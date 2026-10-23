@@ -4,17 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
   <title>SMART OUTFIT | For Smart People</title>
-  <meta name="description" content="Direct Garments Factory Cargo Pants, Export Denim, Jackets & Shirts in Bangladesh." />
+  <meta name="description" content="Premium Menswear, Cargo Pants, Export Denim, Jackets & Shirts in Bangladesh." />
 
-  <!-- Clean Sans-Serif Font (Plus Jakarta Sans & Inter) -->
+  <!-- Dynamic Favicon (Default Brand S Logo, replaceable from Admin) -->
+  <link id="dynamic-favicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%23111111'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' fill='%23ffffff' font-family='sans-serif' font-weight='800' font-size='58'>S</text></svg>" />
+
+  <!-- Fonts: Inter & Plus Jakarta Sans + Hind Siliguri fallback -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Tailwind CSS CDN -->
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Firebase Compat SDKs -->
+  <!-- Direct 1-Click PDF Invoice Generator (html2pdf.js) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -34,7 +40,7 @@
     }
 
     :root {
-      --font-en: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      --font-en: 'Inter', 'Plus Jakarta Sans', sans-serif;
       --font-bn: 'Bornomala', 'Hind Siliguri', sans-serif;
     }
 
@@ -43,19 +49,11 @@
 
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-    @media print {
-      body * { visibility: hidden; }
-      #printable-area, #printable-area * { visibility: visible; }
-      #printable-area { position: absolute; left: 0; top: 0; width: 100%; background: #fff !important; color: #000 !important; padding: 16px; }
-      .no-print { display: none !important; }
-    }
   </style>
 </head>
-<body class="lang-en bg-[#F3EFE6] text-[#0D0D0D] antialiased selection:bg-[#822B17] selection:text-white">
+<body class="lang-en bg-white text-[#111111] antialiased selection:bg-[#111111] selection:text-white">
   <div id="root"></div>
 
-  <!-- Pure Preact + HTM Module (Zero Babel Needed, Instant Load) -->
   <script type="module">
     import { h, render } from 'https://esm.sh/preact@10.19.6';
     import { useState, useEffect, useMemo } from 'https://esm.sh/preact@10.19.6/hooks';
@@ -64,7 +62,7 @@
     const html = htm.bind(h);
 
     // ============================================================================
-    // 1. LIVE FIREBASE CONFIGURATION (smart-outfit-81663)
+    // 1. LIVE FIREBASE CONNECTION (smart-outfit-81663)
     // ============================================================================
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyBKZzZsVfmPyz0qoGyQOpyJBTHQgOtxuRg",
@@ -77,66 +75,69 @@
     };
 
     let db = null;
+    let auth = null;
     try {
       if (window.firebase && !window.firebase.apps.length) {
         window.firebase.initializeApp(FIREBASE_CONFIG);
       }
       if (window.firebase) {
         db = window.firebase.firestore();
+        auth = window.firebase.auth();
       }
-    } catch (err) {
-      console.warn("Firebase connection notice:", err);
-    }
+    } catch (e) { console.warn("Firebase init notice:", e); }
 
     // ============================================================================
-    // 2. DEFAULT STORE SETTINGS, PRODUCTS, COMBOS & BLOGS
+    // 2. CLEAN LINE SVG ICONS (ZERO EMOJIS - FABRILIFE STYLE)
+    // ============================================================================
+    const IconSearch = () => html`<svg class="w-4 h-4 stroke-current" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`;
+    const IconTrack = () => html`<svg class="w-5 h-5 stroke-current" fill="none" stroke-width="1.6" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`;
+    const IconUser = () => html`<svg class="w-5 h-5 stroke-current" fill="none" stroke-width="1.6" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+    const IconHeart = () => html`<svg class="w-5 h-5 stroke-current" fill="none" stroke-width="1.6" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`;
+    const IconBag = () => html`<svg class="w-5 h-5 stroke-current" fill="none" stroke-width="1.6" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`;
+    const IconChat = () => html`<svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-3 9H7V9h10v2zm-4 3H7v-2h6v2z"/></svg>`;
+    const IconClose = () => html`<svg class="w-5 h-5 stroke-current" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>`;
+    const IconDownload = () => html`<svg class="w-4 h-4 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>`;
+    const IconPlus = () => html`<svg class="w-4 h-4 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>`;
+
+    // ============================================================================
+    // 3. DEFAULT STORE DATA (FABRILIFE CLEAN STRUCTURE)
     // ============================================================================
     const DEFAULT_SETTINGS = {
       brandName: "SMART OUTFIT",
-      tagline: "For Smart People",
+      tagline: "Because comfort and confidence go hand in hand.",
+      brandStory: "We focus on crafting export-grade clothing from our own garments facility that is comfortable, looks sharp, and lasts for years. Every stitch goes through strict quality control parameters.",
+      logoUrl: "",
+      faviconUrl: "",
+      heroBannerUrl: "https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?auto=format&fit=crop&w=1800&q=85",
+      heroBannerLinkCategory: "MEN",
+      adminPin: "1234",
+      adminEmail: "",
       whatsapp: "8801700000000",
+      helpline: "+8801700000000",
       insideDhaka: 60,
       outsideDhaka: 120,
       globalFreeDelivery: false,
       minSpendFreeDelivery: 2000,
       enableMinSpendRule: true,
-      flashSaleActive: true,
-      flashSaleTitleEn: "Season End Factory Drop",
-      flashSaleTitleBn: "ফ্যাক্টরি ক্লিয়ারেন্স অফার",
-      announcementEn: "Own Garments Factory • Open Box Delivery • 7-Day Size Exchange",
-      announcementBn: "নিজস্ব গার্মেন্টস ফ্যাক্টরি • ডেলিভারিম্যানের সামনে চেক করে নিন • ৭ দিনে এক্সচেঞ্জ",
-      metaPixelId: "",
       emailWebhookUrl: "",
-      factoryAddressEn: "Dhaka, Bangladesh",
-      factoryAddressBn: "ঢাকা, বাংলাদেশ",
+      metaPixelId: "",
+      facebookUrl: "https://facebook.com",
+      instagramUrl: "https://instagram.com",
+      youtubeUrl: "https://youtube.com",
+      mainCategories: ["MEN", "WOMEN", "WINTER", "COMBO"],
       subCategories: {
-        Pants: ["Six Pocket Cargo", "Premium Denim", "Boys Denim"],
-        Jackets: ["Denim Jacket", "Winter Bomber"],
-        Shirts: ["Denim Shirt", "Casual Shirt", "Solid Oxford"]
+        MEN: ["Six Pocket Cargo", "Denim Jeans", "Casual Shirt", "Denim Shirt", "Chino Pants"],
+        WOMEN: ["Women Cargo", "Women Denim", "Casual Tops"],
+        WINTER: ["Denim Jacket", "Winter Bomber", "Heavy Sweatshirt"],
+        COMBO: ["2-Piece Combo", "3-Pack Cargo Bundle"]
       },
-      banners: [
-        {
-          id: "b1",
-          badgeEn: "DIRECT FACTORY DROP",
-          badgeBn: "নিজস্ব ফ্যাক্টরি প্রোডাকশন",
-          titleEn: "Heavyweight Six Pocket Cargo.",
-          titleBn: "প্রিমিয়াম সিক্স পকেট কার্গো প্যান্ট।",
-          subEn: "280 GSM Export Twill • Enzyme Silicon Wash",
-          subBn: "২৮০ জিএসএম এক্সপোর্ট টুইল • নিখুঁত সেলাই",
-          image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=1400&q=85",
-          ctaTab: "Pants"
-        },
-        {
-          id: "b2",
-          badgeEn: "WINTER & DENIM EDITION",
-          badgeBn: "উইন্টার এবং ডেনিম কালেকশন",
-          titleEn: "Raw Selvedge Jackets & Denim.",
-          titleBn: "এক্সপোর্ট গ্রেড ডেনিম ও জ্যাকেট।",
-          subEn: "Zero Shrinkage • YKK Brass Hardware",
-          subBn: "রং ও কাপড়ের শতভাগ গ্যারান্টি",
-          image: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=1400&q=85",
-          ctaTab: "Jackets"
-        }
+      categoryTiles: [
+        { id: "ct1", nameEn: "Six Pocket Cargo", nameBn: "সিক্স পকেট কার্গো", mainCat: "MEN", subCat: "Six Pocket Cargo", image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=600&q=80" },
+        { id: "ct2", nameEn: "Denim Jeans", nameBn: "প্রিমিয়াম ডেনিম", mainCat: "MEN", subCat: "Denim Jeans", image: "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=600&q=80" },
+        { id: "ct3", nameEn: "Denim Jacket", nameBn: "ডেনিম জ্যাকেট", mainCat: "WINTER", subCat: "Denim Jacket", image: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=600&q=80" },
+        { id: "ct4", nameEn: "Casual Shirt", nameBn: "ক্যাজুয়াল শার্ট", mainCat: "MEN", subCat: "Casual Shirt", image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=600&q=80" },
+        { id: "ct5", nameEn: "Combo Packs", nameBn: "কম্বো অফার", mainCat: "COMBO", subCat: "3-Pack Cargo Bundle", image: "https://images.unsplash.com/photo-1517445312882-bc9910d016b7?auto=format&fit=crop&w=600&q=80" },
+        { id: "ct6", nameEn: "Winter Bomber", nameBn: "উইন্টার জ্যাকেট", mainCat: "WINTER", subCat: "Winter Bomber", image: "https://images.unsplash.com/photo-1551537482-f2075a1d41f2?auto=format&fit=crop&w=600&q=80" }
       ]
     };
 
@@ -144,130 +145,79 @@
       {
         id: "SO-CG01",
         sku: "SO-CG01",
-        nameEn: "Six Pocket Heavy Twill Cargo Pant",
+        nameEn: "Mens Heavy Twill Six Pocket Cargo - Camel Brown",
         nameBn: "সিক্স পকেট হেভি টুইল কার্গো প্যান্ট",
-        category: "Pants",
+        mainCategory: "MEN",
         subCategory: "Six Pocket Cargo",
-        isWinter: false,
         regularPrice: 1650,
         discountPrice: 1290,
         freeDelivery: false,
-        imageFit: "cover",
-        fabricSpecs: "98% Combed Cotton, 2% Spandex | 285 GSM Heavy Twill | YKK Metal Zip",
-        washCare: "Cold machine wash inside out. Do not bleach.",
+        fabricSpecs: "98% Combed Cotton, 2% Spandex | 285 GSM Export Twill | Enzyme Silicon Wash | YKK Metal Zip",
+        sizeChart: "Waist 28 (Length 38\") | Waist 30 (Length 39\") | Waist 32 (Length 40\") | Waist 34 (Length 40.5\") | Waist 36 (Length 41\")",
         colors: [
-          { name: "Camel Brown", hex: "#9E6234", image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=900&q=80", stock: { "28": 6, "30": 15, "32": 24, "34": 18, "36": 10 } },
-          { name: "Jet Black", hex: "#141414", image: "https://images.unsplash.com/photo-1517445312882-bc9910d016b7?auto=format&fit=crop&w=900&q=80", stock: { "28": 4, "30": 14, "32": 20, "34": 16, "36": 8 } },
-          { name: "Olive Green", hex: "#4B5830", image: "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&w=900&q=80", stock: { "28": 5, "30": 12, "32": 19, "34": 11, "36": 6 } },
-          { name: "Charcoal Grey", hex: "#3B3D40", image: "https://images.unsplash.com/photo-1584865288642-42078afe6942?auto=format&fit=crop&w=900&q=80", stock: { "28": 3, "30": 9, "32": 14, "34": 10, "36": 5 } },
-          { name: "Khaki Sand", hex: "#C3B091", image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=900&q=80", stock: { "28": 4, "30": 10, "32": 12, "34": 8, "36": 4 } },
-          { name: "Navy Blue", hex: "#1D2939", image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=80", stock: { "28": 2, "30": 8, "32": 15, "34": 9, "36": 5 } }
+          { name: "Camel Brown", hex: "#9E6234", image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=900&q=80", sizes: "28,30,32,34,36" },
+          { name: "Jet Black", hex: "#141414", image: "https://images.unsplash.com/photo-1517445312882-bc9910d016b7?auto=format&fit=crop&w=900&q=80", sizes: "28,30,32,34,36" },
+          { name: "Olive Green", hex: "#4B5830", image: "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&w=900&q=80", sizes: "30,32,34,36" },
+          { name: "Charcoal Grey", hex: "#3B3D40", image: "https://images.unsplash.com/photo-1584865288642-42078afe6942?auto=format&fit=crop&w=900&q=80", sizes: "30,32,34" },
+          { name: "Khaki Sand", hex: "#C3B091", image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=900&q=80", sizes: "28,30,32,34" },
+          { name: "Navy Blue", hex: "#1D2939", image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=80", sizes: "30,32,34,36" }
         ]
       },
       {
         id: "SO-DN01",
         sku: "SO-DN01",
-        nameEn: "Premium Stretch Tapered Fit Denim",
-        nameBn: "প্রিমিয়াম স্ট্রেচ ন্যারো ফিট ডেনিম",
-        category: "Pants",
-        subCategory: "Premium Denim",
-        isWinter: false,
+        nameEn: "Mens Denim Jeans - Heritage Indigo",
+        nameBn: "প্রিমিয়াম স্ট্রেচ ডেনিম জিন্স - ইন্ডিগো",
+        mainCategory: "MEN",
+        subCategory: "Denim Jeans",
         regularPrice: 1850,
         discountPrice: 1450,
         freeDelivery: false,
-        imageFit: "cover",
-        fabricSpecs: "12.5 Oz Turkish Stretch Denim | Enzyme Whisker Wash | Brass Rivets",
-        washCare: "Wash separately in cold water. Line dry in shade.",
+        fabricSpecs: "12.5 Oz Stretch Denim | Zero Shrinkage | Brass Rivets",
+        sizeChart: "Waist 28, 30, 32, 34, 36",
         colors: [
-          { name: "Deep Indigo", hex: "#23394D", image: "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=900&q=80", stock: { "28": 5, "30": 18, "32": 25, "34": 17, "36": 9 } },
-          { name: "Carbon Black", hex: "#181818", image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=80", stock: { "28": 4, "30": 12, "32": 18, "34": 14, "36": 6 } }
+          { name: "Heritage Indigo", hex: "#23394D", image: "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=900&q=80", sizes: "28,30,32,34,36" },
+          { name: "Jet Black", hex: "#181818", image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=80", sizes: "30,32,34,36" }
         ]
       },
       {
         id: "SO-JK01",
         sku: "SO-JK01",
-        nameEn: "Heavyweight Raw Denim Trucker Jacket",
+        nameEn: "Heavyweight Raw Denim Jacket - Vintage Black",
         nameBn: "হেভিওয়েট ডেনিম ট্রাকার জ্যাকেট",
-        category: "Jackets",
+        mainCategory: "WINTER",
         subCategory: "Denim Jacket",
-        isWinter: true,
         regularPrice: 2550,
         discountPrice: 1990,
         freeDelivery: true,
-        imageFit: "cover",
-        fabricSpecs: "14 Oz Raw Unwashed Denim | Rust-Proof Shank Buttons | 4 Functional Pockets",
-        washCare: "Spot clean or gentle cold wash.",
+        fabricSpecs: "14 Oz Raw Denim | Rust-Proof Metal Shank Buttons | 4 Pockets",
+        sizeChart: "M (Chest 40\") | L (Chest 42\") | XL (Chest 44\") | XXL (Chest 46\")",
         colors: [
-          { name: "Vintage Black", hex: "#1E1E1E", image: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=900&q=80", stock: { "M": 10, "L": 22, "XL": 16, "XXL": 8 } },
-          { name: "Classic Blue", hex: "#2B4C6F", image: "https://images.unsplash.com/photo-1551537482-f2075a1d41f2?auto=format&fit=crop&w=900&q=80", stock: { "M": 8, "L": 15, "XL": 12, "XXL": 6 } }
+          { name: "Vintage Black", hex: "#1E1E1E", image: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=900&q=80", sizes: "M,L,XL,XXL" },
+          { name: "Classic Blue", hex: "#2B4C6F", image: "https://images.unsplash.com/photo-1551537482-f2075a1d41f2?auto=format&fit=crop&w=900&q=80", sizes: "M,L,XL" }
         ]
       },
       {
         id: "SO-SH01",
         sku: "SO-SH01",
-        nameEn: "Smart Garment-Dyed Oxford Shirt",
+        nameEn: "Mens Premium Oxford Casual Shirt - Terracotta",
         nameBn: "স্মার্ট অক্সফোর্ড কটন শার্ট",
-        category: "Shirts",
+        mainCategory: "MEN",
         subCategory: "Casual Shirt",
-        isWinter: false,
         regularPrice: 1390,
         discountPrice: 990,
         freeDelivery: false,
-        imageFit: "cover",
-        fabricSpecs: "100% Compact Combed Cotton | 165 GSM Breathable Oxford Weave",
-        washCare: "Machine wash cold, warm iron.",
+        fabricSpecs: "100% Combed Compact Cotton | 165 GSM Breathable Weave",
+        sizeChart: "M (Chest 40\") | L (Chest 42\") | XL (Chest 44\") | XXL (Chest 46\")",
         colors: [
-          { name: "Rust Terracotta", hex: "#822B17", image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=900&q=80", stock: { "M": 14, "L": 24, "XL": 18, "XXL": 9 } },
-          { name: "Pearl White", hex: "#F2F0EB", image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=900&q=80", stock: { "M": 10, "L": 20, "XL": 15, "XXL": 7 } }
+          { name: "Terracotta", hex: "#822B17", image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=900&q=80", sizes: "M,L,XL,XXL" },
+          { name: "Pearl White", hex: "#F2F0EB", image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=900&q=80", sizes: "M,L,XL" }
         ]
       }
     ];
 
-    const DEFAULT_COMBOS = [
-      {
-        id: "CMB-01",
-        titleEn: "2-Piece Cargo + Oxford Shirt Combo",
-        titleBn: "কার্গো প্যান্ট + অক্সফোর্ড শার্ট কম্বো",
-        regularPrice: 2680,
-        comboPrice: 2090,
-        freeDelivery: true,
-        image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=900&q=80",
-        itemsIncluded: "1x Six Pocket Cargo Pant + 1x Smart Oxford Shirt"
-      },
-      {
-        id: "CMB-02",
-        titleEn: "3-Pack Multi-Color Cargo Bundle",
-        titleBn: "৩টি ভিন্ন কালারের সিক্স পকেট কার্গো প্যাক",
-        regularPrice: 3870,
-        comboPrice: 3450,
-        freeDelivery: true,
-        image: "https://images.unsplash.com/photo-1517445312882-bc9910d016b7?auto=format&fit=crop&w=900&q=80",
-        itemsIncluded: "Camel Brown + Jet Black + Olive Green Cargo Pants"
-      }
-    ];
-
-    const DEFAULT_BLOGS = [
-      {
-        id: "blg-1",
-        titleEn: "How to Identify Export-Grade 280 GSM Twill Cargo",
-        titleBn: "আসল এক্সপোর্ট গ্রেড কার্গো প্যান্ট ও ডেনিম চেনার ৩টি উপায়",
-        summaryEn: "Check fabric density, double chain-stitching inside seams, and YKK brass zipper locking.",
-        summaryBn: "কাপড়ের জিএসএম, ভেতরের ডাবল চেইন সেলাই এবং ওয়াইকেকে (YKK) মেটাল জিপার দেখে আসল প্যান্ট চিনুন।",
-        image: "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=800&q=80",
-        date: "Oct 2026"
-      },
-      {
-        id: "blg-2",
-        titleEn: "Denim & Cargo Wash Guide for 5-Year Longevity",
-        titleBn: "ডেনিম ও কার্গো প্যান্টের রং নতুনের মতো রাখার নিয়ম",
-        summaryEn: "Always turn dark trousers inside out and wash in cold water without bleach.",
-        summaryBn: "প্যান্ট সবসময় উল্টে ঠান্ডা পানিতে ধুবেন এবং কড়া রোদে না শুকিয়ে ছায়ায় শুকাবেন।",
-        image: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=800&q=80",
-        date: "Oct 2026"
-      }
-    ];
-
-    const compressImageToWebP = (file, maxWidth = 800, quality = 0.8) => {
+    // Client-side WebP Image Compressor for Direct File Uploads
+    const compressImageToWebP = (file, maxWidth = 900, quality = 0.8) => {
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -287,106 +237,125 @@
       });
     };
 
+    // ============================================================================
+    // 4. MAIN APPLICATION
+    // ============================================================================
     function SmartOutfitApp() {
       const [lang, setLang] = useState("en");
-      const [darkMode, setDarkMode] = useState(false);
-      const [view, setView] = useState("store");
-      const [activeTab, setActiveTab] = useState("Home");
-      const [activeSubCat, setActiveSubCat] = useState("All");
-      const [searchOpen, setSearchOpen] = useState(false);
+      const [view, setView] = useState("store"); // store | product | checkout | track | wishlist | profile | policy | adminLogin | admin
+      const [activeMainCat, setActiveMainCat] = useState("ALL");
+      const [activeSubCat, setActiveSubCat] = useState("ALL");
+      const [hoveredMainCat, setHoveredMainCat] = useState(null);
       const [searchQuery, setSearchQuery] = useState("");
       const [toast, setToast] = useState("");
 
+      // Persistent Store Data
       const [settings, setSettings] = useState(() => {
         try {
-          const s = localStorage.getItem("so_v2_settings");
+          const s = localStorage.getItem("so_v3_settings");
           return s ? { ...DEFAULT_SETTINGS, ...JSON.parse(s) } : DEFAULT_SETTINGS;
         } catch { return DEFAULT_SETTINGS; }
       });
       const [products, setProducts] = useState(() => {
         try {
-          const p = localStorage.getItem("so_v2_products");
+          const p = localStorage.getItem("so_v3_products");
           return p ? JSON.parse(p) : DEFAULT_PRODUCTS;
         } catch { return DEFAULT_PRODUCTS; }
       });
-      const [combos] = useState(DEFAULT_COMBOS);
-      const [blogs] = useState(DEFAULT_BLOGS);
       const [orders, setOrders] = useState(() => {
         try {
-          const o = localStorage.getItem("so_v2_orders");
+          const o = localStorage.getItem("so_v3_orders");
           return o ? JSON.parse(o) : [];
         } catch { return []; }
       });
       const [abandonedCarts, setAbandonedCarts] = useState(() => {
         try {
-          const a = localStorage.getItem("so_v2_abandoned");
+          const a = localStorage.getItem("so_v3_abandoned");
           return a ? JSON.parse(a) : [];
         } catch { return []; }
       });
+      const [wishlist, setWishlist] = useState(() => {
+        try {
+          const w = localStorage.getItem("so_v3_wishlist");
+          return w ? JSON.parse(w) : [];
+        } catch { return []; }
+      });
 
+      // Product Detail State
       const [selectedProduct, setSelectedProduct] = useState(null);
       const [selectedColorIdx, setSelectedColorIdx] = useState(0);
       const [selectedSize, setSelectedSize] = useState("");
       const [multiPackMode, setMultiPackMode] = useState(false);
       const [multiPackRows, setMultiPackRows] = useState([]);
-      const [zoomActive, setZoomActive] = useState(false);
-      const [sizeFinderModal, setSizeFinderModal] = useState(false);
-      const [fitWeight, setFitWeight] = useState(68);
+      const [showSizeChart, setShowSizeChart] = useState(false);
 
+      // Cart & Checkout State
       const [cart, setCart] = useState([]);
       const [cartOpen, setCartOpen] = useState(false);
       const [customerForm, setCustomerForm] = useState({ name: "", phone: "", email: "", address: "", zone: "inside" });
       const [confirmedOrder, setConfirmedOrder] = useState(null);
+      const [downloadingPdf, setDownloadingPdf] = useState(false);
 
+      // Tracking & Admin States
       const [trackInput, setTrackInput] = useState("");
-      const [adminSection, setAdminSection] = useState("orders");
+      const [adminAuthenticated, setAdminAuthenticated] = useState(false);
+      const [pinInput, setPinInput] = useState("");
+      const [adminTab, setAdminTab] = useState("dashboard"); // dashboard | orders | products | categories | branding | settings
       const [monthFilter, setMonthFilter] = useState("ALL");
-      const [bannerIdx, setBannerIdx] = useState(0);
-      const [trialTopIdx, setTrialTopIdx] = useState(0);
-      const [trialBottomIdx, setTrialBottomIdx] = useState(0);
-      const [trialUserPhoto, setTrialUserPhoto] = useState("");
+      const [orderStatusFilter, setOrderStatusFilter] = useState("ALL");
 
+      // Admin Product Editor Modal State
+      const [editingProduct, setEditingProduct] = useState(null);
+      const [newSubCatInput, setNewSubCatInput] = useState({ main: "MEN", name: "" });
+
+      // Apply Language Font Class
       useEffect(() => {
         document.body.classList.remove("lang-en", "lang-bn");
         document.body.classList.add(lang === "en" ? "lang-en" : "lang-bn");
       }, [lang]);
 
+      // Apply Dynamic Favicon & Title
       useEffect(() => {
-        if (!settings.banners || settings.banners.length <= 1) return;
-        const interval = setInterval(() => {
-          setBannerIdx((prev) => (prev + 1) % settings.banners.length);
-        }, 4500);
-        return () => clearInterval(interval);
-      }, [settings.banners]);
+        document.title = `${settings.brandName} | For Smart People`;
+        const fav = document.getElementById("dynamic-favicon");
+        if (fav && (settings.faviconUrl || settings.logoUrl)) {
+          fav.href = settings.faviconUrl || settings.logoUrl;
+        }
+      }, [settings.brandName, settings.faviconUrl, settings.logoUrl]);
 
-      const syncData = (key, data, collectionName) => {
-        localStorage.setItem(key, JSON.stringify(data));
-        if (db && collectionName) {
-          db.collection("smart_outfit_store").doc(collectionName).set({ items: data, updatedAt: new Date().toISOString() }).catch(() => {});
+      // Sync Helper (LocalStorage + Firebase Firestore)
+      const syncData = (key, data, docName) => {
+        try { localStorage.setItem(key, JSON.stringify(data)); } catch {}
+        if (db && docName) {
+          db.collection("smart_outfit_store").doc(docName).set({
+            items: data,
+            updatedAt: new Date().toISOString()
+          }).catch(() => {});
         }
       };
 
+      // Real-time Firestore Listeners
       useEffect(() => {
         if (!db) return;
         const unsubOrders = db.collection("orders").orderBy("createdAt", "desc").onSnapshot((snap) => {
           const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
           if (list.length > 0) {
             setOrders(list);
-            localStorage.setItem("so_v2_orders", JSON.stringify(list));
+            try { localStorage.setItem("so_v3_orders", JSON.stringify(list)); } catch {}
           }
         }, () => {});
 
         db.collection("smart_outfit_store").doc("products").get().then(doc => {
           if (doc.exists && doc.data()?.items) {
             setProducts(doc.data().items);
-            localStorage.setItem("so_v2_products", JSON.stringify(doc.data().items));
+            try { localStorage.setItem("so_v3_products", JSON.stringify(doc.data().items)); } catch {}
           }
         }).catch(() => {});
 
         db.collection("smart_outfit_store").doc("settings").get().then(doc => {
           if (doc.exists && doc.data()?.items) {
             setSettings(prev => ({ ...prev, ...doc.data().items }));
-            localStorage.setItem("so_v2_settings", JSON.stringify(doc.data().items));
+            try { localStorage.setItem("so_v3_settings", JSON.stringify(doc.data().items)); } catch {}
           }
         }).catch(() => {});
 
@@ -395,7 +364,7 @@
 
       const notify = (msg) => {
         setToast(msg);
-        setTimeout(() => setToast(""), 2600);
+        setTimeout(() => setToast(""), 2500);
       };
 
       const t = (en, bn) => (lang === "en" ? en : bn);
@@ -415,26 +384,28 @@
           };
           setAbandonedCarts(prev => {
             const updated = [draft, ...prev.filter(x => x.phone !== customerForm.phone)];
-            syncData("so_v2_abandoned", updated, "abandoned");
+            syncData("so_v3_abandoned", updated, "abandoned");
             return updated;
           });
         }
       }, [customerForm.phone, customerForm.name, customerForm.address]);
 
+      // Open Product Detail Page
       const openProductPage = (prod) => {
         setSelectedProduct(prod);
         setSelectedColorIdx(0);
-        const firstSizes = Object.keys(prod.colors[0]?.stock || {});
-        setSelectedSize(firstSizes[0] || "32");
+        const firstColorSizes = (prod.colors[0]?.sizes || "30,32,34,36").split(",").map(s => s.trim()).filter(Boolean);
+        setSelectedSize(firstColorSizes[0] || "32");
         setMultiPackMode(false);
         setMultiPackRows([
-          { colorIdx: 0, size: firstSizes[0] || "32" },
-          { colorIdx: prod.colors.length > 1 ? 1 : 0, size: firstSizes[1] || firstSizes[0] || "34" }
+          { colorIdx: 0, size: firstColorSizes[0] || "32" },
+          { colorIdx: prod.colors.length > 1 ? 1 : 0, size: firstColorSizes[1] || firstColorSizes[0] || "34" }
         ]);
         setView("product");
         window.scrollTo({ top: 0, behavior: "smooth" });
       };
 
+      // Add to Bag (Single or Multi-Color/Size Pack)
       const handleAddToCart = (directBuy = false) => {
         if (!selectedProduct) return;
         let updatedCart = [...cart];
@@ -450,9 +421,9 @@
               updatedCart.push({
                 key,
                 productId: selectedProduct.id,
-                sku: `${selectedProduct.sku}-${colorObj.name.slice(0,3).toUpperCase()}-${row.size}`,
+                sku: selectedProduct.sku,
                 nameEn: selectedProduct.nameEn,
-                nameBn: selectedProduct.nameBn,
+                nameBn: selectedProduct.nameBn || selectedProduct.nameEn,
                 color: colorObj.name,
                 size: row.size,
                 price: Number(selectedProduct.discountPrice),
@@ -472,9 +443,9 @@
             updatedCart.push({
               key,
               productId: selectedProduct.id,
-              sku: `${selectedProduct.sku}-${colorObj.name.slice(0,3).toUpperCase()}-${selectedSize}`,
+              sku: selectedProduct.sku,
               nameEn: selectedProduct.nameEn,
-              nameBn: selectedProduct.nameBn,
+              nameBn: selectedProduct.nameBn || selectedProduct.nameEn,
               color: colorObj.name,
               size: selectedSize,
               price: Number(selectedProduct.discountPrice),
@@ -497,31 +468,9 @@
         }
       };
 
-      const addComboToCart = (combo) => {
-        const key = `${combo.id}-COMBO`;
-        setCart([
-          ...cart,
-          {
-            key,
-            productId: combo.id,
-            sku: combo.id,
-            nameEn: combo.titleEn,
-            nameBn: combo.titleBn,
-            color: "Combo Pack",
-            size: "Standard",
-            price: Number(combo.comboPrice),
-            freeDelivery: Boolean(combo.freeDelivery),
-            image: combo.image,
-            qty: 1
-          }
-        ]);
-        setConfirmedOrder(null);
-        setView("checkout");
-      };
-
+      // Delivery & Totals Calculation
       const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
       const totalItemsCount = cart.reduce((sum, item) => sum + item.qty, 0);
-      const multiBuyDiscount = totalItemsCount >= 3 ? 150 : 0;
       const hasProductFreeDelivery = cart.some(i => i.freeDelivery);
       const qualifiesMinSpend = settings.enableMinSpendRule && subtotal >= Number(settings.minSpendFreeDelivery);
       const isFreeDelivery = settings.globalFreeDelivery || hasProductFreeDelivery || qualifiesMinSpend || cart.length === 0;
@@ -532,16 +481,16 @@
         ? Number(settings.insideDhaka)
         : Number(settings.outsideDhaka);
 
-      const grandTotal = Math.max(0, subtotal - multiBuyDiscount + deliveryCharge);
+      const grandTotal = Math.max(0, subtotal + deliveryCharge);
 
+      // Submit Order + Auto Email Notification
       const submitOrder = async (e) => {
         e.preventDefault();
         if (!customerForm.name || !customerForm.phone || !customerForm.address || cart.length === 0) return;
 
         const now = new Date();
         const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-        const randomCode = Math.floor(1000 + Math.random() * 9000);
-        const orderId = `SO-${randomCode}`;
+        const orderId = `SO-${Math.floor(1000 + Math.random() * 9000)}`;
 
         const newOrder = {
           orderId,
@@ -551,43 +500,101 @@
           customer: { ...customerForm },
           items: [...cart],
           subtotal,
-          discount: multiBuyDiscount,
           deliveryCharge,
           grandTotal,
-          status: "Pending",
-          source: "Website"
+          status: "Pending"
         };
 
+        // 1. Save to LocalStorage & Firestore
         const updatedOrders = [newOrder, ...orders];
         setOrders(updatedOrders);
-        localStorage.setItem("so_v2_orders", JSON.stringify(updatedOrders));
+        try { localStorage.setItem("so_v3_orders", JSON.stringify(updatedOrders)); } catch {}
         if (db) {
           db.collection("orders").doc(orderId).set(newOrder).catch(() => {});
         }
 
+        // 2. Remove from Incomplete Orders
         const cleanAbd = abandonedCarts.filter(a => a.phone !== customerForm.phone);
         setAbandonedCarts(cleanAbd);
-        syncData("so_v2_abandoned", cleanAbd, "abandoned");
+        syncData("so_v3_abandoned", cleanAbd, "abandoned");
+
+        // 3. Send Automatic Order Confirmation Email (Customer + Admin)
+        if (settings.emailWebhookUrl) {
+          fetch(settings.emailWebhookUrl, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...newOrder,
+              brandName: settings.brandName,
+              adminEmail: settings.adminEmail,
+              customerEmail: customerForm.email
+            })
+          }).catch(() => {});
+        } else if (settings.adminEmail) {
+          // Zero-config fallback via FormSubmit AJAX API if Admin Email is set
+          fetch(`https://formsubmit.co/ajax/${settings.adminEmail}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify({
+              _subject: `New Order ${orderId} - ${settings.brandName}`,
+              Order_ID: orderId,
+              Customer: customerForm.name,
+              Phone: customerForm.phone,
+              Email: customerForm.email || "N/A",
+              Address: customerForm.address,
+              Items: cart.map(i => `${i.nameEn} (${i.color} / Size: ${i.size}) x${i.qty}`).join(" | "),
+              Total_Payable: `BDT ${grandTotal}`
+            })
+          }).catch(() => {});
+        }
 
         setConfirmedOrder(newOrder);
         setCart([]);
-        notify(t("Order Confirmed!", "অর্ডার সম্পন্ন হয়েছে!"));
+        notify(t("Order Confirmed", "অর্ডার কনফার্ম হয়েছে"));
       };
 
+      // Direct 1-Click PDF Invoice Download (No Browser Print Dialog)
+      const downloadInvoiceDirect = (orderToDownload) => {
+        const element = document.getElementById("invoice-card");
+        if (!element) return;
+        setDownloadingPdf(true);
+
+        if (window.html2pdf) {
+          const opt = {
+            margin: 10,
+            filename: `Smart-Outfit-Invoice-${orderToDownload.orderId}.pdf`,
+            image: { type: "jpeg", quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+          };
+          window.html2pdf().set(opt).from(element).save().then(() => {
+            setDownloadingPdf(false);
+            notify(t("Invoice Downloaded", "ইনভয়েস ডাউনলোড হয়েছে"));
+          }).catch(() => setDownloadingPdf(false));
+        } else {
+          setDownloadingPdf(false);
+        }
+      };
+
+      // Admin Order Status Update
       const handleOrderStatusChange = (orderId, newStatus) => {
         const updated = orders.map(o => o.orderId === orderId ? { ...o, status: newStatus } : o);
         setOrders(updated);
-        localStorage.setItem("so_v2_orders", JSON.stringify(updated));
+        try { localStorage.setItem("so_v3_orders", JSON.stringify(updated)); } catch {}
         if (db) db.collection("orders").doc(orderId).update({ status: newStatus }).catch(() => {});
+        notify(`Status: ${newStatus}`);
       };
 
+      // Export Orders to Excel/CSV
       const downloadOrdersCSV = (listToExport) => {
-        const headers = ["OrderID", "Date", "CustomerName", "Phone", "Address", "Items", "COD_Amount", "Status"];
+        const headers = ["OrderID", "Date", "CustomerName", "Phone", "Email", "Address", "Items", "Total_BDT", "Status"];
         const rows = listToExport.map(o => [
           o.orderId,
           o.dateFormatted,
           `"${o.customer.name}"`,
           o.customer.phone,
+          o.customer.email || "",
           `"${o.customer.address.replace(/"/g, '""')}"`,
           `"${o.items.map(i => `${i.nameEn} (${i.color}-${i.size}) x${i.qty}`).join(" | ")}"`,
           o.grandTotal,
@@ -602,622 +609,278 @@
         document.body.removeChild(link);
       };
 
-      const visibleProducts = useMemo(() => {
+      // Filtered Storefront Products
+      const filteredProducts = useMemo(() => {
         return products.filter(p => {
           if (searchQuery.trim() !== "") {
             const q = searchQuery.toLowerCase();
-            return p.nameEn.toLowerCase().includes(q) || p.nameBn.includes(q) || p.sku.toLowerCase().includes(q);
+            return p.nameEn.toLowerCase().includes(q) || (p.nameBn && p.nameBn.includes(q)) || p.sku.toLowerCase().includes(q) || p.subCategory.toLowerCase().includes(q);
           }
-          if (activeTab === "Home") return true;
-          if (activeTab === "Winter") return Boolean(p.isWinter);
-          if (p.category !== activeTab) return false;
-          if (activeSubCat !== "All" && p.subCategory !== activeSubCat) return false;
+          if (activeMainCat !== "ALL" && p.mainCategory !== activeMainCat) return false;
+          if (activeSubCat !== "ALL" && p.subCategory !== activeSubCat) return false;
           return true;
         });
-      }, [products, activeTab, activeSubCat, searchQuery]);
+      }, [products, activeMainCat, activeSubCat, searchQuery]);
 
+      // Group Products by Sub-Category for Fabrilife-style Homepage Rows
+      const homepageSections = useMemo(() => {
+        const groups = {};
+        products.forEach(p => {
+          const key = p.subCategory || "Featured";
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(p);
+        });
+        return Object.entries(groups);
+      }, [products]);
+
+      // Admin Monthly Analytics
       const availableMonths = useMemo(() => {
         const set = new Set(orders.map(o => o.yearMonth).filter(Boolean));
         return ["ALL", ...Array.from(set)];
       }, [orders]);
 
       const filteredAdminOrders = useMemo(() => {
-        if (monthFilter === "ALL") return orders;
-        return orders.filter(o => o.yearMonth === monthFilter);
-      }, [orders, monthFilter]);
+        return orders.filter(o => {
+          if (monthFilter !== "ALL" && o.yearMonth !== monthFilter) return false;
+          if (orderStatusFilter !== "ALL" && o.status !== orderStatusFilter) return false;
+          return true;
+        });
+      }, [orders, monthFilter, orderStatusFilter]);
 
       const monthlyStats = useMemo(() => {
-        const totalCount = filteredAdminOrders.length;
-        const deliveredOrders = filteredAdminOrders.filter(o => o.status === "Delivered");
-        const deliveredRevenue = deliveredOrders.reduce((s, o) => s + Number(o.grandTotal), 0);
-        const pendingOrders = filteredAdminOrders.filter(o => ["Pending", "Confirmed", "Shipped"].includes(o.status));
-        const pendingAmount = pendingOrders.reduce((s, o) => s + Number(o.grandTotal), 0);
-        const returnedCount = filteredAdminOrders.filter(o => ["Returned", "Cancelled"].includes(o.status)).length;
-        return { totalCount, deliveredCount: deliveredOrders.length, deliveredRevenue, pendingCount: pendingOrders.length, pendingAmount, returnedCount };
-      }, [filteredAdminOrders]);
+        const base = monthFilter === "ALL" ? orders : orders.filter(o => o.yearMonth === monthFilter);
+        const totalCount = base.length;
+        const delivered = base.filter(o => o.status === "Delivered");
+        const deliveredRevenue = delivered.reduce((s, o) => s + Number(o.grandTotal), 0);
+        const pending = base.filter(o => ["Pending", "Confirmed", "Shipped"].includes(o.status));
+        const pendingAmount = pending.reduce((s, o) => s + Number(o.grandTotal), 0);
+        const returnedCount = base.filter(o => ["Returned", "Cancelled"].includes(o.status)).length;
+        return { totalCount, deliveredCount: delivered.length, deliveredRevenue, pendingCount: pending.length, pendingAmount, returnedCount };
+      }, [orders, monthFilter]);
 
-      const recommendedSize = useMemo(() => {
-        if (fitWeight < 55) return "28 / M";
-        if (fitWeight <= 64) return "30 / M";
-        if (fitWeight <= 73) return "32 / L";
-        if (fitWeight <= 82) return "34 / XL";
-        return "36 / XXL";
-      }, [fitWeight]);
+      // Open Blank Product Form for Admin
+      const startNewProduct = () => {
+        setEditingProduct({
+          id: "SO-" + Math.floor(100 + Math.random() * 900),
+          sku: "SO-" + Math.floor(100 + Math.random() * 900),
+          nameEn: "",
+          nameBn: "",
+          mainCategory: "MEN",
+          subCategory: settings.subCategories?.MEN?.[0] || "Six Pocket Cargo",
+          regularPrice: 1650,
+          discountPrice: 1290,
+          freeDelivery: false,
+          fabricSpecs: "98% Cotton, 2% Spandex | Export Quality",
+          sizeChart: "Waist: 28, 30, 32, 34, 36",
+          colors: [
+            { name: "Black", hex: "#111111", image: "", sizes: "28,30,32,34,36" }
+          ]
+        });
+      };
 
-      const currentBanner = settings.banners?.[bannerIdx] || DEFAULT_SETTINGS.banners[0];
+      const saveEditedProduct = (e) => {
+        e.preventDefault();
+        if (!editingProduct.nameEn) return;
+        const exists = products.some(p => p.id === editingProduct.id);
+        const updated = exists
+          ? products.map(p => p.id === editingProduct.id ? editingProduct : p)
+          : [editingProduct, ...products];
+        setProducts(updated);
+        syncData("so_v3_products", updated, "products");
+        setEditingProduct(null);
+        notify("Product Saved Successfully");
+      };
 
-      return html`
-        <div class="${darkMode ? "bg-[#0D0D0D] text-[#F3EFE6]" : "bg-[#F3EFE6] text-[#0D0D0D]"} min-h-screen pb-20 md:pb-0 transition-colors duration-200">
-          
-          ${toast && html`
-            <div class="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#822B17] text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg">
-              ✓ ${toast}
-            </div>
-          `}
-
-          <div class="bg-[#822B17] text-white text-[11px] sm:text-xs font-semibold py-2 px-4 text-center tracking-wide">
-            ${t(settings.announcementEn, settings.announcementBn)}
-          </div>
-
-          <header class="sticky top-0 z-40 border-b backdrop-blur-md ${darkMode ? "bg-[#0D0D0D]/95 border-neutral-800" : "bg-[#F3EFE6]/95 border-[#E2DDD2]"}">
-            <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-2">
-              
-              <div
-                onClick=${() => { setView("store"); setActiveTab("Home"); setActiveSubCat("All"); }}
-                class="flex items-center gap-2.5 cursor-pointer select-none"
-              >
-                <div class="w-10 h-10 rounded-full bg-[#822B17] text-[#F3EFE6] flex flex-col items-center justify-center shadow-sm border border-white/15">
-                  <span class="font-extrabold text-base leading-none tracking-tighter">S</span>
-                  <span class="w-4 h-0.5 bg-[#F3EFE6] rounded-full mt-0.5"></span>
-                </div>
+      // ============================================================================
+      // DEDICATED ADMIN VIEW (COMPLETELY SEPARATE FROM PUBLIC HEADER & CHAT BUTTON)
+      // ============================================================================
+      if (view === "adminLogin") {
+        return html`
+          <div class="min-h-screen bg-[#F7F7F8] flex items-center justify-center p-4">
+            <div class="bg-white border border-neutral-200 p-8 max-w-sm w-full">
+              <h2 class="text-lg font-bold tracking-tight uppercase mb-1">${settings.brandName}</h2>
+              <p class="text-xs text-neutral-500 mb-6">Restricted Admin Access</p>
+              <form onSubmit=${(e) => {
+                e.preventDefault();
+                if (pinInput === String(settings.adminPin)) {
+                  setAdminAuthenticated(true);
+                  setPinInput("");
+                  setView("admin");
+                } else {
+                  notify("Incorrect Admin Password");
+                }
+              }} class="space-y-4">
                 <div>
-                  <h1 class="font-extrabold text-base sm:text-lg leading-none tracking-tight">${settings.brandName}</h1>
-                  <p class="text-[10px] opacity-70 uppercase tracking-widest mt-0.5">${settings.tagline}</p>
+                  <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-600 mb-1.5">Admin Password / PIN</label>
+                  <input
+                    type="password"
+                    required
+                    autofocus
+                    value=${pinInput}
+                    onInput=${e => setPinInput(e.target.value)}
+                    placeholder="Enter PIN"
+                    class="w-full px-3.5 py-2.5 border border-neutral-300 text-sm outline-none focus:border-black"
+                  />
                 </div>
-              </div>
-
-              <nav class="hidden lg:flex items-center gap-6 text-sm font-semibold">
-                ${[
-                  { id: "Home", en: "Home", bn: "হোম" },
-                  { id: "Pants", en: "Pants", bn: "প্যান্ট" },
-                  { id: "Jackets", en: "Jackets", bn: "জ্যাকেট" },
-                  { id: "Shirts", en: "Shirts", bn: "শার্ট" },
-                  { id: "Winter", en: "Winter", bn: "উইন্টার" },
-                  { id: "Combos", en: "Combos", bn: "কম্বো" },
-                  { id: "Blog", en: "Blog", bn: "ব্লগ" }
-                ].map(tab => html`
-                  <button
-                    key=${tab.id}
-                    onClick=${() => { setView("store"); setActiveTab(tab.id); setActiveSubCat("All"); }}
-                    class="py-1 border-b-2 transition ${activeTab === tab.id && view === "store" ? "border-[#822B17] text-[#822B17] font-bold" : "border-transparent opacity-75 hover:opacity-100"}"
-                  >
-                    ${t(tab.en, tab.bn)}
-                  </button>
-                `)}
-                <button
-                  onClick=${() => setView("trial")}
-                  class="text-xs font-bold px-3 py-1.5 rounded-full bg-[#822B17]/10 text-[#822B17]"
-                >
-                  ${t("Trial Studio", "ট্রায়াল রুম")}
+                <button type="submit" class="w-full py-3 bg-[#111111] text-white text-xs font-bold uppercase tracking-widest hover:bg-neutral-800 transition">
+                  Unlock Admin Panel
                 </button>
-                <button
-                  onClick=${() => setView("track")}
-                  class="text-xs font-bold opacity-80 hover:opacity-100"
-                >
-                  ${t("Track Order", "অর্ডার ট্র্যাক")}
-                </button>
-              </nav>
-
-              <div class="flex items-center gap-1.5 sm:gap-2.5">
-                <button onClick=${() => setSearchOpen(!searchOpen)} class="p-2 rounded-full hover:bg-current/10 text-xs font-bold">🔍</button>
-                <button
-                  onClick=${() => setLang(lang === "en" ? "bn" : "en")}
-                  class="text-xs font-bold px-2.5 py-1.5 rounded-md border border-current/20 hover:bg-[#822B17] hover:text-white transition"
-                >
-                  ${lang === "en" ? "বাং" : "EN"}
-                </button>
-                <button onClick=${() => setDarkMode(!darkMode)} class="p-2 rounded-full border border-current/15 hover:bg-current/10 text-xs">
-                  ${darkMode ? "☀️" : "🌙"}
-                </button>
-                <button onClick=${() => setView("admin")} class="p-2 rounded-full border border-current/15 hover:bg-current/10 text-xs" title="Admin">
-                  ⚙️
-                </button>
-                <button
-                  onClick=${() => setCartOpen(true)}
-                  class="px-3 py-2 rounded-full bg-[#822B17] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
-                >
-                  <span>🛍️</span>
-                  <span>${totalItemsCount}</span>
-                </button>
-              </div>
-            </div>
-
-            ${searchOpen && html`
-              <div class="max-w-3xl mx-auto px-4 py-2.5 border-t border-current/10">
-                <input
-                  value=${searchQuery}
-                  onInput=${e => { setSearchQuery(e.target.value); setView("store"); }}
-                  placeholder=${t("Search Cargo, Denim, Jacket or SKU...", "কার্গো প্যান্ট, ডেনিম বা জ্যাকেট খুঁজুন...")}
-                  class="w-full p-2.5 rounded-lg border border-current/20 bg-transparent text-sm outline-none"
-                />
-              </div>
-            `}
-
-            <div class="flex lg:hidden overflow-x-auto no-scrollbar gap-2 px-4 py-2 border-t border-current/10 text-xs font-bold">
-              ${[
-                { id: "Home", en: "Home", bn: "হোম" },
-                { id: "Pants", en: "Pants", bn: "প্যান্ট" },
-                { id: "Jackets", en: "Jackets", bn: "জ্যাকেট" },
-                { id: "Shirts", en: "Shirts", bn: "শার্ট" },
-                { id: "Winter", en: "Winter", bn: "উইন্টার" },
-                { id: "Combos", en: "Combos", bn: "কম্বো" },
-                { id: "Blog", en: "Blog", bn: "ব্লগ" }
-              ].map(tab => html`
-                <button
-                  key=${tab.id}
-                  onClick=${() => { setView("store"); setActiveTab(tab.id); setActiveSubCat("All"); }}
-                  class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition ${activeTab === tab.id && view === "store" ? "bg-[#822B17] text-white" : "bg-current/5"}"
-                >
-                  ${t(tab.en, tab.bn)}
-                </button>
-              `)}
-            </div>
-          </header>
-
-          ${view === "store" && html`
-            <main class="max-w-7xl mx-auto px-4 py-6">
-              ${activeTab === "Home" && !searchQuery && html`
-                <div class="relative rounded-2xl overflow-hidden mb-8 bg-[#181514] text-white min-h-[250px] sm:min-h-[380px] flex items-center">
-                  <img src=${currentBanner.image} alt=${currentBanner.titleEn} class="absolute inset-0 w-full h-full object-cover opacity-50 transition-all duration-700" />
-                  <div class="relative z-10 p-6 sm:p-12 max-w-xl">
-                    <span class="inline-block bg-[#822B17] text-white text-[10px] sm:text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">
-                      ${t(currentBanner.badgeEn, currentBanner.badgeBn)}
-                    </span>
-                    <h2 class="text-2xl sm:text-4xl font-extrabold leading-tight">
-                      ${t(currentBanner.titleEn, currentBanner.titleBn)}
-                    </h2>
-                    <p class="text-xs sm:text-sm opacity-85 mt-2">
-                      ${t(currentBanner.subEn, currentBanner.subBn)}
-                    </p>
-                    <div class="flex flex-wrap gap-3 mt-5">
-                      <button onClick=${() => setActiveTab(currentBanner.ctaTab || "Pants")} class="bg-[#822B17] hover:bg-[#6c2211] text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-lg transition shadow">
-                        ${t("Explore Collection", "কালেকশন দেখুন")}
-                      </button>
-                      <button onClick=${() => setView("trial")} class="bg-white/15 backdrop-blur-md hover:bg-white/25 text-white font-bold text-xs sm:text-sm px-5 py-3 rounded-lg transition">
-                        ${t("Mix & Match Studio", "ট্রায়াল রুম")}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              `}
-
-              ${["Pants", "Jackets", "Shirts"].includes(activeTab) && html`
-                <div class="flex gap-2 mb-6 overflow-x-auto no-scrollbar">
-                  ${["All", ...(settings.subCategories?.[activeTab] || [])].map(sub => html`
-                    <button
-                      key=${sub}
-                      onClick=${() => setActiveSubCat(sub)}
-                      class="text-xs font-bold px-4 py-2 rounded-lg border whitespace-nowrap transition ${activeSubCat === sub ? "bg-[#822B17] text-white border-[#822B17]" : "border-current/15"}"
-                    >
-                      ${sub}
-                    </button>
-                  `)}
-                </div>
-              `}
-
-              ${!["Combos", "Blog"].includes(activeTab) && html`
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3.5 sm:gap-6">
-                  ${visibleProducts.map(prod => {
-                    const savePct = Math.round(((prod.regularPrice - prod.discountPrice) / prod.regularPrice) * 100);
-                    return html`
-                      <div
-                        key=${prod.id}
-                        onClick=${() => openProductPage(prod)}
-                        class="group cursor-pointer rounded-xl overflow-hidden border transition ${darkMode ? "bg-[#151515] border-neutral-800" : "bg-white border-[#E2DDD2]"}"
-                      >
-                        <div class="relative aspect-[3/4] w-full bg-[#E8E4DC] overflow-hidden">
-                          <img src=${prod.colors[0]?.image} alt=${prod.nameEn} loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
-                          ${savePct > 0 && html`
-                            <span class="absolute top-2.5 left-2.5 bg-[#822B17] text-white text-[10px] font-bold px-2 py-0.5 rounded">-${savePct}%</span>
-                          `}
-                          ${prod.freeDelivery && html`
-                            <span class="absolute bottom-2 left-2 bg-emerald-700 text-white text-[10px] font-bold px-2 py-0.5 rounded">${t("Free Delivery", "ফ্রি ডেলিভারি")}</span>
-                          `}
-                        </div>
-                        <div class="p-3">
-                          <p class="text-[10px] opacity-60 uppercase tracking-wider">${prod.subCategory}</p>
-                          <h3 class="font-bold text-xs sm:text-sm truncate mt-0.5">${t(prod.nameEn, prod.nameBn)}</h3>
-                          <div class="flex items-center gap-1.5 my-2">
-                            ${prod.colors.slice(0, 6).map((c, idx) => html`
-                              <span key=${idx} class="w-3.5 h-3.5 rounded-full border border-black/20" style=${{ backgroundColor: c.hex }} title=${c.name} />
-                            `)}
-                          </div>
-                          <div class="flex items-baseline gap-2">
-                            <span class="font-extrabold text-sm sm:text-base text-[#822B17]">৳${prod.discountPrice}</span>
-                            <span class="text-xs line-through opacity-45">৳${prod.regularPrice}</span>
-                          </div>
-                        </div>
-                      </div>
-                    `;
-                  })}
-                </div>
-              `}
-
-              ${(activeTab === "Home" || activeTab === "Combos") && html`
-                <section class="mt-12">
-                  <h2 class="text-lg sm:text-xl font-extrabold mb-4">${t("Combo Bundles", "কম্বো অফার")}</h2>
-                  <div class="grid md:grid-cols-2 gap-4">
-                    ${combos.map(cmb => html`
-                      <div key=${cmb.id} class="p-4 rounded-xl border flex gap-4 items-center ${darkMode ? "bg-[#151515] border-neutral-800" : "bg-white border-[#E2DDD2]"}">
-                        <img src=${cmb.image} alt=${cmb.titleEn} class="w-24 h-32 object-cover rounded-lg" />
-                        <div class="flex-1">
-                          <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-[#822B17]/10 text-[#822B17]">${t("Combo Save", "কম্বো প্যাক")}</span>
-                          <h3 class="font-extrabold text-sm sm:text-base mt-1">${t(cmb.titleEn, cmb.titleBn)}</h3>
-                          <p class="text-xs opacity-70 mt-0.5">${cmb.itemsIncluded}</p>
-                          <div class="flex items-baseline gap-2 my-2">
-                            <span class="font-extrabold text-lg text-[#822B17]">৳${cmb.comboPrice}</span>
-                            <span class="text-xs line-through opacity-50">৳${cmb.regularPrice}</span>
-                          </div>
-                          <button onClick=${() => addComboToCart(cmb)} class="px-4 py-2 rounded-lg bg-[#822B17] text-white text-xs font-bold">
-                            ${t("Order Combo", "কম্বো অর্ডার করুন")}
-                          </button>
-                        </div>
-                      </div>
-                    `)}
-                  </div>
-                </section>
-              `}
-
-              <div class="mt-12 p-5 rounded-xl border grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-bold ${darkMode ? "bg-[#151515] border-neutral-800" : "bg-white border-[#E2DDD2]"}">
-                <div>🏭 ${t("Own Garments Factory", "নিজস্ব গার্মেন্টস ফ্যাক্টরি")}</div>
-                <div>📦 ${t("Open Box Delivery", "ডেলিভারিম্যানের সামনে চেক")}</div>
-                <div>🔄 ${t("7-Day Size Exchange", "৭ দিনে সাইজ এক্সচেঞ্জ")}</div>
-                <div>🧵 ${t("Export Grade Stitching", "এক্সপোর্ট গ্রেড কোয়ালিটি")}</div>
-              </div>
-            </main>
-          `}
-
-          ${view === "product" && selectedProduct && html`
-            <div class="max-w-5xl mx-auto px-4 py-6">
-              <button onClick=${() => setView("store")} class="text-xs font-bold mb-4 opacity-75 hover:opacity-100">
-                ← ${t("Back", "পেছনে যান")}
+              </form>
+              <button onClick=${() => setView("store")} class="w-full mt-4 text-xs text-neutral-500 hover:text-black text-center block">
+                ← Return to Storefront
               </button>
+            </div>
+          </div>
+        `;
+      }
 
-              <div class="grid md:grid-cols-2 gap-8">
+      if (view === "admin" && adminAuthenticated) {
+        return html`
+          <div class="min-h-screen bg-[#F7F7F8] text-[#111111] flex flex-col md:flex-row">
+            
+            <!-- Clean Left Sidebar (Desktop) / Top Scroll Bar (Mobile) -->
+            <aside class="w-full md:w-60 bg-[#111111] text-white flex-shrink-0">
+              <div class="p-5 border-b border-white/10 flex justify-between items-center">
                 <div>
-                  <div onClick=${() => setZoomActive(!zoomActive)} class="relative aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-[#E2DDD2] cursor-zoom-in">
-                    <img src=${selectedProduct.colors[selectedColorIdx]?.image} alt=${selectedProduct.nameEn} class="w-full h-full object-cover transition-transform duration-300 ${zoomActive ? "scale-150" : "scale-100"}" />
-                  </div>
+                  <h1 class="font-extrabold text-sm tracking-widest uppercase">${settings.brandName}</h1>
+                  <p class="text-[11px] text-neutral-400 mt-0.5">Admin Control Center</p>
                 </div>
-
-                <div>
-                  <span class="text-xs font-bold uppercase tracking-wider text-[#822B17]">${selectedProduct.subCategory} • SKU: ${selectedProduct.sku}</span>
-                  <h1 class="text-xl sm:text-2xl font-extrabold mt-1">${t(selectedProduct.nameEn, selectedProduct.nameBn)}</h1>
-
-                  <div class="flex items-center gap-3 my-4">
-                    <span class="text-2xl sm:text-3xl font-extrabold text-[#822B17]">৳${selectedProduct.discountPrice}</span>
-                    <span class="text-base line-through opacity-45">৳${selectedProduct.regularPrice}</span>
-                    <span class="bg-[#822B17]/10 text-[#822B17] text-xs font-bold px-2.5 py-1 rounded">
-                      Save ৳${selectedProduct.regularPrice - selectedProduct.discountPrice}
-                    </span>
-                  </div>
-
-                  ${!multiPackMode ? html`
-                    <div class="mb-4">
-                      <p class="text-xs font-bold uppercase mb-2">${t("Color", "কালার")}: <span class="text-[#822B17]">${selectedProduct.colors[selectedColorIdx]?.name}</span></p>
-                      <div class="flex flex-wrap gap-2">
-                        ${selectedProduct.colors.map((c, idx) => html`
-                          <button
-                            key=${idx}
-                            onClick=${() => setSelectedColorIdx(idx)}
-                            class="px-3 py-1.5 rounded-lg text-xs font-bold border flex items-center gap-2 transition ${selectedColorIdx === idx ? "border-[#822B17] bg-[#822B17]/10" : "border-current/20"}"
-                          >
-                            <span class="w-3.5 h-3.5 rounded-full border border-black/20" style=${{ backgroundColor: c.hex }} />
-                            ${c.name}
-                          </button>
-                        `)}
-                      </div>
-                    </div>
-
-                    <div class="mb-5">
-                      <span class="text-xs font-bold uppercase block mb-2">${t("Size", "সাইজ")}</span>
-                      <div class="flex flex-wrap gap-2">
-                        ${Object.entries(selectedProduct.colors[selectedColorIdx]?.stock || {}).map(([sz, qty]) => html`
-                          <button
-                            key=${sz}
-                            onClick=${() => setSelectedSize(sz)}
-                            class="w-12 h-11 rounded-lg font-bold text-xs border transition ${selectedSize === sz ? "bg-[#822B17] text-white border-[#822B17]" : "border-current/20"}"
-                          >
-                            ${sz}
-                          </button>
-                        `)}
-                      </div>
-                    </div>
-                  ` : html`
-                    <div class="p-4 rounded-xl border-2 border-[#822B17] bg-[#822B17]/5 mb-5">
-                      <div class="flex justify-between items-center mb-3">
-                        <span class="text-xs font-extrabold uppercase text-[#822B17]">${t("Multi-Color & Multi-Size Pack", "একাধিক কালার ও সাইজ সিলেক্ট করুন")}</span>
-                        <button onClick=${() => setMultiPackMode(false)} class="text-xs font-bold underline">${t("Single Item", "১টি নিন")}</button>
-                      </div>
-                      <div class="space-y-2.5">
-                        ${multiPackRows.map((row, rIdx) => html`
-                          <div key=${rIdx} class="flex items-center gap-2">
-                            <span class="text-xs font-bold w-6">#${rIdx + 1}</span>
-                            <select
-                              value=${row.colorIdx}
-                              onChange=${e => {
-                                const copy = [...multiPackRows];
-                                copy[rIdx].colorIdx = Number(e.target.value);
-                                setMultiPackRows(copy);
-                              }}
-                              class="flex-1 p-2 rounded-lg border border-current/20 bg-transparent text-xs font-bold"
-                            >
-                              ${selectedProduct.colors.map((c, cIdx) => html`<option key=${cIdx} value=${cIdx} class="text-black">${c.name}</option>`)}
-                            </select>
-                            <select
-                              value=${row.size}
-                              onChange=${e => {
-                                const copy = [...multiPackRows];
-                                copy[rIdx].size = e.target.value;
-                                setMultiPackRows(copy);
-                              }}
-                              class="w-24 p-2 rounded-lg border border-current/20 bg-transparent text-xs font-bold"
-                            >
-                              ${Object.keys(selectedProduct.colors[row.colorIdx]?.stock || {}).map(s => html`<option key=${s} value=${s} class="text-black">${t("Size", "সাইজ")} ${s}</option>`)}
-                            </select>
-                          </div>
-                        `)}
-                      </div>
-                      <button
-                        onClick=${() => setMultiPackRows([...multiPackRows, { colorIdx: 0, size: Object.keys(selectedProduct.colors[0].stock)[0] }])}
-                        class="mt-3 text-xs font-extrabold text-[#822B17]"
-                      >
-                        + ${t("Add Another Color/Size", "আরও ১টি প্যান্ট যুক্ত করুন")}
-                      </button>
-                    </div>
-                  `}
-
-                  ${!multiPackMode && html`
-                    <button onClick=${() => setMultiPackMode(true)} class="w-full py-2.5 mb-4 rounded-xl border border-dashed border-[#822B17] text-[#822B17] text-xs font-bold">
-                      + ${t("Select Multiple Colors & Different Sizes Together", "একসাথে একাধিক কালার ও ভিন্ন সাইজ নিন")}
-                    </button>
-                  `}
-
-                  <div class="grid grid-cols-2 gap-3 mb-5">
-                    <button onClick=${() => handleAddToCart(false)} class="py-3.5 rounded-xl font-bold text-sm border-2 border-[#822B17] text-[#822B17]">
-                      ${t("Add to Bag", "ব্যাগে রাখুন")}
-                    </button>
-                    <button onClick=${() => handleAddToCart(true)} class="py-3.5 rounded-xl font-bold text-sm bg-[#822B17] text-white shadow-md">
-                      ${t("Buy Now", "অর্ডার করুন")}
-                    </button>
-                  </div>
-
-                  <div class="space-y-2 text-xs leading-relaxed">
-                    <p><strong>${t("Fabric & Specs:", "কাপড়ের বিবরণ:")}</strong> ${selectedProduct.fabricSpecs}</p>
-                    <p><strong>${t("Wash Care:", "যত্ন:")}</strong> ${selectedProduct.washCare}</p>
-                  </div>
-                </div>
+                <button onClick=${() => setView("store")} class="text-xs px-2.5 py-1 bg-white/10 hover:bg-white/20 rounded text-white">
+                  View Site ↗
+                </button>
               </div>
-            </div>
-          `}
 
-          ${view === "checkout" && html`
-            <div class="max-w-3xl mx-auto px-4 py-8">
-              ${confirmedOrder ? html`
-                <div id="printable-area" class="p-6 rounded-2xl border ${darkMode ? "bg-[#151515] border-neutral-800" : "bg-white border-[#E2DDD2]"}">
-                  <div class="text-center border-b border-current/10 pb-4">
-                    <h2 class="text-xl font-extrabold">${settings.brandName} — Official Receipt</h2>
-                    <p class="text-xs opacity-75">Order ID: <strong class="text-[#822B17]">${confirmedOrder.orderId}</strong> • ${confirmedOrder.dateFormatted}</p>
-                  </div>
-                  <div class="my-4 text-xs space-y-1">
-                    <p><strong>${t("Customer:", "নাম:")}</strong> ${confirmedOrder.customer.name}</p>
-                    <p><strong>${t("Phone:", "মোবাইল:")}</strong> ${confirmedOrder.customer.phone}</p>
-                    <p><strong>${t("Address:", "ঠিকানা:")}</strong> ${confirmedOrder.customer.address}</p>
-                  </div>
-                  <div class="border-t border-b border-current/10 py-3 my-3 space-y-2 text-xs">
-                    ${confirmedOrder.items.map((it, idx) => html`
-                      <div key=${idx} class="flex justify-between">
-                        <span>${it.nameEn} (${it.color} / Size: ${it.size}) × ${it.qty}</span>
-                        <span class="font-bold">৳${it.price * it.qty}</span>
-                      </div>
-                    `)}
-                  </div>
-                  <div class="text-xs space-y-1 text-right">
-                    <p class="text-base font-extrabold text-[#822B17]">Total Payable: ৳${confirmedOrder.grandTotal}</p>
-                  </div>
-                  <div class="no-print flex flex-wrap gap-3 justify-center mt-6">
-                    <button onClick=${() => window.print()} class="px-5 py-2.5 rounded-xl bg-[#822B17] text-white text-xs font-bold">
-                      🖨️ ${t("Print Receipt", "রিসিট ডাউনলোড")}
-                    </button>
-                    <button onClick=${() => { setConfirmedOrder(null); setView("store"); }} class="px-5 py-2.5 rounded-xl border border-current/20 text-xs font-bold">
-                      ${t("Back to Store", "হোমে ফিরুন")}
-                    </button>
-                  </div>
-                </div>
-              ` : html`
-                <form onSubmit=${submitOrder} class="grid md:grid-cols-2 gap-6">
-                  <div class="p-5 rounded-2xl border space-y-3.5 ${darkMode ? "bg-[#151515] border-neutral-800" : "bg-white border-[#E2DDD2]"}">
-                    <h2 class="font-extrabold text-lg">${t("Delivery Information", "ডেলিভারি তথ্য")}</h2>
-                    <input required placeholder=${t("Full Name *", "আপনার নাম *")} value=${customerForm.name} onInput=${e => setCustomerForm({ ...customerForm, name: e.target.value })} class="w-full p-3 rounded-lg border border-current/20 bg-transparent text-sm" />
-                    <input required type="tel" placeholder=${t("Mobile Number (11 Digits) *", "মোবাইল নাম্বার *")} value=${customerForm.phone} onInput=${e => setCustomerForm({ ...customerForm, phone: e.target.value })} class="w-full p-3 rounded-lg border border-current/20 bg-transparent text-sm" />
-                    <textarea required rows="2" placeholder=${t("Full Delivery Address *", "পূর্ণ ঠিকানা (বাসা, রোড, থানা, জেলা) *")} value=${customerForm.address} onInput=${e => setCustomerForm({ ...customerForm, address: e.target.value })} class="w-full p-3 rounded-lg border border-current/20 bg-transparent text-sm"></textarea>
-                    <div class="grid grid-cols-2 gap-2.5">
-                      <button type="button" onClick=${() => setCustomerForm({ ...customerForm, zone: "inside" })} class="p-3 rounded-xl border text-xs font-bold text-left ${customerForm.zone === "inside" ? "border-[#822B17] bg-[#822B17]/10" : "border-current/20"}">
-                        <div>${t("Inside Dhaka", "ঢাকার ভেতরে")}</div>
-                        <div class="text-[#822B17] font-extrabold">${isFreeDelivery ? "FREE" : `৳${settings.insideDhaka}`}</div>
-                      </button>
-                      <button type="button" onClick=${() => setCustomerForm({ ...customerForm, zone: "outside" })} class="p-3 rounded-xl border text-xs font-bold text-left ${customerForm.zone === "outside" ? "border-[#822B17] bg-[#822B17]/10" : "border-current/20"}">
-                        <div>${t("Outside Dhaka", "ঢাকার বাইরে")}</div>
-                        <div class="text-[#822B17] font-extrabold">${isFreeDelivery ? "FREE" : `৳${settings.outsideDhaka}`}</div>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div class="p-5 rounded-2xl border flex flex-col justify-between ${darkMode ? "bg-[#151515] border-neutral-800" : "bg-white border-[#E2DDD2]"}">
-                    <div>
-                      <h3 class="font-extrabold text-lg mb-3">${t("Order Summary", "অর্ডার সামারি")}</h3>
-                      <div class="space-y-2.5 max-h-60 overflow-y-auto">
-                        ${cart.map(item => html`
-                          <div key=${item.key} class="flex justify-between items-center text-xs border-b border-current/10 pb-2">
-                            <div>
-                              <p class="font-bold">${t(item.nameEn, item.nameBn)}</p>
-                              <p class="opacity-70">${item.color} • Size: ${item.size} × ${item.qty}</p>
-                            </div>
-                            <span class="font-bold">৳${item.price * item.qty}</span>
-                          </div>
-                        `)}
-                      </div>
-                    </div>
-                    <div class="border-t border-current/10 pt-4 mt-4 space-y-1.5 text-sm">
-                      <div class="flex justify-between"><span>Subtotal</span><span>৳${subtotal}</span></div>
-                      <div class="flex justify-between"><span>Delivery</span><span class="font-bold text-emerald-600">${deliveryCharge === 0 ? "FREE" : `৳${deliveryCharge}`}</span></div>
-                      <div class="flex justify-between text-lg font-extrabold pt-2 border-t border-current/10">
-                        <span>${t("Total Payable", "সর্বমোট")}</span>
-                        <span class="text-[#822B17]">৳${grandTotal}</span>
-                      </div>
-                      <button type="submit" class="w-full mt-4 py-3.5 rounded-xl bg-[#822B17] text-white font-bold text-sm shadow-md">
-                        ${t("Confirm Order (Cash on Delivery)", "অর্ডার কনফার্ম করুন")}
-                      </button>
-                    </div>
-                  </div>
-                </form>
-              `}
-            </div>
-          `}
-
-          ${view === "trial" && html`
-            <div class="max-w-4xl mx-auto px-4 py-8 text-center">
-              <h2 class="text-xl sm:text-2xl font-extrabold mb-4">${t("Smart Mix & Match Trial Studio", "মিক্স অ্যান্ড ম্যাচ ট্রায়াল রুম")}</h2>
-              <div class="grid md:grid-cols-2 gap-6 items-center">
-                <div class="p-4 rounded-2xl border border-[#822B17] bg-white text-black max-w-xs mx-auto w-full space-y-2">
-                  ${(() => {
-                    const tops = products.filter(p => p.category !== "Pants");
-                    const bottoms = products.filter(p => p.category === "Pants");
-                    const topItem = tops[trialTopIdx % Math.max(1, tops.length)] || products[0];
-                    const bottomItem = bottoms[trialBottomIdx % Math.max(1, bottoms.length)] || products[0];
-                    return html`
-                      <div class="aspect-[4/3] overflow-hidden rounded-lg bg-neutral-100">
-                        <img src=${topItem?.colors[0]?.image} class="w-full h-full object-cover" />
-                      </div>
-                      <p class="text-xs font-bold">${topItem?.nameEn}</p>
-                      <div class="aspect-[4/3] overflow-hidden rounded-lg bg-neutral-100">
-                        <img src=${bottomItem?.colors[0]?.image} class="w-full h-full object-cover" />
-                      </div>
-                      <p class="text-xs font-bold">${bottomItem?.nameEn}</p>
-                    `;
-                  })()}
-                </div>
-                <div class="space-y-3">
-                  <button onClick=${() => setTrialTopIdx(trialTopIdx + 1)} class="w-full py-3 rounded-xl border border-current/20 font-bold text-xs">
-                    🔄 ${t("Switch Shirt / Jacket", "অন্য শার্ট বা জ্যাকেট দেখুন")}
+              <nav class="flex md:flex-col overflow-x-auto no-scrollbar p-2 md:p-3 gap-1 text-xs font-medium">
+                ${[
+                  { id: "dashboard", label: "1. Dashboard & Report" },
+                  { id: "orders", label: `2. Orders (${orders.length})` },
+                  { id: "products", label: `3. Products (${products.length})` },
+                  { id: "categories", label: "4. Categories" },
+                  { id: "branding", label: "5. Logo & Banners" },
+                  { id: "settings", label: "6. Delivery & Settings" }
+                ].map(item => html`
+                  <button
+                    key=${item.id}
+                    onClick=${() => setAdminTab(item.id)}
+                    class="text-left px-3.5 py-2.5 whitespace-nowrap transition ${adminTab === item.id ? "bg-white text-[#111111] font-bold" : "text-neutral-300 hover:bg-white/10"}"
+                  >
+                    ${item.label}
                   </button>
-                  <button onClick=${() => setTrialBottomIdx(trialBottomIdx + 1)} class="w-full py-3 rounded-xl border border-current/20 font-bold text-xs">
-                    🔄 ${t("Switch Cargo / Denim Pant", "অন্য কার্গো বা ডেনিম প্যান্ট দেখুন")}
-                  </button>
-                </div>
-              </div>
-            </div>
-          `}
-
-          ${view === "track" && html`
-            <div class="max-w-xl mx-auto px-4 py-10">
-              <h2 class="text-xl font-extrabold mb-3">${t("Track Your Order", "অর্ডার ট্র্যাক করুন")}</h2>
-              <input value=${trackInput} onInput=${e => setTrackInput(e.target.value)} placeholder=${t("Enter Mobile Number or Order ID", "মোবাইল নাম্বার অথবা অর্ডার আইডি দিন")} class="w-full p-3.5 rounded-xl border border-current/20 bg-transparent text-sm mb-6" />
-              <div class="space-y-4">
-                ${orders.filter(o => trackInput && (o.orderId.toLowerCase() === trackInput.toLowerCase() || o.customer.phone.includes(trackInput))).map(ord => html`
-                  <div key=${ord.orderId} class="p-5 rounded-2xl border border-[#822B17] space-y-2 text-xs">
-                    <div class="flex justify-between font-extrabold text-sm">
-                      <span>${ord.orderId}</span>
-                      <span class="px-2.5 py-1 rounded bg-[#822B17] text-white">${ord.status}</span>
-                    </div>
-                    <p>${ord.customer.name} • ${ord.customer.phone}</p>
-                    <p class="font-bold">Total Payable: ৳${ord.grandTotal}</p>
-                  </div>
                 `)}
-              </div>
-            </div>
-          `}
+              </nav>
+            </aside>
 
-          ${view === "admin" && html`
-            <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
-              <div class="flex flex-wrap justify-between items-center gap-3 border-b border-current/15 pb-4">
-                <div>
-                  <h2 class="text-xl sm:text-2xl font-extrabold text-[#822B17]">SMART OUTFIT — Super Admin</h2>
-                  <p class="text-xs opacity-70">Firebase Live Connected • Monthly Accounting & Order Management</p>
+            <!-- Main Admin Content Workspace -->
+            <main class="flex-1 p-4 sm:p-8 max-w-6xl overflow-y-auto">
+              ${toast && html`
+                <div class="fixed top-4 right-4 z-50 bg-[#111111] text-white text-xs font-bold px-4 py-2.5 shadow-lg">
+                  ${toast}
                 </div>
-                <div class="flex flex-wrap gap-2">
-                  ${[
-                    { id: "orders", label: `📦 Orders (${orders.length})` },
-                    { id: "abandoned", label: `⚠️ Incomplete (${abandonedCarts.length})` },
-                    { id: "products", label: `👖 Products (${products.length})` },
-                    { id: "settings", label: "⚙️ Delivery & Pixel" }
-                  ].map(tab => html`
-                    <button key=${tab.id} onClick=${() => setAdminSection(tab.id)} class="px-3.5 py-2 rounded-lg text-xs font-bold transition ${adminSection === tab.id ? "bg-[#822B17] text-white" : "border border-current/20"}">
-                      ${tab.label}
-                    </button>
-                  `)}
-                  <button onClick=${() => setView("store")} class="px-3.5 py-2 rounded-lg border border-current/20 text-xs font-bold">Exit</button>
-                </div>
-              </div>
+              `}
 
-              ${adminSection === "orders" && html`
+              <!-- TAB 1: DASHBOARD & MONTHLY ACCOUNTING -->
+              ${adminTab === "dashboard" && html`
                 <div class="space-y-6">
-                  <div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border border-current/15">
-                    <div class="flex items-center gap-3">
-                      <span class="text-xs font-bold">📅 Filter by Month:</span>
-                      <select value=${monthFilter} onChange=${e => setMonthFilter(e.target.value)} class="p-2 rounded-lg border border-current/20 bg-transparent text-xs font-bold">
-                        ${availableMonths.map(m => html`<option key=${m} value=${m} class="text-black">${m === "ALL" ? "All Months" : m}</option>`)}
-                      </select>
+                  <div class="flex flex-wrap justify-between items-center gap-4 bg-white p-5 border border-neutral-200">
+                    <div>
+                      <h2 class="text-base font-bold uppercase tracking-wide">Monthly Accounting & Overview</h2>
+                      <p class="text-xs text-neutral-500 mt-0.5">Track monthly revenue, pending courier cash, and returns</p>
                     </div>
-                    <button onClick=${() => downloadOrdersCSV(filteredAdminOrders)} class="px-4 py-2 rounded-lg bg-emerald-700 text-white text-xs font-bold">
-                      📥 Download Excel / CSV (${filteredAdminOrders.length})
-                    </button>
+                    <div class="flex items-center gap-3">
+                      <select value=${monthFilter} onChange=${e => setMonthFilter(e.target.value)} class="px-3 py-2 border border-neutral-300 text-xs font-semibold bg-white">
+                        ${availableMonths.map(m => html`<option key=${m} value=${m}>${m === "ALL" ? "All Time" : `Month: ${m}`}</option>`)}
+                      </select>
+                      <button onClick=${() => downloadOrdersCSV(filteredAdminOrders)} class="px-4 py-2 bg-[#111111] text-white text-xs font-bold uppercase tracking-wider">
+                        Download Excel (${filteredAdminOrders.length})
+                      </button>
+                    </div>
                   </div>
 
                   <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="p-4 rounded-xl border border-current/15">
-                      <p class="text-xs opacity-60">Total Orders (${monthFilter})</p>
-                      <p class="text-2xl font-extrabold mt-1">${monthlyStats.totalCount}</p>
+                    <div class="bg-white p-5 border border-neutral-200">
+                      <p class="text-xs text-neutral-500 uppercase">Total Orders</p>
+                      <p class="text-2xl font-extrabold mt-2">${monthlyStats.totalCount}</p>
                     </div>
-                    <div class="p-4 rounded-xl border border-current/15">
-                      <p class="text-xs opacity-60">Delivered Revenue (${monthlyStats.deliveredCount})</p>
-                      <p class="text-2xl font-extrabold text-emerald-600 mt-1">৳${monthlyStats.deliveredRevenue}</p>
+                    <div class="bg-white p-5 border border-neutral-200">
+                      <p class="text-xs text-neutral-500 uppercase">Delivered Revenue (${monthlyStats.deliveredCount})</p>
+                      <p class="text-2xl font-extrabold text-emerald-700 mt-2">৳ ${monthlyStats.deliveredRevenue}</p>
                     </div>
-                    <div class="p-4 rounded-xl border border-current/15">
-                      <p class="text-xs opacity-60">Pending / In-Courier (${monthlyStats.pendingCount})</p>
-                      <p class="text-2xl font-extrabold text-[#822B17] mt-1">৳${monthlyStats.pendingAmount}</p>
+                    <div class="bg-white p-5 border border-neutral-200">
+                      <p class="text-xs text-neutral-500 uppercase">Pending in Courier (${monthlyStats.pendingCount})</p>
+                      <p class="text-2xl font-extrabold text-amber-700 mt-2">৳ ${monthlyStats.pendingAmount}</p>
                     </div>
-                    <div class="p-4 rounded-xl border border-current/15">
-                      <p class="text-xs opacity-60">Returned / Cancelled</p>
-                      <p class="text-2xl font-extrabold text-red-500 mt-1">${monthlyStats.returnedCount}</p>
+                    <div class="bg-white p-5 border border-neutral-200">
+                      <p class="text-xs text-neutral-500 uppercase">Returned / Cancelled</p>
+                      <p class="text-2xl font-extrabold text-red-600 mt-2">${monthlyStats.returnedCount}</p>
                     </div>
+                  </div>
+                </div>
+              `}
+
+              <!-- TAB 2: ORDERS & INCOMPLETE CHECKOUTS -->
+              ${adminTab === "orders" && html`
+                <div class="space-y-6">
+                  <div class="bg-white p-4 border border-neutral-200 flex flex-wrap justify-between items-center gap-3">
+                    <div class="flex flex-wrap gap-1.5">
+                      ${["ALL", "Pending", "Confirmed", "Shipped", "Delivered", "Returned", "Cancelled"].map(st => html`
+                        <button
+                          key=${st}
+                          onClick=${() => setOrderStatusFilter(st)}
+                          class="px-3 py-1.5 text-xs font-semibold border ${orderStatusFilter === st ? "bg-[#111111] text-white border-[#111111]" : "bg-white text-neutral-700 border-neutral-200"}"
+                        >
+                          ${st}
+                        </button>
+                      `)}
+                    </div>
+                    <button onClick=${() => downloadOrdersCSV(filteredAdminOrders)} class="px-3.5 py-1.5 bg-emerald-700 text-white text-xs font-bold">
+                      Export CSV
+                    </button>
                   </div>
 
                   <div class="space-y-3">
-                    ${filteredAdminOrders.map(ord => html`
-                      <div key=${ord.orderId} class="p-4 rounded-xl border flex flex-col md:flex-row justify-between gap-4 text-xs ${darkMode ? "bg-[#151515] border-neutral-800" : "bg-white border-[#E2DDD2]"}">
+                    ${filteredAdminOrders.length === 0 ? html`
+                      <div class="bg-white p-8 text-center text-xs text-neutral-500 border border-neutral-200">No orders found.</div>
+                    ` : filteredAdminOrders.map(ord => html`
+                      <div key=${ord.orderId} class="bg-white p-5 border border-neutral-200 flex flex-col md:flex-row justify-between gap-4 text-xs">
                         <div class="space-y-1">
-                          <span class="font-extrabold text-sm text-[#822B17]">${ord.orderId}</span> • <span class="opacity-60">${ord.dateFormatted}</span>
-                          <p class="font-bold text-sm">${ord.customer.name} — <span class="text-[#822B17]">${ord.customer.phone}</span></p>
-                          <p class="opacity-80">${ord.customer.address}</p>
-                          <div class="pt-1 font-semibold text-[#822B17]">
-                            ${ord.items.map((it, i) => html`<div key=${i}>• ${it.nameEn} (${it.color} | Size: ${it.size}) × ${it.qty}</div>`)}
+                          <div class="flex items-center gap-2">
+                            <span class="font-extrabold text-sm">${ord.orderId}</span>
+                            <span class="text-neutral-400">|</span>
+                            <span class="text-neutral-500">${ord.dateFormatted}</span>
+                          </div>
+                          <p class="font-bold text-sm">${ord.customer.name} — <a href="tel:${ord.customer.phone}" class="underline">${ord.customer.phone}</a></p>
+                          <p class="text-neutral-600">${ord.customer.address}</p>
+                          <div class="pt-2 space-y-1">
+                            ${ord.items.map((it, i) => html`
+                              <div key=${i} class="font-medium text-[#111111]">• ${it.nameEn} (${it.color} | Size: ${it.size}) × ${it.qty}</div>
+                            `)}
                           </div>
                         </div>
-                        <div class="flex flex-col justify-between items-start md:items-end gap-2">
-                          <span class="text-base font-extrabold">COD: ৳${ord.grandTotal}</span>
+
+                        <div class="flex flex-col justify-between items-start md:items-end gap-3">
+                          <span class="text-base font-extrabold">Total: ৳ ${ord.grandTotal}</span>
                           <div class="flex flex-wrap gap-2">
                             <button
                               onClick=${() => {
-                                const text = `${ord.orderId}\t${ord.customer.name}\t${ord.customer.phone}\t${ord.customer.address}\t${ord.items.map(i => `${i.nameEn}(${i.color}-${i.size})x${i.qty}`).join(", ")}\t${ord.grandTotal}`;
-                                navigator.clipboard.writeText(text);
-                                notify("Copied for Google Sheet!");
+                                const row = `${ord.orderId}\t${ord.customer.name}\t${ord.customer.phone}\t${ord.customer.address}\t${ord.items.map(i => `${i.nameEn}(${i.color}-${i.size})x${i.qty}`).join(", ")}\t${ord.grandTotal}`;
+                                navigator.clipboard.writeText(row);
+                                notify("Copied for Sheet / Steadfast");
                               }}
-                              class="px-3 py-1.5 rounded-lg border border-current/20 font-bold"
+                              class="px-3 py-1.5 border border-neutral-300 font-semibold hover:bg-neutral-100"
                             >
-                              📋 Copy Info
+                              Copy Row
                             </button>
-                            <select value=${ord.status} onChange=${e => handleOrderStatusChange(ord.orderId, e.target.value)} class="px-3 py-1.5 rounded-lg bg-[#822B17] text-white font-bold">
+                            <button
+                              onClick=${() => { setConfirmedOrder(ord); setView("checkout"); }}
+                              class="px-3 py-1.5 border border-neutral-300 font-semibold hover:bg-neutral-100"
+                            >
+                              Invoice PDF
+                            </button>
+                            <select
+                              value=${ord.status}
+                              onChange=${e => handleOrderStatusChange(ord.orderId, e.target.value)}
+                              class="px-3 py-1.5 bg-[#111111] text-white font-semibold"
+                            >
                               <option value="Pending">Pending</option>
                               <option value="Confirmed">Confirmed</option>
                               <option value="Shipped">Shipped</option>
@@ -1230,84 +893,1142 @@
                       </div>
                     `)}
                   </div>
-                </div>
-              `}
 
-              ${adminSection === "abandoned" && html`
-                <div class="space-y-3">
-                  ${abandonedCarts.map(abd => html`
-                    <div key=${abd.id} class="p-4 rounded-xl border border-amber-500/40 flex justify-between items-center text-xs">
-                      <div>
-                        <p class="font-bold text-sm">${abd.name} — <span class="text-[#822B17]">${abd.phone}</span></p>
-                        <p class="opacity-75">${abd.items} — <strong>৳${abd.total}</strong></p>
-                      </div>
-                      <a href="tel:${abd.phone}" class="px-3 py-2 rounded-lg bg-[#822B17] text-white font-bold">📞 Call</a>
-                    </div>
-                  `)}
-                </div>
-              `}
-
-              ${adminSection === "products" && html`
-                <div class="grid md:grid-cols-2 gap-4">
-                  ${products.map((p, idx) => html`
-                    <div key=${p.id} class="p-4 rounded-xl border border-current/15 space-y-2 text-xs">
-                      <span class="font-extrabold text-[#822B17]">${p.id}</span>
-                      <input value=${p.nameEn} onInput=${e => { const u = [...products]; u[idx].nameEn = e.target.value; setProducts(u); syncData("so_v2_products", u, "products"); }} class="w-full p-2 rounded border border-current/20 bg-transparent font-bold" />
-                      <input value=${p.nameBn} onInput=${e => { const u = [...products]; u[idx].nameBn = e.target.value; setProducts(u); syncData("so_v2_products", u, "products"); }} class="w-full p-2 rounded border border-current/20 bg-transparent" />
-                      <div class="grid grid-cols-2 gap-2">
-                        <input type="number" value=${p.regularPrice} onInput=${e => { const u = [...products]; u[idx].regularPrice = Number(e.target.value); setProducts(u); syncData("so_v2_products", u, "products"); }} class="p-2 rounded border border-current/20 bg-transparent" />
-                        <input type="number" value=${p.discountPrice} onInput=${e => { const u = [...products]; u[idx].discountPrice = Number(e.target.value); setProducts(u); syncData("so_v2_products", u, "products"); }} class="p-2 rounded border border-current/20 bg-transparent font-bold text-[#822B17]" />
+                  <!-- Incomplete / Abandoned Orders Box -->
+                  ${abandonedCarts.length > 0 && html`
+                    <div class="bg-white p-5 border border-neutral-200 mt-8">
+                      <h3 class="text-xs font-bold uppercase tracking-wider mb-3 text-amber-700">Incomplete Orders (${abandonedCarts.length})</h3>
+                      <div class="space-y-2">
+                        ${abandonedCarts.map(abd => html`
+                          <div key=${abd.id} class="p-3 border border-neutral-200 flex justify-between items-center text-xs">
+                            <div>
+                              <p class="font-bold">${abd.name} — ${abd.phone}</p>
+                              <p class="text-neutral-500">${abd.items} (৳ ${abd.total})</p>
+                            </div>
+                            <a href="tel:${abd.phone}" class="px-3 py-1.5 bg-[#111111] text-white font-bold">Call Customer</a>
+                          </div>
+                        `)}
                       </div>
                     </div>
-                  `)}
+                  `}
                 </div>
               `}
 
-              ${adminSection === "settings" && html`
-                <div class="grid md:grid-cols-2 gap-6 text-xs">
-                  <div class="p-5 rounded-xl border border-current/15 space-y-3">
-                    <h3 class="font-extrabold text-sm text-[#822B17]">Delivery & WhatsApp Control</h3>
-                    <label class="flex items-center justify-between font-bold">
-                      <span>Global Free Delivery</span>
-                      <input type="checkbox" checked=${settings.globalFreeDelivery} onChange=${e => { const u = { ...settings, globalFreeDelivery: e.target.checked }; setSettings(u); syncData("so_v2_settings", u, "settings"); }} />
-                    </label>
-                    <input value=${settings.whatsapp} onInput=${e => { const u = { ...settings, whatsapp: e.target.value }; setSettings(u); syncData("so_v2_settings", u, "settings"); }} placeholder="WhatsApp Number" class="w-full p-2 rounded border border-current/20 bg-transparent" />
+              <!-- TAB 3: PRODUCTS MANAGER (UNLIMITED COLORS & DIRECT PHOTO UPLOAD) -->
+              ${adminTab === "products" && html`
+                <div class="space-y-6">
+                  <div class="flex justify-between items-center bg-white p-5 border border-neutral-200">
+                    <div>
+                      <h2 class="text-base font-bold uppercase">Products Catalog (${products.length})</h2>
+                      <p class="text-xs text-neutral-500">Add products, multiple colors, and upload photos from mobile or PC</p>
+                    </div>
+                    <button onClick=${startNewProduct} class="px-4 py-2.5 bg-[#111111] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <${IconPlus}/> Add New Product
+                    </button>
                   </div>
+
+                  <!-- Product Add / Edit Form Modal -->
+                  ${editingProduct && html`
+                    <form onSubmit=${saveEditedProduct} class="bg-white p-6 border-2 border-[#111111] space-y-5 text-xs">
+                      <div class="flex justify-between items-center border-b border-neutral-200 pb-3">
+                        <h3 class="font-bold text-sm uppercase">Product Details & Color Variants</h3>
+                        <button type="button" onClick=${() => setEditingProduct(null)} class="text-neutral-500 hover:text-black font-bold">Close ✕</button>
+                      </div>
+
+                      <div class="grid md:grid-cols-3 gap-4">
+                        <div>
+                          <label class="block font-semibold mb-1">Product Name (English) *</label>
+                          <input required value=${editingProduct.nameEn} onInput=${e => setEditingProduct({ ...editingProduct, nameEn: e.target.value })} class="w-full p-2.5 border border-neutral-300" placeholder="e.g. Mens Six Pocket Cargo Pant" />
+                        </div>
+                        <div>
+                          <label class="block font-semibold mb-1">Product Name (Bangla)</label>
+                          <input value=${editingProduct.nameBn} onInput=${e => setEditingProduct({ ...editingProduct, nameBn: e.target.value })} class="w-full p-2.5 border border-neutral-300" placeholder="সিক্স পকেট কার্গো প্যান্ট" />
+                        </div>
+                        <div>
+                          <label class="block font-semibold mb-1">SKU Code</label>
+                          <input value=${editingProduct.sku} onInput=${e => setEditingProduct({ ...editingProduct, sku: e.target.value })} class="w-full p-2.5 border border-neutral-300" />
+                        </div>
+                      </div>
+
+                      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                          <label class="block font-semibold mb-1">Main Category</label>
+                          <select
+                            value=${editingProduct.mainCategory}
+                            onChange=${e => {
+                              const mc = e.target.value;
+                              const firstSub = settings.subCategories?.[mc]?.[0] || "";
+                              setEditingProduct({ ...editingProduct, mainCategory: mc, subCategory: firstSub });
+                            }}
+                            class="w-full p-2.5 border border-neutral-300 bg-white"
+                          >
+                            ${settings.mainCategories.map(mc => html`<option key=${mc} value=${mc}>${mc}</option>`)}
+                          </select>
+                        </div>
+                        <div>
+                          <label class="block font-semibold mb-1">Sub-Category</label>
+                          <select
+                            value=${editingProduct.subCategory}
+                            onChange=${e => setEditingProduct({ ...editingProduct, subCategory: e.target.value })}
+                            class="w-full p-2.5 border border-neutral-300 bg-white"
+                          >
+                            ${(settings.subCategories?.[editingProduct.mainCategory] || []).map(sc => html`<option key=${sc} value=${sc}>${sc}</option>`)}
+                          </select>
+                        </div>
+                        <div>
+                          <label class="block font-semibold mb-1">Regular Price (৳)</label>
+                          <input type="number" value=${editingProduct.regularPrice} onInput=${e => setEditingProduct({ ...editingProduct, regularPrice: Number(e.target.value) })} class="w-full p-2.5 border border-neutral-300" />
+                        </div>
+                        <div>
+                          <label class="block font-semibold mb-1">Selling / Discount Price (৳)</label>
+                          <input type="number" value=${editingProduct.discountPrice} onInput=${e => setEditingProduct({ ...editingProduct, discountPrice: Number(e.target.value) })} class="w-full p-2.5 border border-neutral-300 font-bold" />
+                        </div>
+                      </div>
+
+                      <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <label class="block font-semibold mb-1">Fabric & Quality Specs</label>
+                          <input value=${editingProduct.fabricSpecs} onInput=${e => setEditingProduct({ ...editingProduct, fabricSpecs: e.target.value })} class="w-full p-2.5 border border-neutral-300" />
+                        </div>
+                        <div>
+                          <label class="block font-semibold mb-1">Size Measurement Guide</label>
+                          <input value=${editingProduct.sizeChart} onInput=${e => setEditingProduct({ ...editingProduct, sizeChart: e.target.value })} class="w-full p-2.5 border border-neutral-300" />
+                        </div>
+                      </div>
+
+                      <!-- Dynamic Multi-Color & Photo Uploader -->
+                      <div class="border-t border-neutral-200 pt-4">
+                        <div class="flex justify-between items-center mb-3">
+                          <span class="font-bold uppercase tracking-wide">Color Variants & Photos (${editingProduct.colors.length})</span>
+                          <button
+                            type="button"
+                            onClick=${() => setEditingProduct({
+                              ...editingProduct,
+                              colors: [...editingProduct.colors, { name: "New Color", hex: "#333333", image: "", sizes: "28,30,32,34,36" }]
+                            })}
+                            class="px-3 py-1.5 bg-[#111111] text-white font-bold"
+                          >
+                            + Add Another Color
+                          </button>
+                        </div>
+
+                        <div class="space-y-3">
+                          ${editingProduct.colors.map((col, cIdx) => html`
+                            <div key=${cIdx} class="p-3.5 bg-[#F7F7F8] border border-neutral-200 grid md:grid-cols-5 gap-3 items-center">
+                              <div>
+                                <label class="block text-[11px] text-neutral-500 mb-1">Color Name</label>
+                                <input
+                                  value=${col.name}
+                                  onInput=${e => {
+                                    const copy = [...editingProduct.colors];
+                                    copy[cIdx].name = e.target.value;
+                                    setEditingProduct({ ...editingProduct, colors: copy });
+                                  }}
+                                  class="w-full p-2 border border-neutral-300 bg-white"
+                                  placeholder="e.g. Camel Brown"
+                                />
+                              </div>
+
+                              <div>
+                                <label class="block text-[11px] text-neutral-500 mb-1">Color Swatch</label>
+                                <input
+                                  type="color"
+                                  value=${col.hex || "#111111"}
+                                  onInput=${e => {
+                                    const copy = [...editingProduct.colors];
+                                    copy[cIdx].hex = e.target.value;
+                                    setEditingProduct({ ...editingProduct, colors: copy });
+                                  }}
+                                  class="w-full h-9 border border-neutral-300 bg-white cursor-pointer"
+                                />
+                              </div>
+
+                              <div>
+                                <label class="block text-[11px] text-neutral-500 mb-1">Available Sizes (Comma separated)</label>
+                                <input
+                                  value=${col.sizes}
+                                  onInput=${e => {
+                                    const copy = [...editingProduct.colors];
+                                    copy[cIdx].sizes = e.target.value;
+                                    setEditingProduct({ ...editingProduct, colors: copy });
+                                  }}
+                                  class="w-full p-2 border border-neutral-300 bg-white"
+                                  placeholder="28,30,32,34,36"
+                                />
+                              </div>
+
+                              <div class="md:col-span-2 flex items-center gap-2">
+                                ${col.image && html`<img src=${col.image} class="w-12 h-14 object-cover border border-neutral-300 flex-shrink-0" />`}
+                                <div class="flex-1 space-y-1">
+                                  <label class="block px-3 py-1.5 bg-white border border-neutral-300 text-center font-semibold cursor-pointer hover:border-black">
+                                    Upload Photo from Device
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      class="hidden"
+                                      onChange=${async (e) => {
+                                        if (e.target.files?.[0]) {
+                                          const webp = await compressImageToWebP(e.target.files[0], 900);
+                                          const copy = [...editingProduct.colors];
+                                          copy[cIdx].image = webp;
+                                          setEditingProduct({ ...editingProduct, colors: copy });
+                                        }
+                                      }}
+                                    />
+                                  </label>
+                                  <input
+                                    value=${col.image}
+                                    onInput=${e => {
+                                      const copy = [...editingProduct.colors];
+                                      copy[cIdx].image = e.target.value;
+                                      setEditingProduct({ ...editingProduct, colors: copy });
+                                    }}
+                                    placeholder="Or paste image URL"
+                                    class="w-full p-1.5 border border-neutral-300 bg-white text-[11px]"
+                                  />
+                                </div>
+                                ${editingProduct.colors.length > 1 && html`
+                                  <button
+                                    type="button"
+                                    onClick=${() => setEditingProduct({
+                                      ...editingProduct,
+                                      colors: editingProduct.colors.filter((_, i) => i !== cIdx)
+                                    })}
+                                    class="text-red-600 font-bold px-2"
+                                  >
+                                    ✕
+                                  </button>
+                                `}
+                              </div>
+                            </div>
+                          `)}
+                        </div>
+                      </div>
+
+                      <div class="flex justify-end gap-3 pt-3 border-t border-neutral-200">
+                        <button type="button" onClick=${() => setEditingProduct(null)} class="px-5 py-2.5 border border-neutral-300 font-semibold">Cancel</button>
+                        <button type="submit" class="px-6 py-2.5 bg-[#111111] text-white font-bold uppercase tracking-wider">Save Product</button>
+                      </div>
+                    </form>
+                  `}
+
+                  <!-- Existing Products List -->
+                  <div class="grid md:grid-cols-2 gap-4">
+                    ${products.map((p, idx) => html`
+                      <div key=${p.id} class="bg-white p-4 border border-neutral-200 flex gap-4 items-center text-xs">
+                        <img src=${p.colors[0]?.image} class="w-16 h-20 object-cover bg-neutral-100 flex-shrink-0" />
+                        <div class="flex-1 min-w-0">
+                          <span class="text-[10px] font-bold uppercase text-neutral-400">${p.mainCategory} / ${p.subCategory}</span>
+                          <h4 class="font-bold text-sm truncate">${p.nameEn}</h4>
+                          <p class="font-bold mt-1">৳ ${p.discountPrice} <span class="line-through text-neutral-400 font-normal ml-1">৳ ${p.regularPrice}</span></p>
+                          <p class="text-[11px] text-neutral-500 mt-0.5">${p.colors.length} Colors Available</p>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                          <button onClick=${() => setEditingProduct(JSON.parse(JSON.stringify(p)))} class="px-3 py-1.5 bg-[#111111] text-white font-semibold">Edit</button>
+                          <button
+                            onClick=${() => {
+                              const updated = products.filter((_, i) => i !== idx);
+                              setProducts(updated);
+                              syncData("so_v3_products", updated, "products");
+                              notify("Product Deleted");
+                            }}
+                            class="px-3 py-1.5 border border-red-200 text-red-600 font-semibold"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    `)}
+                  </div>
+                </div>
+              `}
+
+              <!-- TAB 4: CATEGORIES & SUB-CATEGORIES MANAGER -->
+              ${adminTab === "categories" && html`
+                <div class="space-y-6 text-xs">
+                  <div class="bg-white p-6 border border-neutral-200 space-y-4">
+                    <h2 class="text-sm font-bold uppercase">Manage Sub-Categories (Under MEN, WOMEN, WINTER, COMBO)</h2>
+                    <div class="flex flex-wrap gap-3">
+                      <select value=${newSubCatInput.main} onChange=${e => setNewSubCatInput({ ...newSubCatInput, main: e.target.value })} class="p-2.5 border border-neutral-300 bg-white font-semibold">
+                        ${settings.mainCategories.map(mc => html`<option key=${mc} value=${mc}>${mc}</option>`)}
+                      </select>
+                      <input
+                        value=${newSubCatInput.name}
+                        onInput=${e => setNewSubCatInput({ ...newSubCatInput, name: e.target.value })}
+                        placeholder="New Sub-Category Name (e.g. Chino Pants)"
+                        class="flex-1 p-2.5 border border-neutral-300"
+                      />
+                      <button
+                        onClick=${() => {
+                          if (!newSubCatInput.name.trim()) return;
+                          const currentList = settings.subCategories[newSubCatInput.main] || [];
+                          const updatedSubs = {
+                            ...settings.subCategories,
+                            [newSubCatInput.main]: [...currentList, newSubCatInput.name.trim()]
+                          };
+                          const updatedSettings = { ...settings, subCategories: updatedSubs };
+                          setSettings(updatedSettings);
+                          syncData("so_v3_settings", updatedSettings, "settings");
+                          setNewSubCatInput({ ...newSubCatInput, name: "" });
+                          notify("Sub-Category Added");
+                        }}
+                        class="px-5 py-2.5 bg-[#111111] text-white font-bold uppercase"
+                      >
+                        + Add Sub-Category
+                      </button>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-4 pt-4">
+                      ${settings.mainCategories.map(mc => html`
+                        <div key=${mc} class="p-4 border border-neutral-200 bg-[#F7F7F8]">
+                          <h3 class="font-bold text-sm mb-2">${mc}</h3>
+                          <div class="flex flex-wrap gap-2">
+                            ${(settings.subCategories?.[mc] || []).map((sc, sIdx) => html`
+                              <span key=${sIdx} class="px-2.5 py-1 bg-white border border-neutral-300 flex items-center gap-2 font-medium">
+                                ${sc}
+                                <button
+                                  onClick=${() => {
+                                    const updatedList = settings.subCategories[mc].filter((_, i) => i !== sIdx);
+                                    const updatedSettings = {
+                                      ...settings,
+                                      subCategories: { ...settings.subCategories, [mc]: updatedList }
+                                    };
+                                    setSettings(updatedSettings);
+                                    syncData("so_v3_settings", updatedSettings, "settings");
+                                  }}
+                                  class="text-red-500 font-bold"
+                                >
+                                  ✕
+                                </button>
+                              </span>
+                            `)}
+                          </div>
+                        </div>
+                      `)}
+                    </div>
+                  </div>
+                </div>
+              `}
+
+              <!-- TAB 5: LOGO, FAVICON & HERO BANNER UPLOAD -->
+              ${adminTab === "branding" && html`
+                <div class="space-y-6 text-xs">
+                  <div class="bg-white p-6 border border-neutral-200 space-y-5">
+                    <h2 class="text-sm font-bold uppercase">Brand Logo, Browser Tab Favicon & Main Hero Banner</h2>
+
+                    <div class="grid md:grid-cols-2 gap-6">
+                      <!-- Logo & Favicon Upload -->
+                      <div class="p-4 border border-neutral-200 space-y-3">
+                        <h3 class="font-bold uppercase">1. Website Logo & Browser Tab Icon (Favicon)</h3>
+                        ${settings.logoUrl && html`<img src=${settings.logoUrl} class="h-12 object-contain border border-neutral-200 p-1 bg-white" />`}
+                        <label class="block px-4 py-2.5 bg-[#111111] text-white text-center font-bold cursor-pointer">
+                          Upload Brand Logo from Device
+                          <input
+                            type="file"
+                            accept="image/*"
+                            class="hidden"
+                            onChange=${async (e) => {
+                              if (e.target.files?.[0]) {
+                                const webp = await compressImageToWebP(e.target.files[0], 400);
+                                const updated = { ...settings, logoUrl: webp, faviconUrl: webp };
+                                setSettings(updated);
+                                syncData("so_v3_settings", updated, "settings");
+                                notify("Logo & Tab Icon Updated");
+                              }
+                            }}
+                          />
+                        </label>
+                        <input
+                          value=${settings.logoUrl}
+                          onInput=${e => {
+                            const updated = { ...settings, logoUrl: e.target.value, faviconUrl: e.target.value };
+                            setSettings(updated);
+                            syncData("so_v3_settings", updated, "settings");
+                          }}
+                          placeholder="Or paste Logo Image URL"
+                          class="w-full p-2 border border-neutral-300"
+                        />
+                      </div>
+
+                      <!-- Full-Width Clean Hero Banner Upload -->
+                      <div class="p-4 border border-neutral-200 space-y-3">
+                        <h3 class="font-bold uppercase">2. Homepage Full-Width Hero Banner</h3>
+                        ${settings.heroBannerUrl && html`<img src=${settings.heroBannerUrl} class="w-full h-24 object-cover border border-neutral-200" />`}
+                        <label class="block px-4 py-2.5 bg-[#111111] text-white text-center font-bold cursor-pointer">
+                          Upload Hero Banner Image
+                          <input
+                            type="file"
+                            accept="image/*"
+                            class="hidden"
+                            onChange=${async (e) => {
+                              if (e.target.files?.[0]) {
+                                const webp = await compressImageToWebP(e.target.files[0], 1600, 0.85);
+                                const updated = { ...settings, heroBannerUrl: webp };
+                                setSettings(updated);
+                                syncData("so_v3_settings", updated, "settings");
+                                notify("Hero Banner Updated");
+                              }
+                            }}
+                          />
+                        </label>
+                        <input
+                          value=${settings.heroBannerUrl}
+                          onInput=${e => {
+                            const updated = { ...settings, heroBannerUrl: e.target.value };
+                            setSettings(updated);
+                            syncData("so_v3_settings", updated, "settings");
+                          }}
+                          placeholder="Or paste Banner Image URL"
+                          class="w-full p-2 border border-neutral-300"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `}
+
+              <!-- TAB 6: DELIVERY, AUTO-EMAIL & SECURITY SETTINGS -->
+              ${adminTab === "settings" && html`
+                <div class="grid md:grid-cols-2 gap-6 text-xs">
+                  <div class="bg-white p-6 border border-neutral-200 space-y-4">
+                    <h3 class="font-bold text-sm uppercase">Delivery Charge & Free Delivery Rules</h3>
+                    <label class="flex items-center justify-between p-3 bg-[#F7F7F8] border border-neutral-200 font-bold cursor-pointer">
+                      <span>1-Click Global Free Delivery (All Orders)</span>
+                      <input
+                        type="checkbox"
+                        checked=${settings.globalFreeDelivery}
+                        onChange=${e => {
+                          const u = { ...settings, globalFreeDelivery: e.target.checked };
+                          setSettings(u);
+                          syncData("so_v3_settings", u, "settings");
+                        }}
+                      />
+                    </label>
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="block font-semibold mb-1">Inside Dhaka (৳)</label>
+                        <input type="number" value=${settings.insideDhaka} onInput=${e => { const u = { ...settings, insideDhaka: Number(e.target.value) }; setSettings(u); syncData("so_v3_settings", u, "settings"); }} class="w-full p-2.5 border border-neutral-300" />
+                      </div>
+                      <div>
+                        <label class="block font-semibold mb-1">Outside Dhaka (৳)</label>
+                        <input type="number" value=${settings.outsideDhaka} onInput=${e => { const u = { ...settings, outsideDhaka: Number(e.target.value) }; setSettings(u); syncData("so_v3_settings", u, "settings"); }} class="w-full p-2.5 border border-neutral-300" />
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block font-semibold mb-1">Minimum Order Amount for Auto Free Delivery (৳)</label>
+                      <input type="number" value=${settings.minSpendFreeDelivery} onInput=${e => { const u = { ...settings, minSpendFreeDelivery: Number(e.target.value) }; setSettings(u); syncData("so_v3_settings", u, "settings"); }} class="w-full p-2.5 border border-neutral-300" />
+                    </div>
+                  </div>
+
+                  <div class="bg-white p-6 border border-neutral-200 space-y-4">
+                    <h3 class="font-bold text-sm uppercase">Auto Order Email, WhatsApp & Admin PIN</h3>
+                    <div>
+                      <label class="block font-semibold mb-1">Admin Notification Email (Receives Order Alerts)</label>
+                      <input type="email" value=${settings.adminEmail} onInput=${e => { const u = { ...settings, adminEmail: e.target.value }; setSettings(u); syncData("so_v3_settings", u, "settings"); }} placeholder="yourname@gmail.com" class="w-full p-2.5 border border-neutral-300" />
+                    </div>
+                    <div>
+                      <label class="block font-semibold mb-1">Google Script Email Webhook URL (For Customer Auto-Email)</label>
+                      <input value=${settings.emailWebhookUrl} onInput=${e => { const u = { ...settings, emailWebhookUrl: e.target.value }; setSettings(u); syncData("so_v3_settings", u, "settings"); }} placeholder="https://script.google.com/macros/s/..." class="w-full p-2.5 border border-neutral-300" />
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="block font-semibold mb-1">WhatsApp / Helpline</label>
+                        <input value=${settings.whatsapp} onInput=${e => { const u = { ...settings, whatsapp: e.target.value, helpline: e.target.value }; setSettings(u); syncData("so_v3_settings", u, "settings"); }} class="w-full p-2.5 border border-neutral-300" />
+                      </div>
+                      <div>
+                        <label class="block font-semibold mb-1">Admin Login Password / PIN</label>
+                        <input value=${settings.adminPin} onInput=${e => { const u = { ...settings, adminPin: e.target.value }; setSettings(u); syncData("so_v3_settings", u, "settings"); }} class="w-full p-2.5 border border-neutral-300 font-bold" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `}
+            </main>
+          </div>
+        `;
+      }
+
+      // ============================================================================
+      // PUBLIC STOREFRONT VIEW (EXACT FABRILIFE CLEAN WHITE DESIGN)
+      // ============================================================================
+      return html`
+        <div class="min-h-screen flex flex-col bg-white text-[#111111]">
+          
+          ${toast && html`
+            <div class="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#111111] text-white text-xs font-semibold px-5 py-2.5 shadow-md">
+              ${toast}
+            </div>
+          `}
+
+          <!-- FABRILIFE-STYLE PURE WHITE STICKY HEADER (NO TOP CLUTTER BAR) -->
+          <header class="sticky top-0 z-40 bg-white border-b border-neutral-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-4">
+              
+              <!-- Left: Brand Logo & 4 Main Categories -->
+              <div class="flex items-center gap-8">
+                <div
+                  onClick=${() => { setView("store"); setActiveMainCat("ALL"); setActiveSubCat("ALL"); setSearchQuery(""); }}
+                  class="cursor-pointer flex items-center gap-2.5 select-none"
+                >
+                  ${settings.logoUrl ? html`
+                    <img src=${settings.logoUrl} alt=${settings.brandName} class="h-8 sm:h-10 object-contain" />
+                  ` : html`
+                    <div class="flex items-center gap-2">
+                      <div class="w-8 h-8 bg-[#111111] text-white flex items-center justify-center font-extrabold text-base tracking-tighter">S</div>
+                      <span class="font-extrabold text-lg sm:text-xl tracking-tight uppercase">${settings.brandName}</span>
+                    </div>
+                  `}
+                </div>
+
+                <!-- 4 Main Categories with Clean Sub-Category Dropdown -->
+                <nav class="hidden lg:flex items-center gap-7 text-xs font-bold uppercase tracking-wider">
+                  ${settings.mainCategories.map(mc => html`
+                    <div
+                      key=${mc}
+                      class="relative py-6"
+                      onMouseEnter=${() => setHoveredMainCat(mc)}
+                      onMouseLeave=${() => setHoveredMainCat(null)}
+                    >
+                      <button
+                        onClick=${() => { setView("store"); setActiveMainCat(mc); setActiveSubCat("ALL"); }}
+                        class="hover:text-[#822B17] transition ${activeMainCat === mc && view === "store" ? "text-[#822B17] underline underline-offset-8 decoration-2" : "text-[#111111]"}"
+                      >
+                        ${mc}
+                      </button>
+
+                      <!-- Dropdown Menu -->
+                      ${hoveredMainCat === mc && (settings.subCategories?.[mc]?.length > 0) && html`
+                        <div class="absolute left-0 top-full w-52 bg-white border border-neutral-200 shadow-lg py-2 z-50">
+                          ${settings.subCategories[mc].map(sc => html`
+                            <button
+                              key=${sc}
+                              onClick=${() => {
+                                setView("store");
+                                setActiveMainCat(mc);
+                                setActiveSubCat(sc);
+                                setHoveredMainCat(null);
+                              }}
+                              class="block w-full text-left px-4 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-100 hover:text-black capitalize tracking-normal"
+                            >
+                              ${sc}
+                            </button>
+                          `)}
+                        </div>
+                      `}
+                    </div>
+                  `)}
+                </nav>
+              </div>
+
+              <!-- Center/Right: Clean Search Box & 4 Line Icons with Labels -->
+              <div class="flex items-center gap-4 sm:gap-6">
+                <div class="hidden md:flex items-center bg-[#F5F5F6] px-3.5 py-2 w-60 lg:w-72 border border-transparent focus-within:border-neutral-300 focus-within:bg-white transition">
+                  <span class="text-neutral-400 mr-2"><${IconSearch}/></span>
+                  <input
+                    value=${searchQuery}
+                    onInput=${e => { setSearchQuery(e.target.value); setView("store"); }}
+                    placeholder=${t("Search Cargo, Denim, Shirt...", "প্যান্ট, শার্ট বা জ্যাকেট খুঁজুন...")}
+                    class="bg-transparent text-xs w-full outline-none text-[#111111]"
+                  />
+                </div>
+
+                <!-- 4 Clean Line Icons (Track, Profile, Wishlist, Bag) -->
+                <div class="flex items-center gap-4 sm:gap-5 text-[#111111]">
+                  <button onClick=${() => setView("track")} class="flex flex-col items-center gap-0.5 hover:opacity-70 transition">
+                    <${IconTrack}/>
+                    <span class="text-[10px] font-medium">${t("Track", "ট্র্যাক")}</span>
+                  </button>
+
+                  <button onClick=${() => setLang(lang === "en" ? "bn" : "en")} class="flex flex-col items-center gap-0.5 hover:opacity-70 transition" title="Switch Language">
+                    <${IconUser}/>
+                    <span class="text-[10px] font-medium">${lang === "en" ? "বাংলা" : "EN"}</span>
+                  </button>
+
+                  <button onClick=${() => setView("wishlist")} class="relative flex flex-col items-center gap-0.5 hover:opacity-70 transition">
+                    <${IconHeart}/>
+                    <span class="text-[10px] font-medium">${t("Wishlist", "উইশলিস্ট")}</span>
+                    ${wishlist.length > 0 && html`<span class="absolute -top-1 right-1 w-3.5 h-3.5 rounded-full bg-[#822B17] text-white text-[9px] flex items-center justify-center font-bold">${wishlist.length}</span>`}
+                  </button>
+
+                  <button onClick=${() => setCartOpen(true)} class="relative flex flex-col items-center gap-0.5 hover:opacity-70 transition">
+                    <${IconBag}/>
+                    <span class="text-[10px] font-medium">${t("Bag", "ব্যাগ")}</span>
+                    ${totalItemsCount > 0 && html`<span class="absolute -top-1 right-0 w-4 h-4 rounded-full bg-[#111111] text-white text-[9px] flex items-center justify-center font-bold">${totalItemsCount}</span>`}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mobile Category & Search Strip -->
+            <div class="lg:hidden border-t border-neutral-100 px-4 py-2 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+              <div class="flex items-center gap-4 text-xs font-bold uppercase tracking-wider">
+                <button onClick=${() => { setView("store"); setActiveMainCat("ALL"); setActiveSubCat("ALL"); }} class="${activeMainCat === "ALL" ? "text-[#822B17]" : "text-neutral-600"}">ALL</button>
+                ${settings.mainCategories.map(mc => html`
+                  <button
+                    key=${mc}
+                    onClick=${() => { setView("store"); setActiveMainCat(mc); setActiveSubCat("ALL"); }}
+                    class="whitespace-nowrap ${activeMainCat === mc ? "text-[#822B17] underline underline-offset-4" : "text-neutral-600"}"
+                  >
+                    ${mc}
+                  </button>
+                `)}
+              </div>
+            </div>
+          </header>
+
+          <!-- ===================================================================== -->
+          <!-- VIEW 1: FABRILIFE-STYLE ULTRA-CLEAN HOMEPAGE & CATALOG                -->
+          <!-- ===================================================================== -->
+          ${view === "store" && html`
+            <main class="flex-1">
+              
+              <!-- Full-Width Clean Hero Banner (No Overlay Text/Shapes) -->
+              ${activeMainCat === "ALL" && activeSubCat === "ALL" && !searchQuery && html`
+                <div
+                  onClick=${() => setActiveMainCat(settings.heroBannerLinkCategory || "MEN")}
+                  class="w-full cursor-pointer overflow-hidden bg-neutral-100"
+                >
+                  <img
+                    src=${settings.heroBannerUrl}
+                    alt=${settings.brandName}
+                    class="w-full h-[220px] sm:h-[420px] lg:h-[520px] object-cover block"
+                  />
+                </div>
+              `}
+
+              <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+                
+                <!-- Sub-Category Filter Pills (When inside a Main Category) -->
+                ${activeMainCat !== "ALL" && html`
+                  <div class="mb-8 pb-4 border-b border-neutral-200 flex items-center justify-between flex-wrap gap-3">
+                    <div>
+                      <p class="text-xs text-neutral-400 uppercase tracking-widest">Home / ${activeMainCat}</p>
+                      <h1 class="text-xl sm:text-2xl font-extrabold uppercase tracking-tight mt-0.5">${activeSubCat === "ALL" ? activeMainCat : activeSubCat}</h1>
+                    </div>
+                    <div class="flex gap-2 overflow-x-auto no-scrollbar">
+                      <button
+                        onClick=${() => setActiveSubCat("ALL")}
+                        class="px-3.5 py-1.5 text-xs font-semibold border ${activeSubCat === "ALL" ? "bg-[#111111] text-white border-[#111111]" : "border-neutral-300 text-neutral-700"}"
+                      >
+                        All ${activeMainCat}
+                      </button>
+                      ${(settings.subCategories?.[activeMainCat] || []).map(sc => html`
+                        <button
+                          key=${sc}
+                          onClick=${() => setActiveSubCat(sc)}
+                          class="px-3.5 py-1.5 text-xs font-semibold border whitespace-nowrap ${activeSubCat === sc ? "bg-[#111111] text-white border-[#111111]" : "border-neutral-300 text-neutral-700"}"
+                        >
+                          ${sc}
+                        </button>
+                      `)}
+                    </div>
+                  </div>
+                `}
+
+                <!-- "FIND YOUR THING" Visual Sub-Category Grid (On Home) -->
+                ${activeMainCat === "ALL" && activeSubCat === "ALL" && !searchQuery && html`
+                  <section class="mb-14">
+                    <div class="text-center mb-6">
+                      <h2 class="text-base sm:text-lg font-extrabold uppercase tracking-widest">FIND YOUR THING</h2>
+                      <p class="text-xs text-neutral-500 mt-0.5">Shop our product range</p>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+                      ${(settings.categoryTiles || []).map(tile => html`
+                        <div
+                          key=${tile.id}
+                          onClick=${() => { setActiveMainCat(tile.mainCat); setActiveSubCat(tile.subCat); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                          class="group cursor-pointer text-center"
+                        >
+                          <div class="aspect-square overflow-hidden bg-[#F7F7F8] mb-2">
+                            <img src=${tile.image} alt=${tile.nameEn} loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                          </div>
+                          <h3 class="text-xs font-bold text-[#111111] group-hover:text-[#822B17] transition">${t(tile.nameEn, tile.nameBn)}</h3>
+                        </div>
+                      `)}
+                    </div>
+                  </section>
+
+                  <!-- Minimal Brand Statement (Fabrilife Style Typography) -->
+                  <section class="my-14 py-10 px-4 bg-[#F7F7F8] text-center max-w-4xl mx-auto">
+                    <h2 class="text-lg sm:text-xl font-extrabold tracking-tight">${settings.brandName}</h2>
+                    <p class="text-xs sm:text-sm font-semibold text-neutral-700 mt-1">${settings.tagline}</p>
+                    <p class="text-xs text-neutral-500 max-w-2xl mx-auto mt-3 leading-relaxed">${settings.brandStory}</p>
+                  </section>
+                `}
+
+                <!-- HOMEPAGE CATEGORY ROWS OR FILTERED GRID -->
+                ${activeMainCat === "ALL" && activeSubCat === "ALL" && !searchQuery ? html`
+                  <div class="space-y-14">
+                    ${homepageSections.map(([subCatName, items]) => html`
+                      <section key=${subCatName}>
+                        <div class="flex items-baseline justify-between mb-5 border-b border-neutral-200 pb-2.5">
+                          <h2 class="text-base sm:text-lg font-extrabold uppercase tracking-tight">${subCatName}</h2>
+                          <button
+                            onClick=${() => { setActiveSubCat(subCatName); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                            class="text-xs font-bold text-neutral-600 hover:text-black"
+                          >
+                            View More →
+                          </button>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-6">
+                          ${items.slice(0, 4).map(prod => html`
+                            <div key=${prod.id} onClick=${() => openProductPage(prod)} class="group cursor-pointer">
+                              <div class="relative aspect-[3/4] w-full bg-[#F7F7F8] overflow-hidden mb-2.5">
+                                <img
+                                  src=${prod.colors[0]?.image}
+                                  alt=${prod.nameEn}
+                                  loading="lazy"
+                                  class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                                />
+                              </div>
+                              <h3 class="text-xs sm:text-[13px] font-medium text-[#111111] truncate">${t(prod.nameEn, prod.nameBn || prod.nameEn)}</h3>
+                              <div class="flex items-baseline gap-2 mt-1">
+                                <span class="text-xs sm:text-sm font-extrabold text-[#111111]">৳ ${prod.discountPrice}.00</span>
+                                ${prod.regularPrice > prod.discountPrice && html`
+                                  <span class="text-[11px] line-through text-neutral-400">৳ ${prod.regularPrice}.00</span>
+                                `}
+                              </div>
+                            </div>
+                          `)}
+                        </div>
+                      </section>
+                    `)}
+                  </div>
+                ` : html`
+                  <!-- Filtered Category / Search Grid -->
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-6">
+                    ${filteredProducts.map(prod => html`
+                      <div key=${prod.id} onClick=${() => openProductPage(prod)} class="group cursor-pointer">
+                        <div class="relative aspect-[3/4] w-full bg-[#F7F7F8] overflow-hidden mb-2.5">
+                          <img
+                            src=${prod.colors[0]?.image}
+                            alt=${prod.nameEn}
+                            loading="lazy"
+                            class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                          />
+                        </div>
+                        <h3 class="text-xs sm:text-[13px] font-medium text-[#111111] truncate">${t(prod.nameEn, prod.nameBn || prod.nameEn)}</h3>
+                        <div class="flex items-baseline gap-2 mt-1">
+                          <span class="text-xs sm:text-sm font-extrabold text-[#111111]">৳ ${prod.discountPrice}.00</span>
+                          ${prod.regularPrice > prod.discountPrice && html`
+                            <span class="text-[11px] line-through text-neutral-400">৳ ${prod.regularPrice}.00</span>
+                          `}
+                        </div>
+                      </div>
+                    `)}
+                  </div>
+                `}
+              </div>
+            </main>
+          `}
+
+          <!-- ===================================================================== -->
+          <!-- VIEW 2: ULTRA-CLEAN PRODUCT DETAILS PAGE (DYNAMIC COLORS & PHOTOS)    -->
+          <!-- ===================================================================== -->
+          ${view === "product" && selectedProduct && html`
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8 flex-1 w-full">
+              
+              <!-- Breadcrumb -->
+              <div class="text-xs text-neutral-400 mb-6 flex items-center gap-2">
+                <button onClick=${() => setView("store")} class="hover:text-black">Home</button>
+                <span>/</span>
+                <button onClick=${() => { setActiveMainCat(selectedProduct.mainCategory); setView("store"); }} class="hover:text-black">${selectedProduct.mainCategory}</button>
+                <span>/</span>
+                <span class="text-neutral-700 font-medium">${selectedProduct.subCategory}</span>
+              </div>
+
+              <div class="grid md:grid-cols-12 gap-8 lg:gap-12">
+                
+                <!-- Left: Main Image + Color Thumbnail Strip -->
+                <div class="md:col-span-6 space-y-3">
+                  <div class="aspect-[3/4] bg-[#F7F7F8] overflow-hidden">
+                    <img
+                      src=${selectedProduct.colors[selectedColorIdx]?.image}
+                      alt=${selectedProduct.nameEn}
+                      class="w-full h-full object-cover"
+                    />
+                  </div>
+                  ${selectedProduct.colors.length > 1 && html`
+                    <div class="flex gap-2.5 overflow-x-auto no-scrollbar">
+                      ${selectedProduct.colors.map((c, idx) => html`
+                        <button
+                          key=${idx}
+                          onClick=${() => {
+                            setSelectedColorIdx(idx);
+                            const sizes = (c.sizes || "30,32,34,36").split(",").map(s => s.trim()).filter(Boolean);
+                            if (!sizes.includes(selectedSize)) setSelectedSize(sizes[0] || "");
+                          }}
+                          class="w-16 h-20 flex-shrink-0 border-2 overflow-hidden transition ${selectedColorIdx === idx ? "border-[#111111]" : "border-transparent opacity-60 hover:opacity-100"}"
+                        >
+                          <img src=${c.image} class="w-full h-full object-cover" />
+                        </button>
+                      `)}
+                    </div>
+                  `}
+                </div>
+
+                <!-- Right: Clean Typography, Swatches, Sizes & Actions -->
+                <div class="md:col-span-6 flex flex-col justify-between">
+                  <div>
+                    <p class="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">SKU: ${selectedProduct.sku}</p>
+                    <h1 class="text-xl sm:text-2xl font-bold text-[#111111] mt-1">${t(selectedProduct.nameEn, selectedProduct.nameBn || selectedProduct.nameEn)}</h1>
+
+                    <!-- Price -->
+                    <div class="flex items-baseline gap-3 my-5 pb-5 border-b border-neutral-200">
+                      <span class="text-2xl font-extrabold text-[#111111]">৳ ${selectedProduct.discountPrice}.00</span>
+                      ${selectedProduct.regularPrice > selectedProduct.discountPrice && html`
+                        <span class="text-sm line-through text-neutral-400">৳ ${selectedProduct.regularPrice}.00</span>
+                      `}
+                    </div>
+
+                    ${!multiPackMode ? html`
+                      <!-- Dynamic Color Selector -->
+                      <div class="mb-6">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 mb-2.5">
+                          Color: <span class="text-[#111111] font-bold">${selectedProduct.colors[selectedColorIdx]?.name}</span>
+                        </p>
+                        <div class="flex flex-wrap gap-2.5">
+                          ${selectedProduct.colors.map((c, idx) => html`
+                            <button
+                              key=${idx}
+                              onClick=${() => {
+                                setSelectedColorIdx(idx);
+                                const sizes = (c.sizes || "30,32,34,36").split(",").map(s => s.trim()).filter(Boolean);
+                                if (!sizes.includes(selectedSize)) setSelectedSize(sizes[0] || "");
+                              }}
+                              class="px-3.5 py-2 border text-xs font-medium flex items-center gap-2 transition ${selectedColorIdx === idx ? "border-[#111111] bg-[#111111] text-white" : "border-neutral-300 text-neutral-700 hover:border-black"}"
+                            >
+                              <span class="w-3 h-3 rounded-full border border-white/30" style=${{ backgroundColor: c.hex }} />
+                              <span>${c.name}</span>
+                            </button>
+                          `)}
+                        </div>
+                      </div>
+
+                      <!-- Size Selector -->
+                      <div class="mb-6">
+                        <div class="flex justify-between items-center mb-2.5">
+                          <span class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Select Size</span>
+                          <button onClick=${() => setShowSizeChart(!showSizeChart)} class="text-xs font-semibold underline text-neutral-600 hover:text-black">
+                            Size Chart
+                          </button>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                          ${(selectedProduct.colors[selectedColorIdx]?.sizes || "30,32,34,36").split(",").map(s => s.trim()).filter(Boolean).map(sz => html`
+                            <button
+                              key=${sz}
+                              onClick=${() => setSelectedSize(sz)}
+                              class="w-12 h-11 border text-xs font-bold transition ${selectedSize === sz ? "border-[#111111] bg-[#111111] text-white" : "border-neutral-300 text-[#111111] hover:border-black"}"
+                            >
+                              ${sz}
+                            </button>
+                          `)}
+                        </div>
+                      </div>
+                    ` : html`
+                      <!-- Multi-Color & Multi-Size Pack Builder -->
+                      <div class="p-4 bg-[#F7F7F8] border border-neutral-300 mb-6">
+                        <div class="flex justify-between items-center mb-3">
+                          <span class="text-xs font-bold uppercase tracking-wider">Multi-Color / Multi-Size Selection</span>
+                          <button onClick=${() => setMultiPackMode(false)} class="text-xs underline font-semibold">Single Item</button>
+                        </div>
+                        <div class="space-y-2.5">
+                          ${multiPackRows.map((row, rIdx) => {
+                            const rowSizes = (selectedProduct.colors[row.colorIdx]?.sizes || "30,32,34,36").split(",").map(s => s.trim()).filter(Boolean);
+                            return html`
+                              <div key=${rIdx} class="flex items-center gap-2 text-xs">
+                                <span class="font-bold w-5">#${rIdx + 1}</span>
+                                <select
+                                  value=${row.colorIdx}
+                                  onChange=${e => {
+                                    const copy = [...multiPackRows];
+                                    copy[rIdx].colorIdx = Number(e.target.value);
+                                    setMultiPackRows(copy);
+                                  }}
+                                  class="flex-1 p-2 border border-neutral-300 bg-white font-medium"
+                                >
+                                  ${selectedProduct.colors.map((c, cIdx) => html`<option key=${cIdx} value=${cIdx}>${c.name}</option>`)}
+                                </select>
+                                <select
+                                  value=${row.size}
+                                  onChange=${e => {
+                                    const copy = [...multiPackRows];
+                                    copy[rIdx].size = e.target.value;
+                                    setMultiPackRows(copy);
+                                  }}
+                                  class="w-24 p-2 border border-neutral-300 bg-white font-medium"
+                                >
+                                  ${rowSizes.map(s => html`<option key=${s} value=${s}>Size ${s}</option>`)}
+                                </select>
+                                ${multiPackRows.length > 1 && html`
+                                  <button onClick=${() => setMultiPackRows(multiPackRows.filter((_, i) => i !== rIdx))} class="text-neutral-500 hover:text-red-600 px-1 font-bold">✕</button>
+                                `}
+                              </div>
+                            `;
+                          })}
+                        </div>
+                        <button
+                          onClick=${() => setMultiPackRows([...multiPackRows, { colorIdx: 0, size: "32" }])}
+                          class="mt-3 text-xs font-bold underline"
+                        >
+                          + Add Another Piece
+                        </button>
+                      </div>
+                    `}
+
+                    ${!multiPackMode && selectedProduct.colors.length > 1 && html`
+                      <button
+                        onClick=${() => setMultiPackMode(true)}
+                        class="w-full py-2.5 mb-5 border border-neutral-300 text-xs font-semibold hover:border-black transition"
+                      >
+                        + Buy Multiple Colors / Sizes Together
+                      </button>
+                    `}
+
+                    ${showSizeChart && html`
+                      <div class="p-3.5 mb-5 bg-[#F7F7F8] border border-neutral-200 text-xs text-neutral-700">
+                        <p class="font-bold mb-1">Size Guide (Inches):</p>
+                        <p>${selectedProduct.sizeChart}</p>
+                      </div>
+                    `}
+
+                    <!-- Clean Sharp Action Buttons -->
+                    <div class="grid grid-cols-2 gap-3 mb-6">
+                      <button
+                        onClick=${() => handleAddToCart(false)}
+                        class="py-3.5 border border-[#111111] text-[#111111] text-xs font-bold uppercase tracking-widest hover:bg-neutral-100 transition"
+                      >
+                        ${t("Add to Bag", "ব্যাগে রাখুন")}
+                      </button>
+                      <button
+                        onClick=${() => handleAddToCart(true)}
+                        class="py-3.5 bg-[#111111] text-white text-xs font-bold uppercase tracking-widest hover:bg-neutral-800 transition"
+                      >
+                        ${t("Buy Now", "অর্ডার করুন")}
+                      </button>
+                    </div>
+
+                    <!-- Product Specifications -->
+                    <div class="border-t border-neutral-200 pt-5 space-y-2.5 text-xs text-neutral-600 leading-relaxed">
+                      <p><strong class="text-[#111111] uppercase">Specification:</strong> ${selectedProduct.fabricSpecs}</p>
+                      <p><strong class="text-[#111111] uppercase">Delivery & Exchange:</strong> Open Box Delivery Available. Easy 7-Day Size Exchange.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `}
+
+          <!-- ===================================================================== -->
+          <!-- VIEW 3: CHECKOUT & DIRECT 1-CLICK PDF INVOICE DOWNLOAD                -->
+          <!-- ===================================================================== -->
+          ${view === "checkout" && html`
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 py-10 flex-1 w-full">
+              ${confirmedOrder ? html`
+                <div class="max-w-xl mx-auto">
+                  <!-- Clean Invoice Card for Direct PDF Generation -->
+                  <div id="invoice-card" class="bg-white p-8 border border-neutral-300 text-[#111111]">
+                    <div class="flex justify-between items-start border-b border-neutral-200 pb-5">
+                      <div>
+                        <h2 class="text-lg font-extrabold uppercase tracking-tight">${settings.brandName}</h2>
+                        <p class="text-xs text-neutral-500 mt-0.5">Official Order Invoice</p>
+                      </div>
+                      <div class="text-right text-xs">
+                        <p class="font-bold">Invoice: ${confirmedOrder.orderId}</p>
+                        <p class="text-neutral-500">${confirmedOrder.dateFormatted}</p>
+                      </div>
+                    </div>
+
+                    <div class="my-5 text-xs space-y-1">
+                      <p class="text-neutral-400 uppercase font-semibold">Billed To:</p>
+                      <p class="font-bold text-sm">${confirmedOrder.customer.name}</p>
+                      <p>Phone: ${confirmedOrder.customer.phone}</p>
+                      ${confirmedOrder.customer.email && html`<p>Email: ${confirmedOrder.customer.email}</p>`}
+                      <p>Address: ${confirmedOrder.customer.address}</p>
+                    </div>
+
+                    <table class="w-full text-xs border-t border-b border-neutral-200 my-4">
+                      <thead>
+                        <tr class="border-b border-neutral-200 text-left text-neutral-500">
+                          <th class="py-2">Item</th>
+                          <th class="py-2 text-right">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-neutral-100">
+                        ${confirmedOrder.items.map((it, idx) => html`
+                          <tr key=${idx}>
+                            <td class="py-2.5">${it.nameEn} (${it.color} / Size: ${it.size}) × ${it.qty}</td>
+                            <td class="py-2.5 text-right font-semibold">৳ ${it.price * it.qty}</td>
+                          </tr>
+                        `)}
+                      </tbody>
+                    </table>
+
+                    <div class="text-xs space-y-1.5 text-right">
+                      <p>Subtotal: ৳ ${confirmedOrder.subtotal}</p>
+                      <p>Delivery Charge: ${confirmedOrder.deliveryCharge === 0 ? "FREE" : `৳ ${confirmedOrder.deliveryCharge}`}</p>
+                      <p class="text-base font-extrabold pt-2 border-t border-neutral-200">Total Payable (COD): ৳ ${confirmedOrder.grandTotal}</p>
+                    </div>
+                  </div>
+
+                  <!-- Direct 1-Click Download Invoice Button (No Print Dialog) -->
+                  <div class="flex flex-wrap gap-3 justify-center mt-6">
+                    <button
+                      onClick=${() => downloadInvoiceDirect(confirmedOrder)}
+                      disabled=${downloadingPdf}
+                      class="px-6 py-3 bg-[#111111] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:bg-neutral-800 transition"
+                    >
+                      <${IconDownload}/>
+                      <span>${downloadingPdf ? "Downloading..." : t("Download Invoice", "ইনভয়েস ডাউনলোড করুন")}</span>
+                    </button>
+                    <button
+                      onClick=${() => { setConfirmedOrder(null); setView("store"); }}
+                      class="px-6 py-3 border border-neutral-300 text-xs font-bold uppercase tracking-wider hover:border-black"
+                    >
+                      ${t("Continue Shopping", "হোমে ফিরুন")}
+                    </button>
+                  </div>
+                </div>
+              ` : html`
+                <form onSubmit=${submitOrder} class="grid md:grid-cols-12 gap-8">
+                  <div class="md:col-span-7 space-y-4">
+                    <h2 class="text-base font-bold uppercase tracking-wider border-b border-neutral-200 pb-2.5">${t("Delivery Information", "ডেলিভারি তথ্য")}</h2>
+                    <div>
+                      <label class="block text-xs font-semibold mb-1">${t("Full Name *", "আপনার নাম *")}</label>
+                      <input required value=${customerForm.name} onInput=${e => setCustomerForm({ ...customerForm, name: e.target.value })} class="w-full p-3 border border-neutral-300 text-xs outline-none focus:border-black" />
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-xs font-semibold mb-1">${t("Mobile Number *", "মোবাইল নাম্বার *")}</label>
+                        <input required type="tel" value=${customerForm.phone} onInput=${e => setCustomerForm({ ...customerForm, phone: e.target.value })} class="w-full p-3 border border-neutral-300 text-xs outline-none focus:border-black" placeholder="01XXXXXXXXX" />
+                      </div>
+                      <div>
+                        <label class="block text-xs font-semibold mb-1">${t("Email (For Order Confirmation)", "ইমেইল (কনফার্মেশন মেইলের জন্য)")}</label>
+                        <input type="email" value=${customerForm.email} onInput=${e => setCustomerForm({ ...customerForm, email: e.target.value })} class="w-full p-3 border border-neutral-300 text-xs outline-none focus:border-black" placeholder="you@example.com" />
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold mb-1">${t("Full Address *", "পূর্ণ ঠিকানা *")}</label>
+                      <textarea required rows="2" value=${customerForm.address} onInput=${e => setCustomerForm({ ...customerForm, address: e.target.value })} class="w-full p-3 border border-neutral-300 text-xs outline-none focus:border-black" placeholder="House, Road, Area, District"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 pt-1">
+                      <button type="button" onClick=${() => setCustomerForm({ ...customerForm, zone: "inside" })} class="p-3 border text-xs font-semibold text-left ${customerForm.zone === "inside" ? "border-[#111111] bg-[#111111] text-white" : "border-neutral-300"}">
+                        <div>Inside Dhaka</div>
+                        <div class="font-bold mt-0.5">${isFreeDelivery ? "FREE" : `৳ ${settings.insideDhaka}`}</div>
+                      </button>
+                      <button type="button" onClick=${() => setCustomerForm({ ...customerForm, zone: "outside" })} class="p-3 border text-xs font-semibold text-left ${customerForm.zone === "outside" ? "border-[#111111] bg-[#111111] text-white" : "border-neutral-300"}">
+                        <div>Outside Dhaka</div>
+                        <div class="font-bold mt-0.5">${isFreeDelivery ? "FREE" : `৳ ${settings.outsideDhaka}`}</div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="md:col-span-5 bg-[#F7F7F8] p-6 border border-neutral-200 flex flex-col justify-between">
+                    <div>
+                      <h3 class="text-sm font-bold uppercase tracking-wider border-b border-neutral-200 pb-2.5 mb-4">${t("Order Summary", "অর্ডার সামারি")}</h3>
+                      <div class="space-y-3 max-h-60 overflow-y-auto">
+                        ${cart.map(item => html`
+                          <div key=${item.key} class="flex justify-between text-xs border-b border-neutral-200 pb-2">
+                            <div>
+                              <p class="font-semibold">${item.nameEn}</p>
+                              <p class="text-neutral-500">${item.color} | Size: ${item.size} × ${item.qty}</p>
+                            </div>
+                            <span class="font-bold">৳ ${item.price * item.qty}</span>
+                          </div>
+                        `)}
+                      </div>
+                    </div>
+
+                    <div class="border-t border-neutral-300 pt-4 mt-4 space-y-2 text-xs">
+                      <div class="flex justify-between"><span>Subtotal</span><span>৳ ${subtotal}</span></div>
+                      <div class="flex justify-between"><span>Delivery</span><span>${deliveryCharge === 0 ? "FREE" : `৳ ${deliveryCharge}`}</span></div>
+                      <div class="flex justify-between text-base font-extrabold pt-2 border-t border-neutral-200">
+                        <span>Total Payable</span>
+                        <span>৳ ${grandTotal}</span>
+                      </div>
+                      <button type="submit" class="w-full mt-4 py-3.5 bg-[#111111] text-white text-xs font-bold uppercase tracking-widest hover:bg-neutral-800 transition">
+                        ${t("Confirm Order", "অর্ডার কনফার্ম করুন")}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              `}
+            </div>
+          `}
+
+          <!-- ===================================================================== -->
+          <!-- VIEW 4: ORDER TRACKING & WISHLIST                                     -->
+          <!-- ===================================================================== -->
+          ${view === "track" && html`
+            <div class="max-w-xl mx-auto px-4 py-12 flex-1 w-full">
+              <h2 class="text-lg font-bold uppercase tracking-wide mb-2">${t("Track Your Order", "অর্ডার ট্র্যাক করুন")}</h2>
+              <input value=${trackInput} onInput=${e => setTrackInput(e.target.value)} placeholder="Enter Mobile Number or Order ID (e.g. SO-1234)" class="w-full p-3.5 border border-neutral-300 text-xs outline-none focus:border-black mb-6" />
+              <div class="space-y-4">
+                ${orders.filter(o => trackInput && (o.orderId.toLowerCase() === trackInput.toLowerCase() || o.customer.phone.includes(trackInput))).map(ord => html`
+                  <div key=${ord.orderId} class="p-5 border border-neutral-300 text-xs space-y-2">
+                    <div class="flex justify-between font-bold text-sm">
+                      <span>${ord.orderId}</span>
+                      <span class="px-2.5 py-0.5 bg-[#111111] text-white text-xs">${ord.status}</span>
+                    </div>
+                    <p>${ord.customer.name} • ${ord.customer.phone}</p>
+                    <p class="font-bold">Total Payable: ৳ ${ord.grandTotal}</p>
+                  </div>
+                `)}
+              </div>
+            </div>
+          `}
+
+          ${view === "wishlist" && html`
+            <div class="max-w-5xl mx-auto px-4 py-12 flex-1 w-full">
+              <h2 class="text-lg font-bold uppercase tracking-wide mb-6">My Wishlist (${wishlist.length})</h2>
+              ${wishlist.length === 0 ? html`<p class="text-xs text-neutral-500">No items saved in wishlist yet.</p>` : html`
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  ${products.filter(p => wishlist.includes(p.id)).map(prod => html`
+                    <div key=${prod.id} onClick=${() => openProductPage(prod)} class="cursor-pointer">
+                      <img src=${prod.colors[0]?.image} class="aspect-[3/4] object-cover mb-2" />
+                      <h3 class="text-xs font-medium">${prod.nameEn}</h3>
+                      <p class="text-xs font-bold mt-0.5">৳ ${prod.discountPrice}</p>
+                    </div>
+                  `)}
                 </div>
               `}
             </div>
           `}
 
+          <!-- ===================================================================== -->
+          <!-- SLIDE-OUT SHOPPING BAG DRAWER                                         -->
+          <!-- ===================================================================== -->
           ${cartOpen && html`
-            <div class="fixed inset-0 z-50 bg-black/60 flex justify-end">
-              <div class="w-full max-w-md h-full p-5 flex flex-col justify-between ${darkMode ? "bg-[#121212] text-white" : "bg-[#F3EFE6] text-[#0D0D0D]"}">
+            <div class="fixed inset-0 z-50 bg-black/50 flex justify-end">
+              <div class="w-full max-w-sm bg-white h-full p-6 flex flex-col justify-between text-[#111111]">
                 <div>
-                  <div class="flex justify-between items-center border-b border-current/10 pb-3">
-                    <h3 class="font-extrabold text-base">${t("Shopping Bag", "আপনার ব্যাগ")} (${totalItemsCount})</h3>
-                    <button onClick=${() => setCartOpen(false)} class="text-lg font-bold">✕</button>
+                  <div class="flex justify-between items-center border-b border-neutral-200 pb-4">
+                    <h3 class="font-bold text-sm uppercase tracking-wider">Shopping Bag (${totalItemsCount})</h3>
+                    <button onClick=${() => setCartOpen(false)}><${IconClose}/></button>
                   </div>
-                  <div class="mt-3 space-y-3 max-h-[65vh] overflow-y-auto">
-                    ${cart.map((item, i) => html`
-                      <div key=${item.key} class="flex gap-3 items-center border-b border-current/10 pb-3 text-xs">
-                        <img src=${item.image} class="w-14 h-16 object-cover rounded-lg" />
-                        <div class="flex-1">
-                          <p class="font-bold text-sm">${t(item.nameEn, item.nameBn)}</p>
-                          <p class="opacity-70">${item.color} • Size: ${item.size}</p>
-                          <p class="font-extrabold text-[#822B17] mt-0.5">৳${item.price} × ${item.qty}</p>
+                  <div class="mt-4 space-y-4 max-h-[65vh] overflow-y-auto">
+                    ${cart.length === 0 ? html`<p class="text-xs text-neutral-400 py-12 text-center">Your bag is empty.</p>` : cart.map((item, i) => html`
+                      <div key=${item.key} class="flex gap-3 items-center border-b border-neutral-100 pb-3 text-xs">
+                        <img src=${item.image} class="w-14 h-18 object-cover bg-neutral-100" />
+                        <div class="flex-1 min-w-0">
+                          <p class="font-semibold truncate">${item.nameEn}</p>
+                          <p class="text-neutral-500">${item.color} | Size: ${item.size}</p>
+                          <p class="font-bold mt-1">৳ ${item.price} × ${item.qty}</p>
                         </div>
-                        <button onClick=${() => setCart(cart.filter((_, idx) => idx !== i))} class="text-red-500 font-bold px-2">✕</button>
+                        <button onClick=${() => setCart(cart.filter((_, idx) => idx !== i))} class="text-neutral-400 hover:text-black px-1">✕</button>
                       </div>
                     `)}
                   </div>
                 </div>
                 ${cart.length > 0 && html`
-                  <div class="border-t border-current/15 pt-4">
-                    <div class="flex justify-between font-extrabold text-base mb-3">
-                      <span>${t("Subtotal", "মোট")}</span>
-                      <span>৳${subtotal}</span>
+                  <div class="border-t border-neutral-200 pt-4">
+                    <div class="flex justify-between font-bold text-sm mb-4">
+                      <span>Subtotal</span>
+                      <span>৳ ${subtotal}</span>
                     </div>
-                    <button onClick=${() => { setCartOpen(false); setConfirmedOrder(null); setView("checkout"); }} class="w-full py-3.5 rounded-xl bg-[#822B17] text-white font-bold text-sm">
-                      ${t("Proceed to Checkout", "চেকআউট করুন")}
+                    <button onClick=${() => { setCartOpen(false); setConfirmedOrder(null); setView("checkout"); }} class="w-full py-3.5 bg-[#111111] text-white text-xs font-bold uppercase tracking-widest">
+                      Proceed to Checkout
                     </button>
                   </div>
                 `}
@@ -1315,13 +2036,60 @@
             </div>
           `}
 
+          <!-- ===================================================================== -->
+          <!-- ULTRA-CLEAN 3-COLUMN DARK CHARCOAL FOOTER (FABRILIFE STYLE)           -->
+          <!-- ===================================================================== -->
+          <footer class="mt-16 bg-[#333333] text-neutral-300 text-xs">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-1 md:grid-cols-3 gap-10">
+              
+              <!-- Column 1: Logo & Essential Links -->
+              <div class="space-y-3">
+                <h3 class="text-white font-extrabold text-base tracking-wider uppercase">${settings.brandName}</h3>
+                <ul class="space-y-2 text-neutral-300">
+                  <li><button onClick=${() => setView("store")} class="hover:text-white">About ${settings.brandName}</button></li>
+                  <li><button onClick=${() => setView("track")} class="hover:text-white">Cancellation & Return Policy</button></li>
+                  <li><button onClick=${() => setView("store")} class="hover:text-white">Terms & Privacy Policy</button></li>
+                  <li><button onClick=${() => setView("adminLogin")} class="text-neutral-400 hover:text-white">Admin</button></li>
+                </ul>
+              </div>
+
+              <!-- Column 2: Customer Care & Track -->
+              <div class="space-y-2.5">
+                <p class="text-white font-bold uppercase tracking-wider">FOR ANY HELP YOU MAY CALL US AT</p>
+                <p class="text-sm font-semibold text-white">${settings.helpline}</p>
+                <p class="text-neutral-400">Customer Service (10:00 AM - 10:00 PM)</p>
+                <button onClick=${() => { setView("track"); window.scrollTo({ top: 0, behavior: "smooth" }); }} class="pt-1 inline-block text-white underline">
+                  Track your order or request size exchange →
+                </button>
+              </div>
+
+              <!-- Column 3: Follow Us -->
+              <div class="space-y-3">
+                <p class="text-white font-bold uppercase tracking-wider">FOLLOW US</p>
+                <p class="text-neutral-400">Stay updated on our latest arrivals and exclusive offers.</p>
+                <div class="flex items-center gap-4 pt-1 text-white font-bold">
+                  <a href=${settings.facebookUrl} target="_blank" rel="noreferrer" class="hover:opacity-75">Facebook</a>
+                  <a href=${settings.instagramUrl} target="_blank" rel="noreferrer" class="hover:opacity-75">Instagram</a>
+                  <a href=${settings.youtubeUrl} target="_blank" rel="noreferrer" class="hover:opacity-75">YouTube</a>
+                </div>
+              </div>
+            </div>
+
+            <!-- White Copyright Bottom Bar -->
+            <div class="bg-white text-neutral-500 py-4 px-4 text-center text-[11px] border-t border-neutral-200">
+              Copyright © 2026 ${settings.brandName}. All Rights Reserved.
+            </div>
+          </footer>
+
+          <!-- CLEAN SOLID FLOATING MESSAGE BUTTON (FABRILIFE STYLE) -->
           <a
             href="https://wa.me/${settings.whatsapp}"
             target="_blank"
             rel="noreferrer"
-            class="no-print fixed bottom-20 md:bottom-6 right-4 z-40 w-12 h-12 rounded-full bg-[#168A45] text-white shadow-xl flex items-center justify-center hover:scale-105 transition"
+            class="fixed bottom-6 right-6 z-40 w-12 h-12 rounded-full bg-[#111111] text-white shadow-lg flex items-center justify-center hover:scale-105 transition"
+            title="Chat with us"
           >
-            💬
+            <${IconChat}/>
           </a>
         </div>
       `;
