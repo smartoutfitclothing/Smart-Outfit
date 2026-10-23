@@ -28,13 +28,14 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
   <style>
-    /* Bornomala Bangla Font Integration (Upload Bornomala.ttf or Bornomala.woff2 in the same folder) */
+    /* Bornomala Bangla Font Integration (Supports root & ./Bornomala/ folder) */
     @font-face {
       font-family: 'Bornomala';
-      src: url('./Bornomala.woff2') format('woff2'),
-           url('./Bornomala.ttf') format('truetype'),
-           url('./fonts/Bornomala.woff2') format('woff2'),
-           url('./fonts/Bornomala.ttf') format('truetype');
+      src: url('./Bornomala/Bornomala.woff2') format('woff2'),
+           url('./Bornomala/Bornomala.ttf') format('truetype'),
+           url('./Bornomala/Bornomala-Regular.ttf') format('truetype'),
+           url('./Bornomala.woff2') format('woff2'),
+           url('./Bornomala.ttf') format('truetype');
       font-weight: normal;
       font-style: normal;
       font-display: swap;
@@ -65,34 +66,32 @@
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState, useEffect, useMemo, useRef } = React;
+    const { useState, useEffect, useMemo } = React;
 
     // ============================================================================
-    // 1. FIREBASE CONFIGURATION (PASTE YOUR FIREBASE PROJECT CONFIG HERE LATER)
+    // 1. LIVE FIREBASE CONFIGURATION (SMART OUTFIT - CONNECTED)
     // ============================================================================
     const FIREBASE_CONFIG = {
-      apiKey: "PASTE_YOUR_API_KEY",
-      authDomain: "PASTE_YOUR_PROJECT.firebaseapp.com",
-      projectId: "PASTE_YOUR_PROJECT_ID",
-      storageBucket: "PASTE_YOUR_PROJECT.appspot.com",
-      messagingSenderId: "PASTE_SENDER_ID",
-      appId: "PASTE_APP_ID"
+      apiKey: "AIzaSyBKZzZsVfmPyz0qoGyQOpyJBTHQgOtxuRg",
+      authDomain: "smart-outfit-81663.firebaseapp.com",
+      projectId: "smart-outfit-81663",
+      storageBucket: "smart-outfit-81663.firebasestorage.app",
+      messagingSenderId: "32049953640",
+      appId: "1:32049953640:web:0ca9fb8ea9a775785234dd",
+      measurementId: "G-CBZF2PDXSF"
     };
 
     let db = null;
     let auth = null;
-    const isFirebaseConfigured = FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.includes("PASTE_");
 
-    if (isFirebaseConfigured) {
-      try {
-        if (!firebase.apps.length) {
-          firebase.initializeApp(FIREBASE_CONFIG);
-        }
-        db = firebase.firestore();
-        auth = firebase.auth();
-      } catch (err) {
-        console.warn("Firebase connection fallback to local mode:", err);
+    try {
+      if (!firebase.apps.length) {
+        firebase.initializeApp(FIREBASE_CONFIG);
       }
+      db = firebase.firestore();
+      auth = firebase.auth();
+    } catch (err) {
+      console.warn("Firebase connection notice:", err);
     }
 
     // ============================================================================
@@ -102,29 +101,21 @@
       brandName: "SMART OUTFIT",
       tagline: "For Smart People",
       superAdminEmail: "admin@smartoutfit.com",
-      staffPin: "1234",
       whatsapp: "8801700000000",
       insideDhaka: 60,
       outsideDhaka: 120,
       globalFreeDelivery: false,
       minSpendFreeDelivery: 2000,
       enableMinSpendRule: true,
-      requireAdvanceOutsideDhaka: false,
-      bkashNumber: "01700-000000",
       flashSaleActive: true,
       flashSaleTitleEn: "Season End Factory Drop",
       flashSaleTitleBn: "ফ্যাক্টরি ক্লিয়ারেন্স অফার",
-      flashSaleEndTime: "2026-12-31T23:59",
       announcementEn: "Own Garments Factory • Open Box Delivery • 7-Day Size Exchange",
       announcementBn: "নিজস্ব গার্মেন্টস ফ্যাক্টরি • ডেলিভারিম্যানের সামনে চেক করে নিন • ৭ দিনে এক্সচেঞ্জ",
       metaPixelId: "",
-      googleTagId: "",
-      imgbbApiKey: "",
       emailWebhookUrl: "",
-      steadfastApiKey: "",
-      steadfastSecretKey: "",
-      factoryAddressEn: "Aftabnagar / Badda Industrial Zone, Dhaka, Bangladesh",
-      factoryAddressBn: "আফতাবনগর, ঢাকা, বাংলাদেশ",
+      factoryAddressEn: "Dhaka, Bangladesh",
+      factoryAddressBn: "ঢাকা, বাংলাদেশ",
       subCategories: {
         Pants: ["Six Pocket Cargo", "Premium Denim", "Boys Denim"],
         Jackets: ["Denim Jacket", "Winter Bomber"],
@@ -165,12 +156,10 @@
         category: "Pants",
         subCategory: "Six Pocket Cargo",
         isWinter: false,
-        isBestSeller: true,
         regularPrice: 1650,
         discountPrice: 1290,
         freeDelivery: false,
         imageFit: "cover",
-        videoUrl: "",
         fabricSpecs: "98% Combed Cotton, 2% Spandex | 285 GSM Heavy Twill | YKK Metal Zip",
         washCare: "Cold machine wash inside out. Do not bleach.",
         colors: [
@@ -220,12 +209,10 @@
         category: "Pants",
         subCategory: "Premium Denim",
         isWinter: false,
-        isBestSeller: true,
         regularPrice: 1850,
         discountPrice: 1450,
         freeDelivery: false,
         imageFit: "cover",
-        videoUrl: "",
         fabricSpecs: "12.5 Oz Turkish Stretch Denim | Enzyme Whisker Wash | Brass Rivets",
         washCare: "Wash separately in cold water. Line dry in shade.",
         colors: [
@@ -251,12 +238,10 @@
         category: "Jackets",
         subCategory: "Denim Jacket",
         isWinter: true,
-        isBestSeller: true,
         regularPrice: 2550,
         discountPrice: 1990,
         freeDelivery: true,
         imageFit: "cover",
-        videoUrl: "",
         fabricSpecs: "14 Oz Raw Unwashed Denim | Rust-Proof Shank Buttons | 4 Functional Pockets",
         washCare: "Spot clean or gentle cold wash.",
         colors: [
@@ -282,12 +267,10 @@
         category: "Shirts",
         subCategory: "Casual Shirt",
         isWinter: false,
-        isBestSeller: true,
         regularPrice: 1390,
         discountPrice: 990,
         freeDelivery: false,
         imageFit: "cover",
-        videoUrl: "",
         fabricSpecs: "100% Compact Combed Cotton | 165 GSM Breathable Oxford Weave",
         washCare: "Machine wash cold, warm iron.",
         colors: [
@@ -352,7 +335,1758 @@
     ];
 
     // ============================================================================
-    // 3. CLIENT-SIDE WEBP IMAGE COMPRESSOR (AUTO-OPTIMIZES MOBILE LOAD SPEED)
+    // 3. CLIENT-SIDE WEBP IMAGE COMPRESSOR
+    // ============================================================================
+    const compressImageToWebP = (file, maxWidth = 900, quality = 0.8) => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            const ratio = img.width > maxWidth ? maxWidth / img.width : 1;
+            canvas.width = img.width * ratio;
+            canvas.height = img.height * ratio;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL("image/webp", quality));
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    };
+
+    // ============================================================================
+    // 4. MAIN APPLICATION COMPONENT
+    // ============================================================================
+    function SmartOutfitApp() {
+      const [lang, setLang] = useState("en");
+      const [darkMode, setDarkMode] = useState(false);
+      const [view, setView] = useState("store"); // store | product | checkout | track | trial | profile | admin
+      const [activeTab, setActiveTab] = useState("Home");
+      const [activeSubCat, setActiveSubCat] = useState("All");
+      const [searchOpen, setSearchOpen] = useState(false);
+      const [searchQuery, setSearchQuery] = useState("");
+      const [toast, setToast] = useState("");
+
+      // Store Data States
+      const [settings, setSettings] = useState(() => {
+        const s = localStorage.getItem("so_v2_settings");
+        return s ? { ...DEFAULT_SETTINGS, ...JSON.parse(s) } : DEFAULT_SETTINGS;
+      });
+      const [products, setProducts] = useState(() => {
+        const p = localStorage.getItem("so_v2_products");
+        return p ? JSON.parse(p) : DEFAULT_PRODUCTS;
+      });
+      const [combos, setCombos] = useState(() => {
+        const c = localStorage.getItem("so_v2_combos");
+        return c ? JSON.parse(c) : DEFAULT_COMBOS;
+      });
+      const [blogs] = useState(() => {
+        const b = localStorage.getItem("so_v2_blogs");
+        return b ? JSON.parse(b) : DEFAULT_BLOGS;
+      });
+      const [orders, setOrders] = useState(() => {
+        const o = localStorage.getItem("so_v2_orders");
+        return o ? JSON.parse(o) : [];
+      });
+      const [abandonedCarts, setAbandonedCarts] = useState(() => {
+        const a = localStorage.getItem("so_v2_abandoned");
+        return a ? JSON.parse(a) : [];
+      });
+
+      // Product & Pack States
+      const [selectedProduct, setSelectedProduct] = useState(null);
+      const [selectedColorIdx, setSelectedColorIdx] = useState(0);
+      const [selectedSize, setSelectedSize] = useState("");
+      const [multiPackMode, setMultiPackMode] = useState(false);
+      const [multiPackRows, setMultiPackRows] = useState([]);
+      const [zoomActive, setZoomActive] = useState(false);
+      const [sizeFinderModal, setSizeFinderModal] = useState(false);
+      const [fitWeight, setFitWeight] = useState(68);
+
+      // Cart & Checkout States
+      const [cart, setCart] = useState([]);
+      const [cartOpen, setCartOpen] = useState(false);
+      const [customerForm, setCustomerForm] = useState({
+        name: "",
+        phone: "",
+        email: "",
+        address: "",
+        zone: "inside"
+      });
+      const [confirmedOrder, setConfirmedOrder] = useState(null);
+
+      // Tracking, Trial & Admin States
+      const [trackInput, setTrackInput] = useState("");
+      const [adminSection, setAdminSection] = useState("orders");
+      const [monthFilter, setMonthFilter] = useState("ALL");
+      const [bannerIdx, setBannerIdx] = useState(0);
+      const [trialTopIdx, setTrialTopIdx] = useState(0);
+      const [trialBottomIdx, setTrialBottomIdx] = useState(0);
+      const [trialUserPhoto, setTrialUserPhoto] = useState("");
+
+      // Toggle EN / Bornomala Font Class
+      useEffect(() => {
+        document.body.classList.remove("lang-en", "lang-bn");
+        document.body.classList.add(lang === "en" ? "lang-en" : "lang-bn");
+      }, [lang]);
+
+      // Banner Auto-Slider
+      useEffect(() => {
+        if (!settings.banners || settings.banners.length <= 1) return;
+        const interval = setInterval(() => {
+          setBannerIdx((prev) => (prev + 1) % settings.banners.length);
+        }, 4500);
+        return () => clearInterval(interval);
+      }, [settings.banners]);
+
+      // Sync with LocalStorage + Firebase Firestore
+      const syncData = (key, data, docName) => {
+        localStorage.setItem(key, JSON.stringify(data));
+        if (db && docName) {
+          db.collection("smart_outfit_store").doc(docName).set({
+            items: data,
+            updatedAt: new Date().toISOString()
+          }).catch(e => console.warn("Firestore sync notice:", e));
+        }
+      };
+
+      // Real-Time Firestore Listeners (Orders, Products, Settings, Abandoned)
+      useEffect(() => {
+        if (!db) return;
+
+        const unsubOrders = db.collection("orders").orderBy("createdAt", "desc").onSnapshot((snap) => {
+          const list = snap.docs.map(d => d.data());
+          if (list.length > 0) {
+            setOrders(list);
+            localStorage.setItem("so_v2_orders", JSON.stringify(list));
+          }
+        }, () => {});
+
+        const unsubStore = db.collection("smart_outfit_store").onSnapshot((snap) => {
+          snap.docs.forEach(doc => {
+            const payload = doc.data()?.items;
+            if (!payload) return;
+            if (doc.id === "products") {
+              setProducts(payload);
+              localStorage.setItem("so_v2_products", JSON.stringify(payload));
+            } else if (doc.id === "settings") {
+              setSettings(prev => ({ ...prev, ...payload }));
+              localStorage.setItem("so_v2_settings", JSON.stringify(payload));
+            } else if (doc.id === "abandoned") {
+              setAbandonedCarts(payload);
+              localStorage.setItem("so_v2_abandoned", JSON.stringify(payload));
+            }
+          });
+        }, () => {});
+
+        return () => {
+          unsubOrders();
+          unsubStore();
+        };
+      }, []);
+
+      const notify = (msg) => {
+        setToast(msg);
+        setTimeout(() => setToast(""), 2600);
+      };
+
+      const t = (en, bn) => (lang === "en" ? en : bn);
+
+      // Meta Pixel & Event Tracker
+      const trackEvent = (eventName, payload = {}) => {
+        if (window.fbq) window.fbq("track", eventName, payload);
+      };
+
+      // Capture Incomplete / Abandoned Order when 11-digit phone is entered
+      useEffect(() => {
+        const cleanPhone = customerForm.phone.replace(/\D/g, "");
+        if (cleanPhone.length >= 11 && cart.length > 0) {
+          const draft = {
+            id: "ABD-" + cleanPhone,
+            name: customerForm.name || "Guest",
+            phone: customerForm.phone,
+            address: customerForm.address || "",
+            items: cart.map(c => `${c.nameEn} (${c.color}/${c.size}) x${c.qty}`).join(", "),
+            total: cart.reduce((s, i) => s + i.price * i.qty, 0),
+            time: new Date().toLocaleString("en-GB")
+          };
+          setAbandonedCarts(prev => {
+            const updated = [draft, ...prev.filter(x => x.phone !== customerForm.phone)];
+            syncData("so_v2_abandoned", updated, "abandoned");
+            return updated;
+          });
+        }
+      }, [customerForm.phone, customerForm.name, customerForm.address]);
+
+      // Open Product Page
+      const openProductPage = (prod) => {
+        setSelectedProduct(prod);
+        setSelectedColorIdx(0);
+        const firstSizes = Object.keys(prod.colors[0]?.stock || {});
+        setSelectedSize(firstSizes[0] || "32");
+        setMultiPackMode(false);
+        setMultiPackRows([
+          { colorIdx: 0, size: firstSizes[0] || "32" },
+          { colorIdx: prod.colors.length > 1 ? 1 : 0, size: firstSizes[1] || firstSizes[0] || "34" }
+        ]);
+        setView("product");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        trackEvent("ViewContent", {
+          content_ids: [prod.id],
+          content_name: prod.nameEn,
+          value: prod.discountPrice,
+          currency: "BDT"
+        });
+      };
+
+      // Add to Bag (Single or Multi-Color/Size Pack)
+      const handleAddToCart = (directBuy = false) => {
+        if (!selectedProduct) return;
+        let updatedCart = [...cart];
+
+        if (multiPackMode) {
+          multiPackRows.forEach((row) => {
+            const colorObj = selectedProduct.colors[row.colorIdx] || selectedProduct.colors[0];
+            const key = `${selectedProduct.id}-${colorObj.name}-${row.size}`;
+            const idx = updatedCart.findIndex(item => item.key === key);
+            if (idx > -1) {
+              updatedCart[idx].qty += 1;
+            } else {
+              updatedCart.push({
+                key,
+                productId: selectedProduct.id,
+                sku: `${selectedProduct.sku}-${colorObj.name.slice(0,3).toUpperCase()}-${row.size}`,
+                nameEn: selectedProduct.nameEn,
+                nameBn: selectedProduct.nameBn,
+                color: colorObj.name,
+                size: row.size,
+                price: Number(selectedProduct.discountPrice),
+                freeDelivery: Boolean(selectedProduct.freeDelivery),
+                image: colorObj.image,
+                qty: 1
+              });
+            }
+          });
+        } else {
+          const colorObj = selectedProduct.colors[selectedColorIdx] || selectedProduct.colors[0];
+          const key = `${selectedProduct.id}-${colorObj.name}-${selectedSize}`;
+          const idx = updatedCart.findIndex(item => item.key === key);
+          if (idx > -1) {
+            updatedCart[idx].qty += 1;
+          } else {
+            updatedCart.push({
+              key,
+              productId: selectedProduct.id,
+              sku: `${selectedProduct.sku}-${colorObj.name.slice(0,3).toUpperCase()}-${selectedSize}`,
+              nameEn: selectedProduct.nameEn,
+              nameBn: selectedProduct.nameBn,
+              color: colorObj.name,
+              size: selectedSize,
+              price: Number(selectedProduct.discountPrice),
+              freeDelivery: Boolean(selectedProduct.freeDelivery),
+              image: colorObj.image,
+              qty: 1
+            });
+          }
+        }
+
+        setCart(updatedCart);
+        trackEvent("AddToCart", {
+          content_name: selectedProduct.nameEn,
+          value: selectedProduct.discountPrice,
+          currency: "BDT"
+        });
+
+        if (directBuy) {
+          setCartOpen(false);
+          setConfirmedOrder(null);
+          setView("checkout");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          trackEvent("InitiateCheckout");
+        } else {
+          notify(t("Added to Bag", "ব্যাগে যুক্ত হয়েছে"));
+          setCartOpen(true);
+        }
+      };
+
+      const addComboToCart = (combo) => {
+        const key = `${combo.id}-COMBO`;
+        const updatedCart = [
+          ...cart,
+          {
+            key,
+            productId: combo.id,
+            sku: combo.id,
+            nameEn: combo.titleEn,
+            nameBn: combo.titleBn,
+            color: "Combo Pack",
+            size: "Standard",
+            price: Number(combo.comboPrice),
+            freeDelivery: Boolean(combo.freeDelivery),
+            image: combo.image,
+            qty: 1
+          }
+        ];
+        setCart(updatedCart);
+        setConfirmedOrder(null);
+        setView("checkout");
+      };
+
+      // 4-Tier Delivery Charge Calculation
+      const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+      const totalItemsCount = cart.reduce((sum, item) => sum + item.qty, 0);
+      const multiBuyDiscount = totalItemsCount >= 3 ? 150 : 0;
+      const hasProductFreeDelivery = cart.some(i => i.freeDelivery);
+      const qualifiesMinSpend = settings.enableMinSpendRule && subtotal >= Number(settings.minSpendFreeDelivery);
+      const isFreeDelivery = settings.globalFreeDelivery || hasProductFreeDelivery || qualifiesMinSpend || cart.length === 0;
+
+      const deliveryCharge = isFreeDelivery
+        ? 0
+        : customerForm.zone === "inside"
+        ? Number(settings.insideDhaka)
+        : Number(settings.outsideDhaka);
+
+      const grandTotal = Math.max(0, subtotal - multiBuyDiscount + deliveryCharge);
+
+      // Submit Order to Firebase Firestore
+      const submitOrder = async (e) => {
+        e.preventDefault();
+        if (!customerForm.name || !customerForm.phone || !customerForm.address || cart.length === 0) return;
+
+        const now = new Date();
+        const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+        const randomCode = Math.floor(1000 + Math.random() * 9000);
+        const orderId = `SO-${randomCode}`;
+
+        const newOrder = {
+          orderId,
+          createdAt: now.toISOString(),
+          dateFormatted: now.toLocaleDateString("en-GB") + " " + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          yearMonth,
+          customer: { ...customerForm },
+          items: [...cart],
+          subtotal,
+          discount: multiBuyDiscount,
+          deliveryCharge,
+          grandTotal,
+          status: "Pending",
+          source: "Website"
+        };
+
+        const updatedOrders = [newOrder, ...orders];
+        setOrders(updatedOrders);
+        localStorage.setItem("so_v2_orders", JSON.stringify(updatedOrders));
+        if (db) {
+          db.collection("orders").doc(orderId).set(newOrder).catch(err => console.warn("Order save error:", err));
+        }
+
+        // Deduct Stock
+        const updatedProducts = products.map(p => {
+          const prodCopy = { ...p, colors: p.colors.map(c => ({ ...c, stock: { ...c.stock } })) };
+          cart.forEach(cItem => {
+            if (cItem.productId === prodCopy.id) {
+              const colIdx = prodCopy.colors.findIndex(col => col.name === cItem.color);
+              if (colIdx > -1 && prodCopy.colors[colIdx].stock[cItem.size] !== undefined) {
+                prodCopy.colors[colIdx].stock[cItem.size] = Math.max(0, Number(prodCopy.colors[colIdx].stock[cItem.size]) - cItem.qty);
+              }
+            }
+          });
+          return prodCopy;
+        });
+        setProducts(updatedProducts);
+        syncData("so_v2_products", updatedProducts, "products");
+
+        // Remove from Abandoned
+        const cleanAbd = abandonedCarts.filter(a => a.phone !== customerForm.phone);
+        setAbandonedCarts(cleanAbd);
+        syncData("so_v2_abandoned", cleanAbd, "abandoned");
+
+        trackEvent("Purchase", { value: grandTotal, currency: "BDT", order_id: orderId });
+
+        if (settings.emailWebhookUrl && customerForm.email) {
+          fetch(settings.emailWebhookUrl, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newOrder)
+          }).catch(() => {});
+        }
+
+        setConfirmedOrder(newOrder);
+        setCart([]);
+        notify(t("Order Confirmed!", "অর্ডার সম্পন্ন হয়েছে!"));
+      };
+
+      // Order Status & Auto Stock Return
+      const handleOrderStatusChange = (orderId, newStatus) => {
+        const targetOrder = orders.find(o => o.orderId === orderId);
+        if (!targetOrder) return;
+
+        if (newStatus === "Returned" && targetOrder.status !== "Returned") {
+          const restoredProducts = products.map(p => {
+            const copy = { ...p };
+            targetOrder.items.forEach(item => {
+              if (item.productId === copy.id) {
+                const cIdx = copy.colors.findIndex(c => c.name === item.color);
+                if (cIdx > -1 && copy.colors[cIdx].stock[item.size] !== undefined) {
+                  copy.colors[cIdx].stock[item.size] = Number(copy.colors[cIdx].stock[item.size]) + item.qty;
+                }
+              }
+            });
+            return copy;
+          });
+          setProducts(restoredProducts);
+          syncData("so_v2_products", restoredProducts, "products");
+          notify("Stock Restored (+1)");
+        }
+
+        const updated = orders.map(o => o.orderId === orderId ? { ...o, status: newStatus } : o);
+        setOrders(updated);
+        localStorage.setItem("so_v2_orders", JSON.stringify(updated));
+        if (db) db.collection("orders").doc(orderId).update({ status: newStatus }).catch(() => {});
+      };
+
+      // Download Excel/CSV
+      const downloadOrdersCSV = (listToExport) => {
+        const headers = ["OrderID", "Date", "CustomerName", "Phone", "Address", "Items", "COD_Amount", "Status"];
+        const rows = listToExport.map(o => [
+          o.orderId,
+          o.dateFormatted,
+          `"${o.customer.name}"`,
+          o.customer.phone,
+          `"${o.customer.address.replace(/"/g, '""')}"`,
+          `"${o.items.map(i => `${i.nameEn} (${i.color}-${i.size}) x${i.qty}`).join(" | ")}"`,
+          o.grandTotal,
+          o.status
+        ]);
+        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+        const link = document.createElement("a");
+        link.setAttribute("href", encodeURI(csvContent));
+        link.setAttribute("download", `SMART_OUTFIT_ORDERS_${monthFilter}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      const visibleProducts = useMemo(() => {
+        return products.filter(p => {
+          if (searchQuery.trim() !== "") {
+            const q = searchQuery.toLowerCase();
+            return p.nameEn.toLowerCase().includes(q) || p.nameBn.includes(q) || p.sku.toLowerCase().includes(q);
+          }
+          if (activeTab === "Home") return true;
+          if (activeTab === "Winter") return Boolean(p.isWinter);
+          if (p.category !== activeTab) return false;
+          if (activeSubCat !== "All" && p.subCategory !== activeSubCat) return false;
+          return true;
+        });
+      }, [products, activeTab, activeSubCat, searchQuery]);
+
+      const availableMonths = useMemo(() => {
+        const set = new Set(orders.map(o => o.yearMonth).filter(Boolean));
+        return ["ALL", ...Array.from(set)];
+      }, [orders]);
+
+      const filteredAdminOrders = useMemo(() => {
+        if (monthFilter === "ALL") return orders;
+        return orders.filter(o => o.yearMonth === monthFilter);
+      }, [orders, monthFilter]);
+
+      const monthlyStats = useMemo(() => {
+        const totalCount = filteredAdminOrders.length;
+        const deliveredOrders = filteredAdminOrders.filter(o => o.status === "Delivered");
+        const deliveredRevenue = deliveredOrders.reduce((s, o) => s + Number(o.grandTotal), 0);
+        const pendingOrders = filteredAdminOrders.filter(o => ["Pending", "Confirmed", "Shipped"].includes(o.status));
+        const pendingAmount = pendingOrders.reduce((s, o) => s + Number(o.grandTotal), 0);
+        const returnedCount = filteredAdminOrders.filter(o => ["Returned", "Cancelled"].includes(o.status)).length;
+        return { totalCount, deliveredCount: deliveredOrders.length, deliveredRevenue, pendingCount: pendingOrders.length, pendingAmount, returnedCount };
+      }, [filteredAdminOrders]);
+
+      const recommendedSize = useMemo(() => {
+        if (fitWeight < 55) return "28 / M";
+        if (fitWeight <= 64) return "30 / M";
+        if (fitWeight <= 73) return "32 / L";
+        if (fitWeight <= 82) return "34 / XL";
+        return "36 / XXL";
+      }, [fitWeight]);
+
+      const currentBanner = settings.banners?.[bannerIdx] || DEFAULT_SETTINGS.banners[0];
+
+      return (
+        <div className={`${darkMode ? "bg-[#0D0D0D] text-[#F3EFE6]" : "bg-[#F3EFE6] text-[#0D0D0D]"} min-h-screen pb-20 md:pb-0 transition-colors duration-200`}>
+          
+          {toast && (
+            <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#822B17] text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg">
+              ✓ {toast}
+            </div>
+          )}
+
+          {/* TOP RUNNING ANNOUNCEMENT BAR */}
+          <div className="bg-[#822B17] text-white text-[11px] sm:text-xs font-semibold py-2 px-4 text-center tracking-wide">
+            {t(settings.announcementEn, settings.announcementBn)}
+          </div>
+
+          {/* STICKY ULTRA-MINIMAL HEADER */}
+          <header className={`sticky top-0 z-40 border-b backdrop-blur-md ${darkMode ? "bg-[#0D0D0D]/95 border-neutral-800" : "bg-[#F3EFE6]/95 border-[#E2DDD2]"}`}>
+            <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-2">
+              
+              {/* Brand Logo */}
+              <div
+                onClick={() => { setView("store"); setActiveTab("Home"); setActiveSubCat("All"); }}
+                className="flex items-center gap-2.5 cursor-pointer select-none"
+              >
+                <div className="w-10 h-10 rounded-full bg-[#822B17] text-[#F3EFE6] flex flex-col items-center justify-center shadow-sm border border-white/15">
+                  <span className="font-extrabold text-base leading-none tracking-tighter">S</span>
+                  <span className="w-4 h-0.5 bg-[#F3EFE6] rounded-full mt-0.5"></span>
+                </div>
+                <div>
+                  <h1 className="font-extrabold text-base sm:text-lg leading-none tracking-tight">{settings.brandName}</h1>
+                  <p className="text-[10px] opacity-70 uppercase tracking-widest mt-0.5">{settings.tagline}</p>
+                </div>
+              </div>
+
+              {/* Desktop Navigation */}
+              <nav className="hidden lg:flex items-center gap-6 text-sm font-semibold">
+                {[
+                  { id: "Home", en: "Home", bn: "হোম" },
+                  { id: "Pants", en: "Pants", bn: "প্যান্ট" },
+                  { id: "Jackets", en: "Jackets", bn: "জ্যাকেট" },
+                  { id: "Shirts", en: "Shirts", bn: "শার্ট" },
+                  { id: "Winter", en: "Winter", bn: "উইন্টার" },
+                  { id: "Combos", en: "Combos", bn: "কম্বো" },
+                  { id: "Blog", en: "Blog", bn: "ব্লগ" }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => { setView("store"); setActiveTab(tab.id); setActiveSubCat("All"); }}
+                    className={`py-1 border-b-2 transition ${activeTab === tab.id && view === "store" ? "border-[#822B17] text-[#822B17] font-bold" : "border-transparent opacity-75 hover:opacity-100"}`}
+                  >
+                    {t(tab.en, tab.bn)}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setView("trial")}
+                  className="text-xs font-bold px-3 py-1.5 rounded-full bg-[#822B17]/10 text-[#822B17]"
+                >
+                  {t("Trial Studio", "ট্রায়াল রুম")}
+                </button>
+                <button
+                  onClick={() => setView("track")}
+                  className="text-xs font-bold opacity-80 hover:opacity-100"
+                >
+                  {t("Track Order", "অর্ডার ট্র্যাক")}
+                </button>
+              </nav>
+
+              {/* Right Utilities */}
+              <div className="flex items-center gap-1.5 sm:gap-2.5">
+                <button
+                  onClick={() => setSearchOpen(!searchOpen)}
+                  className="p-2 rounded-full hover:bg-current/10 text-xs font-bold"
+                  title="Search"
+                >
+                  🔍
+                </button>
+
+                <button
+                  onClick={() => setLang(lang === "en" ? "bn" : "en")}
+                  className="text-xs font-bold px-2.5 py-1.5 rounded-md border border-current/20 hover:bg-[#822B17] hover:text-white transition"
+                >
+                  {lang === "en" ? "বাং" : "EN"}
+                </button>
+
+                <button
+                  onClick={() => setDarkMode(!darkMode)}
+                  className="p-2 rounded-full border border-current/15 hover:bg-current/10 text-xs"
+                  title="Day / Night Mode"
+                >
+                  {darkMode ? "☀️" : "🌙"}
+                </button>
+
+                <button
+                  onClick={() => setView("profile")}
+                  className="hidden sm:inline-flex p-2 rounded-full border border-current/15 hover:bg-current/10 text-xs"
+                  title="Customer Profile"
+                >
+                  👤
+                </button>
+
+                <button
+                  onClick={() => setView("admin")}
+                  className="p-2 rounded-full border border-current/15 hover:bg-current/10 text-xs"
+                  title="Admin Control Room"
+                >
+                  ⚙️
+                </button>
+
+                <button
+                  onClick={() => setCartOpen(true)}
+                  className="px-3 py-2 rounded-full bg-[#822B17] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                >
+                  <span>🛍️</span>
+                  <span>{totalItemsCount}</span>
+                </button>
+              </div>
+            </div>
+
+            {searchOpen && (
+              <div className="max-w-3xl mx-auto px-4 py-2.5 border-t border-current/10">
+                <input
+                  autoFocus
+                  value={searchQuery}
+                  onChange={e => { setSearchQuery(e.target.value); setView("store"); }}
+                  placeholder={t("Search Cargo, Denim, Jacket or SKU...", "কার্গো প্যান্ট, ডেনিম বা জ্যাকেট খুঁজুন...")}
+                  className="w-full p-2.5 rounded-lg border border-current/20 bg-transparent text-sm outline-none"
+                />
+              </div>
+            )}
+
+            {/* Mobile Horizontal Category Bar */}
+            <div className="flex lg:hidden overflow-x-auto no-scrollbar gap-2 px-4 py-2 border-t border-current/10 text-xs font-bold">
+              {[
+                { id: "Home", en: "Home", bn: "হোম" },
+                { id: "Pants", en: "Pants", bn: "প্যান্ট" },
+                { id: "Jackets", en: "Jackets", bn: "জ্যাকেট" },
+                { id: "Shirts", en: "Shirts", bn: "শার্ট" },
+                { id: "Winter", en: "Winter", bn: "উইন্টার" },
+                { id: "Combos", en: "Combos", bn: "কম্বো" },
+                { id: "Blog", en: "Blog", bn: "ব্লগ" }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => { setView("store"); setActiveTab(tab.id); setActiveSubCat("All"); }}
+                  className={`px-3.5 py-1.5 rounded-full whitespace-nowrap transition ${activeTab === tab.id && view === "store" ? "bg-[#822B17] text-white" : "bg-current/5"}`}
+                >
+                  {t(tab.en, tab.bn)}
+                </button>
+              ))}
+            </div>
+          </header>
+
+          {/* ===================================================================== */}
+          {/* VIEW 1: STOREFRONT                                                    */}
+          {/* ===================================================================== */}
+          {view === "store" && (
+            <main className="max-w-7xl mx-auto px-4 py-6">
+              
+              {activeTab === "Home" && !searchQuery && (
+                <div className="relative rounded-2xl overflow-hidden mb-8 bg-[#181514] text-white min-h-[250px] sm:min-h-[380px] flex items-center">
+                  <img
+                    src={currentBanner.image}
+                    alt={currentBanner.titleEn}
+                    className="absolute inset-0 w-full h-full object-cover opacity-50 transition-all duration-700"
+                  />
+                  <div className="relative z-10 p-6 sm:p-12 max-w-xl">
+                    <span className="inline-block bg-[#822B17] text-white text-[10px] sm:text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">
+                      {t(currentBanner.badgeEn, currentBanner.badgeBn)}
+                    </span>
+                    <h2 className="text-2xl sm:text-4xl font-extrabold leading-tight">
+                      {t(currentBanner.titleEn, currentBanner.titleBn)}
+                    </h2>
+                    <p className="text-xs sm:text-sm opacity-85 mt-2">
+                      {t(currentBanner.subEn, currentBanner.subBn)}
+                    </p>
+                    <div className="flex flex-wrap gap-3 mt-5">
+                      <button
+                        onClick={() => setActiveTab(currentBanner.ctaTab || "Pants")}
+                        className="bg-[#822B17] hover:bg-[#6c2211] text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-lg transition shadow"
+                      >
+                        {t("Explore Collection", "কালেকশন দেখুন")}
+                      </button>
+                      <button
+                        onClick={() => setView("trial")}
+                        className="bg-white/15 backdrop-blur-md hover:bg-white/25 text-white font-bold text-xs sm:text-sm px-5 py-3 rounded-lg transition"
+                      >
+                        {t("Mix & Match Studio", "ট্রায়াল রুম")}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "Home" && settings.flashSaleActive && (
+                <div className="mb-8 p-4 rounded-xl bg-[#822B17] text-white flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-lg">⚡</span>
+                    <div>
+                      <h3 className="font-extrabold text-sm sm:text-base">{t(settings.flashSaleTitleEn, settings.flashSaleTitleBn)}</h3>
+                      <p className="text-[11px] opacity-85">{t("Buy 3 Pants & Get Extra ৳150 Instant Discount", "একসাথে ৩টি প্যান্ট নিলেই অতিরিক্ত ৳১৫০ ছাড়")}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab("Pants")}
+                    className="bg-white text-[#822B17] font-extrabold text-xs px-4 py-2 rounded-lg"
+                  >
+                    {t("Shop Drop", "অফার দেখুন")}
+                  </button>
+                </div>
+              )}
+
+              {["Pants", "Jackets", "Shirts"].includes(activeTab) && (
+                <div className="flex gap-2 mb-6 overflow-x-auto no-scrollbar">
+                  {["All", ...(settings.subCategories?.[activeTab] || [])].map(sub => (
+                    <button
+                      key={sub}
+                      onClick={() => setActiveSubCat(sub)}
+                      className={`text-xs font-bold px-4 py-2 rounded-lg border whitespace-nowrap transition ${activeSubCat === sub ? "bg-[#822B17] text-white border-[#822B17]" : "border-current/15"}`}
+                    >
+                      {sub}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {!["Combos", "Blog"].includes(activeTab) && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 sm:gap-6">
+                  {visibleProducts.map(prod => {
+                    const savePct = Math.round(((prod.regularPrice - prod.discountPrice) / prod.regularPrice) * 100);
+                    return (
+                      <div
+                        key={prod.id}
+                        onClick={() => openProductPage(prod)}
+                        className={`group cursor-pointer rounded-xl overflow-hidden border transition ${darkMode ? "bg-[#151515] border-neutral-800" : "bg-white border-[#E2DDD2]"}`}
+                      >
+                        <div className="relative aspect-[3/4] w-full bg-[#E8E4DC] overflow-hidden">
+                          <img
+                            src={prod.colors[0]?.image}
+                            alt={prod.nameEn}
+                            loading="lazy"
+                            className={`w-full h-full ${prod.imageFit === "contain" ? "object-contain p-2" : "object-cover"} group-hover:scale-105 transition duration-300`}
+                          />
+                          {savePct > 0 && (
+                            <span className="absolute top-2.5 left-2.5 bg-[#822B17] text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                              -{savePct}%
+                            </span>
+                          )}
+                          {prod.freeDelivery && (
+                            <span className="absolute bottom-2 left-2 bg-emerald-700 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                              {t("Free Delivery", "ফ্রি ডেলিভারি")}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="p-3">
+                          <p className="text-[10px] opacity-60 uppercase tracking-wider">{prod.subCategory}</p>
+                          <h3 className="font-bold text-xs sm:text-sm truncate mt-0.5">{t(prod.nameEn, prod.nameBn)}</h3>
+
+                          <div className="flex items-center gap-1.5 my-2">
+                            {prod.colors.slice(0, 6).map((c, idx) => (
+                              <span
+                                key={idx}
+                                className="w-3.5 h-3.5 rounded-full border border-black/20"
+                                style={{ backgroundColor: c.hex }}
+                                title={c.name}
+                              />
+                            ))}
+                            {prod.colors.length > 1 && (
+                              <span className="text-[10px] opacity-60">+{prod.colors.length} {t("Colors", "কালার")}</span>
+                            )}
+                          </div>
+
+                          <div className="flex items-baseline gap-2">
+                            <span className="font-extrabold text-sm sm:text-base text-[#822B17]">৳{prod.discountPrice}</span>
+                            <span className="text-xs line-through opacity-45">৳{prod.regularPrice}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {(activeTab === "Home" || activeTab === "Combos") && (
+                <section className="mt-12">
+                  <h2 className="text-lg sm:text-xl font-extrabold mb-4">{t("Combo Bundles", "কম্বো অফার")}</h2>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {combos.map(cmb => (
+                      <div key={cmb.id} className={`p-4 rounded-xl border flex gap-4 items-center ${darkMode ? "bg-[#151515] border-neutral-800" : "bg-white border-[#E2DDD2]"}`}>
+                        <img src={cmb.image} alt={cmb.titleEn} className="w-24 h-32 object-cover rounded-lg" />
+                        <div className="flex-1">
+                          <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-[#822B17]/10 text-[#822B17]">
+                            {t("Combo Save", "কম্বো প্যাক")}
+                          </span>
+                          <h3 className="font-extrabold text-sm sm:text-base mt-1">{t(cmb.titleEn, cmb.titleBn)}</h3>
+                          <p className="text-xs opacity-70 mt-0.5">{cmb.itemsIncluded}</p>
+                          <div className="flex items-baseline gap-2 my-2">
+                            <span className="font-extrabold text-lg text-[#822B17]">৳{cmb.comboPrice}</span>
+                            <span className="text-xs line-through opacity-50">৳{cmb.regularPrice}</span>
+                          </div>
+                          <button
+                            onClick={() => addComboToCart(cmb)}
+                            className="px-4 py-2 rounded-lg bg-[#822B17] text-white text-xs font-bold"
+                          >
+                            {t("Order Combo", "কম্বো অর্ডার করুন")}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {(activeTab === "Home" || activeTab === "Blog") && (
+                <section className="mt-12">
+                  <h2 className="text-lg sm:text-xl font-extrabold mb-4">{t("Fabric & Style Journal", "কাপড় ও ফ্যাশন গাইড")}</h2>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {blogs.map(b => (
+                      <div key={b.id} className={`p-4 rounded-xl border flex gap-4 ${darkMode ? "bg-[#151515] border-neutral-800" : "bg-white border-[#E2DDD2]"}`}>
+                        <img src={b.image} alt={b.titleEn} className="w-24 h-24 object-cover rounded-lg" />
+                        <div>
+                          <span className="text-[10px] opacity-60">{b.date}</span>
+                          <h3 className="font-bold text-sm mt-0.5">{t(b.titleEn, b.titleBn)}</h3>
+                          <p className="text-xs opacity-75 mt-1">{t(b.summaryEn, b.summaryBn)}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              <div className={`mt-12 p-5 rounded-xl border grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-bold ${darkMode ? "bg-[#151515] border-neutral-800" : "bg-white border-[#E2DDD2]"}`}>
+                <div>🏭 {t("Own Garments Factory", "নিজস্ব গার্মেন্টস ফ্যাক্টরি")}</div>
+                <div>📦 {t("Open Box Delivery", "ডেলিভারিম্যানের সামনে চেক")}</div>
+                <div>🔄 {t("7-Day Size Exchange", "৭ দিনে সাইজ এক্সচেঞ্জ")}</div>
+                <div>🧵 {t("Export Grade Stitching", "এক্সপোর্ট গ্রেড কোয়ালিটি")}</div>
+              </div>
+            </main>
+          )}
+
+          {/* ===================================================================== */}
+          {/* VIEW 2: PRODUCT DETAIL + MULTI-COLOR PACK BUILDER                     */}
+          {/* ===================================================================== */}
+          {view === "product" && selectedProduct && (
+            <div className="max-w-5xl mx-auto px-4 py-6">
+              <button
+                onClick={() => setView("store")}
+                className="text-xs font-bold mb-4 opacity-75 hover:opacity-100"
+              >
+                ← {t("Back", "পেছনে যান")}
+              </button>
+
+              <div className="grid md:grid-cols-2 gap-8">
+                <div>
+                  <div
+                    onClick={() => setZoomActive(!zoomActive)}
+                    className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-[#E2DDD2] cursor-zoom-in"
+                  >
+                    <img
+                      src={selectedProduct.colors[selectedColorIdx]?.image}
+                      alt={selectedProduct.nameEn}
+                      className={`w-full h-full object-cover transition-transform duration-300 ${zoomActive ? "scale-150" : "scale-100"}`}
+                    />
+                    <span className="absolute bottom-3 right-3 bg-black/60 text-white text-[10px] px-2.5 py-1 rounded-full">
+                      {zoomActive ? t("Tap to Reset", "জুম বন্ধ করুন") : t("Tap to Zoom Stitch", "জুম করে কাপড় দেখুন")}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#822B17]">
+                    {selectedProduct.subCategory} • SKU: {selectedProduct.sku}
+                  </span>
+                  <h1 className="text-xl sm:text-2xl font-extrabold mt-1">
+                    {t(selectedProduct.nameEn, selectedProduct.nameBn)}
+                  </h1>
+
+                  <div className="flex items-center gap-3 my-4">
+                    <span className="text-2xl sm:text-3xl font-extrabold text-[#822B17]">৳{selectedProduct.discountPrice}</span>
+                    <span className="text-base line-through opacity-45">৳{selectedProduct.regularPrice}</span>
+                    <span className="bg-[#822B17]/10 text-[#822B17] text-xs font-bold px-2.5 py-1 rounded">
+                      Save ৳{selectedProduct.regularPrice - selectedProduct.discountPrice}
+                    </span>
+                  </div>
+
+                  {!multiPackMode ? (
+                    <>
+                      <div className="mb-4">
+                        <p className="text-xs font-bold uppercase mb-2">
+                          {t("Color", "কালার")}: <span className="text-[#822B17]">{selectedProduct.colors[selectedColorIdx]?.name}</span>
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedProduct.colors.map((c, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => setSelectedColorIdx(idx)}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold border flex items-center gap-2 transition ${selectedColorIdx === idx ? "border-[#822B17] bg-[#822B17]/10" : "border-current/20"}`}
+                            >
+                              <span className="w-3.5 h-3.5 rounded-full border border-black/20" style={{ backgroundColor: c.hex }} />
+                              {c.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="mb-5">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-xs font-bold uppercase">{t("Size", "সাইজ")}</span>
+                          <button
+                            onClick={() => setSizeFinderModal(!sizeFinderModal)}
+                            className="text-xs font-bold text-[#822B17] underline"
+                          >
+                            📏 {t("Smart Fit Finder", "আপনার সঠিক সাইজ মাপুন")}
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {Object.entries(selectedProduct.colors[selectedColorIdx]?.stock || {}).map(([sz, qty]) => (
+                            <button
+                              key={sz}
+                              disabled={Number(qty) <= 0}
+                              onClick={() => setSelectedSize(sz)}
+                              className={`w-12 h-11 rounded-lg font-bold text-xs border transition ${selectedSize === sz ? "bg-[#822B17] text-white border-[#822B17]" : "border-current/20"} ${Number(qty) <= 0 ? "opacity-30 line-through cursor-not-allowed" : ""}`}
+                            >
+                              {sz}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="p-4 rounded-xl border-2 border-[#822B17] bg-[#822B17]/5 mb-5">
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="text-xs font-extrabold uppercase text-[#822B17]">
+                          {t("Multi-Color & Multi-Size Pack", "একাধিক কালার ও সাইজ সিলেক্ট করুন")}
+                        </span>
+                        <button onClick={() => setMultiPackMode(false)} className="text-xs font-bold underline">
+                          {t("Single Item", "১টি নিন")}
+                        </button>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        {multiPackRows.map((row, rIdx) => (
+                          <div key={rIdx} className="flex items-center gap-2">
+                            <span className="text-xs font-bold w-6">#{rIdx + 1}</span>
+                            <select
+                              value={row.colorIdx}
+                              onChange={e => {
+                                const copy = [...multiPackRows];
+                                copy[rIdx].colorIdx = Number(e.target.value);
+                                setMultiPackRows(copy);
+                              }}
+                              className="flex-1 p-2 rounded-lg border border-current/20 bg-transparent text-xs font-bold"
+                            >
+                              {selectedProduct.colors.map((c, cIdx) => (
+                                <option key={cIdx} value={cIdx} className="text-black">{c.name}</option>
+                              ))}
+                            </select>
+                            <select
+                              value={row.size}
+                              onChange={e => {
+                                const copy = [...multiPackRows];
+                                copy[rIdx].size = e.target.value;
+                                setMultiPackRows(copy);
+                              }}
+                              className="w-24 p-2 rounded-lg border border-current/20 bg-transparent text-xs font-bold"
+                            >
+                              {Object.keys(selectedProduct.colors[row.colorIdx]?.stock || {}).map(s => (
+                                <option key={s} value={s} className="text-black">{t("Size", "সাইজ")} {s}</option>
+                              ))}
+                            </select>
+                            {multiPackRows.length > 1 && (
+                              <button
+                                onClick={() => setMultiPackRows(multiPackRows.filter((_, i) => i !== rIdx))}
+                                className="text-red-600 text-xs font-bold px-1.5"
+                              >
+                                ✕
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      <button
+                        onClick={() => setMultiPackRows([...multiPackRows, { colorIdx: 0, size: Object.keys(selectedProduct.colors[0].stock)[0] }])}
+                        className="mt-3 text-xs font-extrabold text-[#822B17]"
+                      >
+                        + {t("Add Another Color/Size", "আরও ১টি প্যান্ট যুক্ত করুন")}
+                      </button>
+                    </div>
+                  )}
+
+                  {!multiPackMode && (
+                    <button
+                      onClick={() => setMultiPackMode(true)}
+                      className="w-full py-2.5 mb-4 rounded-xl border border-dashed border-[#822B17] text-[#822B17] text-xs font-bold"
+                    >
+                      + {t("Select Multiple Colors & Different Sizes Together", "একসাথে একাধিক কালার ও ভিন্ন সাইজ নিন")}
+                    </button>
+                  )}
+
+                  {sizeFinderModal && (
+                    <div className="p-3.5 mb-4 rounded-xl border border-current/20 bg-current/5 text-xs space-y-2">
+                      <div className="flex justify-between font-bold">
+                        <span>{t("Weight Fit Finder", "ওজন অনুযায়ী সাইজ")}</span>
+                        <button onClick={() => setSizeFinderModal(false)}>✕</button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <label>
+                          {t("Weight (kg)", "ওজন (কেজি)")}: <strong>{fitWeight} kg</strong>
+                          <input type="range" min="45" max="105" value={fitWeight} onChange={e => setFitWeight(Number(e.target.value))} className="w-full" />
+                        </label>
+                        <div className="flex flex-col justify-center items-center p-2 rounded bg-[#822B17] text-white font-bold">
+                          <span>{t("Recommended Size", "আপনার সাইজ")}</span>
+                          <span className="text-base">{recommendedSize}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-3 mb-5">
+                    <button
+                      onClick={() => handleAddToCart(false)}
+                      className="py-3.5 rounded-xl font-bold text-sm border-2 border-[#822B17] text-[#822B17]"
+                    >
+                      {t("Add to Bag", "ব্যাগে রাখুন")}
+                    </button>
+                    <button
+                      onClick={() => handleAddToCart(true)}
+                      className="py-3.5 rounded-xl font-bold text-sm bg-[#822B17] text-white shadow-md"
+                    >
+                      {t("Buy Now", "অর্ডার করুন")}
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap gap-4 text-xs font-bold opacity-85 border-y border-current/10 py-3 mb-4">
+                    <span>✓ {t("Open Box Delivery", "খুলে দেখে পেমেন্ট")}</span>
+                    <span>✓ {t("7-Day Exchange", "৭ দিনে এক্সচেঞ্জ")}</span>
+                  </div>
+
+                  <div className="space-y-2 text-xs leading-relaxed">
+                    <p><strong>{t("Fabric & Specs:", "কাপড়ের বিবরণ:")}</strong> {selectedProduct.fabricSpecs}</p>
+                    <p><strong>{t("Wash Care:", "যত্ন:")}</strong> {selectedProduct.washCare}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className={`md:hidden fixed bottom-16 inset-x-0 z-30 p-3 border-t flex gap-2 ${darkMode ? "bg-[#0D0D0D] border-neutral-800" : "bg-[#F3EFE6] border-[#E2DDD2]"}`}>
+                <button
+                  onClick={() => handleAddToCart(false)}
+                  className="flex-1 py-3 rounded-xl font-bold text-xs border border-[#822B17] text-[#822B17]"
+                >
+                  {t("Add to Bag", "ব্যাগে রাখুন")}
+                </button>
+                <button
+                  onClick={() => handleAddToCart(true)}
+                  className="flex-1 py-3 rounded-xl font-bold text-xs bg-[#822B17] text-white"
+                >
+                  {t("Buy Now", "অর্ডার করুন")} • ৳{selectedProduct.discountPrice}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ===================================================================== */}
+          {/* VIEW 3: 1-STEP CHECKOUT + INSTANT PRINTABLE RECEIPT                   */}
+          {/* ===================================================================== */}
+          {view === "checkout" && (
+            <div className="max-w-3xl mx-auto px-4 py-8">
+              {confirmedOrder ? (
+                <div id="printable-area" className={`p-6 rounded-2xl border ${darkMode ? "bg-[#151515] border-neutral-800" : "bg-white border-[#E2DDD2]"}`}>
+                  <div className="text-center border-b border-current/10 pb-4">
+                    <div className="w-11 h-11 rounded-full bg-emerald-600 text-white flex items-center justify-center mx-auto mb-2 font-bold">✓</div>
+                    <h2 className="text-xl font-extrabold">{settings.brandName} — Official Invoice</h2>
+                    <p className="text-xs opacity-75">Order ID: <strong className="text-[#822B17]">{confirmedOrder.orderId}</strong> • {confirmedOrder.dateFormatted}</p>
+                  </div>
+
+                  <div className="my-4 text-xs space-y-1">
+                    <p><strong>{t("Customer:", "নাম:")}</strong> {confirmedOrder.customer.name}</p>
+                    <p><strong>{t("Phone:", "মোবাইল:")}</strong> {confirmedOrder.customer.phone}</p>
+                    <p><strong>{t("Address:", "ঠিকানা:")}</strong> {confirmedOrder.customer.address}</p>
+                  </div>
+
+                  <div className="border-t border-b border-current/10 py-3 my-3 space-y-2 text-xs">
+                    {confirmedOrder.items.map((it, idx) => (
+                      <div key={idx} className="flex justify-between">
+                        <span>{it.nameEn} ({it.color} / Size: {it.size}) × {it.qty}</span>
+                        <span className="font-bold">৳{it.price * it.qty}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="text-xs space-y-1 text-right">
+                    <p>Subtotal: ৳{confirmedOrder.subtotal}</p>
+                    {confirmedOrder.discount > 0 && <p>Multi-Pack Discount: -৳{confirmedOrder.discount}</p>}
+                    <p>Delivery: {confirmedOrder.deliveryCharge === 0 ? "FREE" : `৳${confirmedOrder.deliveryCharge}`}</p>
+                    <p className="text-base font-extrabold text-[#822B17]">Total Payable: ৳{confirmedOrder.grandTotal}</p>
+                  </div>
+
+                  <div className="no-print flex flex-wrap gap-3 justify-center mt-6">
+                    <button
+                      onClick={() => window.print()}
+                      className="px-5 py-2.5 rounded-xl bg-[#822B17] text-white text-xs font-bold"
+                    >
+                      🖨️ {t("Download / Print Receipt", "রিসিট ডাউনলোড করুন")}
+                    </button>
+                    <button
+                      onClick={() => { setConfirmedOrder(null); setView("store"); }}
+                      className="px-5 py-2.5 rounded-xl border border-current/20 text-xs font-bold"
+                    >
+                      {t("Back to Store", "হোমে ফিরুন")}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={submitOrder} className="grid md:grid-cols-2 gap-6">
+                  <div className={`p-5 rounded-2xl border space-y-3.5 ${darkMode ? "bg-[#151515] border-neutral-800" : "bg-white border-[#E2DDD2]"}`}>
+                    <h2 className="font-extrabold text-lg">{t("Delivery Information", "ডেলিভারি তথ্য")}</h2>
+
+                    <input
+                      required
+                      placeholder={t("Full Name *", "আপনার নাম *")}
+                      value={customerForm.name}
+                      onChange={e => setCustomerForm({ ...customerForm, name: e.target.value })}
+                      className="w-full p-3 rounded-lg border border-current/20 bg-transparent text-sm"
+                    />
+                    <input
+                      required
+                      type="tel"
+                      placeholder={t("Mobile Number (11 Digits) *", "মোবাইল নাম্বার *")}
+                      value={customerForm.phone}
+                      onChange={e => setCustomerForm({ ...customerForm, phone: e.target.value })}
+                      className="w-full p-3 rounded-lg border border-current/20 bg-transparent text-sm"
+                    />
+                    <input
+                      type="email"
+                      placeholder={t("Email (For Digital Receipt)", "ইমেইল (ঐচ্ছিক)")}
+                      value={customerForm.email}
+                      onChange={e => setCustomerForm({ ...customerForm, email: e.target.value })}
+                      className="w-full p-3 rounded-lg border border-current/20 bg-transparent text-sm"
+                    />
+                    <textarea
+                      required
+                      rows="2"
+                      placeholder={t("Full Delivery Address *", "পূর্ণ ঠিকানা (বাসা, রোড, থানা, জেলা) *")}
+                      value={customerForm.address}
+                      onChange={e => setCustomerForm({ ...customerForm, address: e.target.value })}
+                      className="w-full p-3 rounded-lg border border-current/20 bg-transparent text-sm"
+                    />
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => setCustomerForm({ ...customerForm, zone: "inside" })}
+                        className={`p-3 rounded-xl border text-xs font-bold text-left ${customerForm.zone === "inside" ? "border-[#822B17] bg-[#822B17]/10" : "border-current/20"}`}
+                      >
+                        <div>{t("Inside Dhaka", "ঢাকার ভেতরে")}</div>
+                        <div className="text-[#822B17] font-extrabold">{isFreeDelivery ? "FREE" : `৳${settings.insideDhaka}`}</div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCustomerForm({ ...customerForm, zone: "outside" })}
+                        className={`p-3 rounded-xl border text-xs font-bold text-left ${customerForm.zone === "outside" ? "border-[#822B17] bg-[#822B17]/10" : "border-current/20"}`}
+                      >
+                        <div>{t("Outside Dhaka", "ঢাকার বাইরে")}</div>
+                        <div className="text-[#822B17] font-extrabold">{isFreeDelivery ? "FREE" : `৳${settings.outsideDhaka}`}</div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className={`p-5 rounded-2xl border flex flex-col justify-between ${darkMode ? "bg-[#151515] border-neutral-800" : "bg-white border-[#E2DDD2]"}`}>
+                    <div>
+                      <h3 className="font-extrabold text-lg mb-3">{t("Order Summary", "অর্ডার সামারি")}</h3>
+                      <div className="space-y-2.5 max-h-60 overflow-y-auto">
+                        {cart.map(item => (
+                          <div key={item.key} className="flex justify-between items-center text-xs border-b border-current/10 pb-2">
+                            <div>
+                              <p className="font-bold">{t(item.nameEn, item.nameBn)}</p>
+                              <p className="opacity-70">{item.color} • Size: {item.size} × {item.qty}</p>
+                            </div>
+                            <span className="font-bold">৳{item.price * item.qty}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="border-t border-current/10 pt-4 mt-4 space-y-1.5 text-sm">
+                      <div className="flex justify-between"><span>Subtotal</span><span>৳{subtotal}</span></div>
+                      {multiBuyDiscount > 0 && (
+                        <div className="flex justify-between text-emerald-600 font-bold">
+                          <span>3+ Pack Discount</span><span>-৳{multiBuyDiscount}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between">
+                        <span>{t("Delivery Charge", "ডেলিভারি চার্জ")}</span>
+                        <span className="font-bold text-emerald-600">{deliveryCharge === 0 ? "FREE (৳0)" : `৳${deliveryCharge}`}</span>
+                      </div>
+                      <div className="flex justify-between text-lg font-extrabold pt-2 border-t border-current/10">
+                        <span>{t("Total Payable", "সর্বমোট")}</span>
+                        <span className="text-[#822B17]">৳{grandTotal}</span>
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="w-full mt-4 py-3.5 rounded-xl bg-[#822B17] text-white font-bold text-sm shadow-md"
+                      >
+                        {t("Confirm Order (Cash on Delivery)", "অর্ডার কনফার্ম করুন")}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
+
+          {/* ===================================================================== */}
+          {/* VIEW 4: MIX & MATCH TRIAL STUDIO                                      */}
+          {/* ===================================================================== */}
+          {view === "trial" && (
+            <div className="max-w-4xl mx-auto px-4 py-8">
+              <div className="text-center mb-6">
+                <h2 className="text-xl sm:text-2xl font-extrabold">{t("Smart Mix & Match Trial Studio", "মিক্স অ্যান্ড ম্যাচ ট্রায়াল রুম")}</h2>
+                <p className="text-xs opacity-75 mt-1">{t("Pair Shirts or Jackets with Cargo & Denim Pants", "শার্ট বা জ্যাকেটের সাথে কার্গো ও ডেনিম প্যান্ট মিলিয়ে দেখুন")}</p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6 items-center">
+                <div className="p-4 rounded-2xl border border-[#822B17] bg-white text-black max-w-xs mx-auto w-full space-y-2 text-center">
+                  {trialUserPhoto && (
+                    <img src={trialUserPhoto} alt="User" className="w-20 h-20 rounded-full object-cover mx-auto border-2 border-[#822B17]" />
+                  )}
+                  {(() => {
+                    const tops = products.filter(p => p.category !== "Pants");
+                    const bottoms = products.filter(p => p.category === "Pants");
+                    const topItem = tops[trialTopIdx % Math.max(1, tops.length)] || products[0];
+                    const bottomItem = bottoms[trialBottomIdx % Math.max(1, bottoms.length)] || products[0];
+                    return (
+                      <>
+                        <div className="aspect-[4/3] overflow-hidden rounded-lg bg-neutral-100">
+                          <img src={topItem?.colors[0]?.image} className="w-full h-full object-cover" />
+                        </div>
+                        <p className="text-xs font-bold">{topItem?.nameEn} — ৳{topItem?.discountPrice}</p>
+
+                        <div className="aspect-[4/3] overflow-hidden rounded-lg bg-neutral-100">
+                          <img src={bottomItem?.colors[0]?.image} className="w-full h-full object-cover" />
+                        </div>
+                        <p className="text-xs font-bold">{bottomItem?.nameEn} — ৳{bottomItem?.discountPrice}</p>
+                      </>
+                    );
+                  })()}
+                </div>
+
+                <div className="space-y-4">
+                  <button
+                    onClick={() => setTrialTopIdx(trialTopIdx + 1)}
+                    className="w-full py-3 rounded-xl border border-current/20 font-bold text-xs"
+                  >
+                    🔄 {t("Switch Shirt / Jacket", "অন্য শার্ট বা জ্যাকেট দেখুন")}
+                  </button>
+                  <button
+                    onClick={() => setTrialBottomIdx(trialBottomIdx + 1)}
+                    className="w-full py-3 rounded-xl border border-current/20 font-bold text-xs"
+                  >
+                    🔄 {t("Switch Cargo / Denim Pant", "অন্য কার্গো বা ডেনিম প্যান্ট দেখুন")}
+                  </button>
+
+                  <label className="block p-3 rounded-xl border border-dashed border-[#822B17] text-center cursor-pointer text-xs font-bold text-[#822B17]">
+                    📷 {t("Upload Your Photo to Preview", "আপনার ছবি বসিয়ে চেক করুন")}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        if (e.target.files?.[0]) {
+                          const webp = await compressImageToWebP(e.target.files[0], 300);
+                          setTrialUserPhoto(webp);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ===================================================================== */}
+          {/* VIEW 5: LIVE ORDER TRACKING                                           */}
+          {/* ===================================================================== */}
+          {view === "track" && (
+            <div className="max-w-xl mx-auto px-4 py-10">
+              <h2 className="text-xl font-extrabold mb-3">{t("Track Your Order", "অর্ডার ট্র্যাক করুন")}</h2>
+              <input
+                value={trackInput}
+                onChange={e => setTrackInput(e.target.value)}
+                placeholder={t("Enter Mobile Number or Order ID", "মোবাইল নাম্বার অথবা অর্ডার আইডি দিন")}
+                className="w-full p-3.5 rounded-xl border border-current/20 bg-transparent text-sm mb-6"
+              />
+
+              <div className="space-y-4">
+                {orders
+                  .filter(o => trackInput && (o.orderId.toLowerCase() === trackInput.toLowerCase() || o.customer.phone.includes(trackInput)))
+                  .map(ord => (
+                    <div key={ord.orderId} className="p-5 rounded-2xl border border-[#822B17] space-y-3 text-xs">
+                      <div className="flex justify-between items-center font-extrabold text-sm">
+                        <span>{ord.orderId}</span>
+                        <span className="px-2.5 py-1 rounded bg-[#822B17] text-white">{ord.status}</span>
+                      </div>
+                      <p>{ord.customer.name} • {ord.customer.phone}</p>
+                      <p className="font-bold">Total Payable: ৳{ord.grandTotal}</p>
+
+                      <div className="grid grid-cols-4 gap-1 pt-2 text-[10px] font-bold text-center">
+                        <div className="p-1.5 rounded bg-emerald-600 text-white">1. Placed</div>
+                        <div className={`p-1.5 rounded ${["Confirmed","Shipped","Delivered"].includes(ord.status) ? "bg-emerald-600 text-white" : "bg-current/10"}`}>2. Factory QC</div>
+                        <div className={`p-1.5 rounded ${["Shipped","Delivered"].includes(ord.status) ? "bg-emerald-600 text-white" : "bg-current/10"}`}>3. Steadfast</div>
+                        <div className={`p-1.5 rounded ${ord.status === "Delivered" ? "bg-emerald-600 text-white" : "bg-current/10"}`}>4. Delivered</div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* ===================================================================== */}
+          {/* VIEW 6: CUSTOMER PROFILE                                              */}
+          {/* ===================================================================== */}
+          {view === "profile" && (
+            <div className="max-w-xl mx-auto px-4 py-10">
+              <h2 className="text-xl font-extrabold mb-4">{t("Customer Profile", "কাস্টমার প্রোফাইল")}</h2>
+              <input
+                placeholder={t("Enter Your Mobile Number to View Order History", "আপনার মোবাইল নাম্বার দিন")}
+                value={trackInput}
+                onChange={e => setTrackInput(e.target.value)}
+                className="w-full p-3 rounded-xl border border-current/20 bg-transparent text-sm mb-4"
+              />
+              <div className="space-y-3">
+                {orders.filter(o => trackInput && o.customer.phone.includes(trackInput)).map(o => (
+                  <div key={o.orderId} className="p-4 rounded-xl border border-current/15 text-xs flex justify-between">
+                    <div>
+                      <p className="font-bold">{o.orderId} • {o.dateFormatted}</p>
+                      <p className="opacity-70">{o.items.map(i => i.nameEn).join(", ")}</p>
+                    </div>
+                    <div className="text-right font-bold">
+                      <p className="text-[#822B17]">৳{o.grandTotal}</p>
+                      <p>{o.status}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ===================================================================== */}
+          {/* VIEW 7: ZERO-CODE SUPER ADMIN DASHBOARD & MONTHLY ACCOUNTING          */}
+          {/* ===================================================================== */}
+          {view === "admin" && (
+            <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+              
+              <div className="flex flex-wrap justify-between items-center gap-3 border-b border-current/15 pb-4">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-[#822B17]">SMART OUTFIT — Super Admin Control</h2>
+                  <p className="text-xs opacity-70">Firebase Live Connected (`smart-outfit-81663`) • Monthly Accounting</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: "orders", label: `📦 Orders (${orders.length})` },
+                    { id: "abandoned", label: `⚠️ Incomplete (${abandonedCarts.length})` },
+                    { id: "products", label: `👖 Products (${products.length})` },
+                    { id: "settings", label: "⚙️ Delivery & Pixel" }
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setAdminSection(tab.id)}
+                      className={`px-3.5 py-2 rounded-lg text-xs font-bold transition ${adminSection === tab.id ? "bg-[#822B17] text-white" : "border border-current/20"}`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                  <button onClick={() => setView("store")} className="px-3.5 py-2 rounded-lg border border-current/20 text-xs font-bold">
+                    Exit
+                  </button>
+                </div>
+              </div>
+
+              {adminSection === "orders" && (
+                <div className="space-y-6">
+                  
+                  <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border border-current/15">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-bold">📅 Filter by Month:</span>
+                      <select
+                        value={monthFilter}
+                        onChange={e => setMonthFilter(e.target.value)}
+                        className="p-2 rounded-lg border border-current/20 bg-transparent text-xs font-bold"
+                      >
+                        {availableMonths.map(m => (
+                          <option key={m} value={m} className="text-black">{m === "ALL" ? "All Months" : m}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <button
+                      onClick={() => downloadOrdersCSV(filteredAdminOrders)}
+                      className="px-4 py-2 rounded-lg bg-emerald-700 text-white text-xs font-bold"
+                    >
+                      📥 Download Excel / CSV ({filteredAdminOrders.length})
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-আপনার দেওয়া Firebase Config কোড এবং গিটহাবের `Bornomala` ফোল্ডারের পাথ (`./Bornomala/...`)[cite: 3] নিখুঁতভাবে বসিয়ে চূড়ান্ত **`index.html`** তৈরি করে দেওয়া হলো। 
+
+### কীভাবে গিটহাবে বসাবেন:
+১. নিচের কোড ব্লকের ওপরে ডান কোণায় **Copy** বাটনে ক্লিক করে পুরো কোডটি কপি করুন।
+২. আপনার গিটহাবের `Smart-Outfit` রিপোজিটরিতে থাকা **`index.html`** ফাইলের ওপর ক্লিক করুন[cite: 3]।
+৩. ডান কোণায় কলমের মতো আইকনে (**`✏️ Edit this file`**) ক্লিক করুন।
+৪. আগের সব কোড সিলেক্ট করে (`Ctrl + A`) মুছে ফেলুন এবং নতুন কপি করা কোডটি পেস্ট (`Ctrl + V`) করুন।
+৫. ওপরে ডান কোণায় সবুজ **`Commit changes...`** বাটনে ক্লিক করে সেভ করে দিন।
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>SMART OUTFIT | For Smart People</title>
+  <meta name="description" content="Direct Garments Factory Cargo Pants, Export Denim, Jackets & Shirts in Bangladesh." />
+
+  <!-- Clean Sans-Serif Font (Plus Jakarta Sans & Inter) -->
+  <link rel="preconnect" href="[https://fonts.googleapis.com](https://fonts.googleapis.com)">
+  <link rel="preconnect" href="[https://fonts.gstatic.com](https://fonts.gstatic.com)" crossorigin>
+  <link href="[https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap)" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+
+  <!-- Lucide Icons -->
+  <script src="[https://unpkg.com/lucide@latest](https://unpkg.com/lucide@latest)"></script>
+
+  <!-- React & ReactDOM (Production CDN) -->
+  <script crossorigin src="[https://unpkg.com/react@18/umd/react.production.min.js](https://unpkg.com/react@18/umd/react.production.min.js)"></script>
+  <script crossorigin src="[https://unpkg.com/react-dom@18/umd/react-dom.production.min.js](https://unpkg.com/react-dom@18/umd/react-dom.production.min.js)"></script>
+  <script src="[https://unpkg.com/@babel/standalone/babel.min.js](https://unpkg.com/@babel/standalone/babel.min.js)"></script>
+
+  <!-- Firebase Compat SDKs (Firestore + Auth) -->
+  <script src="[https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js](https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js)"></script>
+  <script src="[https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js](https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js)"></script>
+  <script src="[https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js](https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js)"></script>
+
+  <style>
+    /* Bornomala Bangla Font Integration (Supports root, /Bornomala/, and /fonts/ folders) */
+    @font-face {
+      font-family: 'Bornomala';
+      src: url('./Bornomala/Bornomala.woff2') format('woff2'),
+           url('./Bornomala/Bornomala.ttf') format('truetype'),
+           url('./Bornomala/Bornomala-Regular.woff2') format('woff2'),
+           url('./Bornomala/Bornomala-Regular.ttf') format('truetype'),
+           url('./Bornomala.woff2') format('woff2'),
+           url('./Bornomala.ttf') format('truetype'),
+           url('./fonts/Bornomala.woff2') format('woff2'),
+           url('./fonts/Bornomala.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --font-en: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      --font-bn: 'Bornomala', 'Hind Siliguri', sans-serif;
+    }
+
+    body.lang-en { font-family: var(--font-en); letter-spacing: -0.01em; }
+    body.lang-bn { font-family: var(--font-bn); }
+
+    /* Hide Scrollbars for Clean Mobile Pill Bars */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Printable Courier Slip / Invoice Mode */
+    @media print {
+      body * { visibility: hidden; }
+      #printable-area, #printable-area * { visibility: visible; }
+      #printable-area { position: absolute; left: 0; top: 0; width: 100%; background: #fff !important; color: #000 !important; padding: 16px; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="lang-en bg-[#F3EFE6] text-[#0D0D0D] antialiased selection:bg-[#822B17] selection:text-white">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    // ============================================================================
+    // 1. LIVE FIREBASE CONFIGURATION (CONNECTED TO smart-outfit-81663)
+    // ============================================================================
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyBKZzZsVfmPyz0qoGyQOpyJBTHQgOtxuRg",
+      authDomain: "smart-outfit-81663.firebaseapp.com",
+      projectId: "smart-outfit-81663",
+      storageBucket: "smart-outfit-81663.firebasestorage.app",
+      messagingSenderId: "32049953640",
+      appId: "1:32049953640:web:0ca9fb8ea9a775785234dd",
+      measurementId: "G-CBZF2PDXSF"
+    };
+
+    let db = null;
+    let auth = null;
+
+    try {
+      if (!firebase.apps.length) {
+        firebase.initializeApp(FIREBASE_CONFIG);
+      }
+      db = firebase.firestore();
+      auth = firebase.auth();
+    } catch (err) {
+      console.warn("Firebase connection error:", err);
+    }
+
+    // ============================================================================
+    // 2. DEFAULT STORE SETTINGS, CATEGORIES, PRODUCTS, COMBOS & BLOGS
+    // ============================================================================
+    const DEFAULT_SETTINGS = {
+      brandName: "SMART OUTFIT",
+      tagline: "For Smart People",
+      superAdminEmail: "admin@smartoutfit.com",
+      staffPin: "1234",
+      whatsapp: "8801700000000",
+      insideDhaka: 60,
+      outsideDhaka: 120,
+      globalFreeDelivery: false,
+      minSpendFreeDelivery: 2000,
+      enableMinSpendRule: true,
+      requireAdvanceOutsideDhaka: false,
+      bkashNumber: "01700-000000",
+      flashSaleActive: true,
+      flashSaleTitleEn: "Season End Factory Drop",
+      flashSaleTitleBn: "ফ্যাক্টরি ক্লিয়ারেন্স অফার",
+      flashSaleEndTime: "2026-12-31T23:59",
+      announcementEn: "Own Garments Factory • Open Box Delivery • 7-Day Size Exchange",
+      announcementBn: "নিজস্ব গার্মেন্টস ফ্যাক্টরি • ডেলিভারিম্যানের সামনে চেক করে নিন • ৭ দিনে এক্সচেঞ্জ",
+      metaPixelId: "",
+      googleTagId: "G-CBZF2PDXSF",
+      imgbbApiKey: "",
+      emailWebhookUrl: "",
+      steadfastApiKey: "",
+      steadfastSecretKey: "",
+      factoryAddressEn: "Dhaka, Bangladesh",
+      factoryAddressBn: "ঢাকা, বাংলাদেশ",
+      subCategories: {
+        Pants: ["Six Pocket Cargo", "Premium Denim", "Boys Denim"],
+        Jackets: ["Denim Jacket", "Winter Bomber"],
+        Shirts: ["Denim Shirt", "Casual Shirt", "Solid Oxford"]
+      },
+      banners: [
+        {
+          id: "b1",
+          badgeEn: "DIRECT FACTORY DROP",
+          badgeBn: "নিজস্ব ফ্যাক্টরি প্রোডাকশন",
+          titleEn: "Heavyweight Six Pocket Cargo.",
+          titleBn: "প্রিমিয়াম সিক্স পকেট কার্গো প্যান্ট।",
+          subEn: "280 GSM Export Twill • Enzyme Silicon Wash",
+          subBn: "২৮০ জিএসএম এক্সপোর্ট টুইল • নিখুঁত সেলাই",
+          image: "[https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=1400&q=85](https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=1400&q=85)",
+          ctaTab: "Pants"
+        },
+        {
+          id: "b2",
+          badgeEn: "WINTER & DENIM EDITION",
+          badgeBn: "উইন্টার এবং ডেনিম কালেকশন",
+          titleEn: "Raw Selvedge Jackets & Denim.",
+          titleBn: "এক্সপোর্ট গ্রেড ডেনিম ও জ্যাকেট।",
+          subEn: "Zero Shrinkage • YKK Brass Hardware",
+          subBn: "রং ও কাপড়ের শতভাগ গ্যারান্টি",
+          image: "[https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=1400&q=85](https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=1400&q=85)",
+          ctaTab: "Jackets"
+        }
+      ]
+    };
+
+    const DEFAULT_PRODUCTS = [
+      {
+        id: "SO-CG01",
+        sku: "SO-CG01",
+        nameEn: "Six Pocket Heavy Twill Cargo Pant",
+        nameBn: "সিক্স পকেট হেভি টুইল কার্গো প্যান্ট",
+        category: "Pants",
+        subCategory: "Six Pocket Cargo",
+        isWinter: false,
+        isBestSeller: true,
+        regularPrice: 1650,
+        discountPrice: 1290,
+        freeDelivery: false,
+        imageFit: "cover",
+        videoUrl: "",
+        fabricSpecs: "98% Combed Cotton, 2% Spandex | 285 GSM Heavy Twill | YKK Metal Zip",
+        washCare: "Cold machine wash inside out. Do not bleach.",
+        colors: [
+          {
+            name: "Camel Brown",
+            hex: "#9E6234",
+            image: "[https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=900&q=80](https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=900&q=80)",
+            stock: { "28": 6, "30": 15, "32": 24, "34": 18, "36": 10 }
+          },
+          {
+            name: "Jet Black",
+            hex: "#141414",
+            image: "[https://images.unsplash.com/photo-1517445312882-bc9910d016b7?auto=format&fit=crop&w=900&q=80](https://images.unsplash.com/photo-1517445312882-bc9910d016b7?auto=format&fit=crop&w=900&q=80)",
+            stock: { "28": 4, "30": 14, "32": 20, "34": 16, "36": 8 }
+          },
+          {
+            name: "Olive Green",
+            hex: "#4B5830",
+            image: "[https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&w=900&q=80](https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&w=900&q=80)",
+            stock: { "28": 5, "30": 12, "32": 19, "34": 11, "36": 6 }
+          },
+          {
+            name: "Charcoal Grey",
+            hex: "#3B3D40",
+            image: "[https://images.unsplash.com/photo-1584865288642-42078afe6942?auto=format&fit=crop&w=900&q=80](https://images.unsplash.com/photo-1584865288642-42078afe6942?auto=format&fit=crop&w=900&q=80)",
+            stock: { "28": 3, "30": 9, "32": 14, "34": 10, "36": 5 }
+          },
+          {
+            name: "Khaki Sand",
+            hex: "#C3B091",
+            image: "[https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=900&q=80](https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=900&q=80)",
+            stock: { "28": 4, "30": 10, "32": 12, "34": 8, "36": 4 }
+          },
+          {
+            name: "Navy Blue",
+            hex: "#1D2939",
+            image: "[https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=80](https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=80)",
+            stock: { "28": 2, "30": 8, "32": 15, "34": 9, "36": 5 }
+          }
+        ]
+      },
+      {
+        id: "SO-DN01",
+        sku: "SO-DN01",
+        nameEn: "Premium Stretch Tapered Fit Denim",
+        nameBn: "প্রিমিয়াম স্ট্রেচ ন্যারো ফিট ডেনিম",
+        category: "Pants",
+        subCategory: "Premium Denim",
+        isWinter: false,
+        isBestSeller: true,
+        regularPrice: 1850,
+        discountPrice: 1450,
+        freeDelivery: false,
+        imageFit: "cover",
+        videoUrl: "",
+        fabricSpecs: "12.5 Oz Turkish Stretch Denim | Enzyme Whisker Wash | Brass Rivets",
+        washCare: "Wash separately in cold water. Line dry in shade.",
+        colors: [
+          {
+            name: "Deep Indigo",
+            hex: "#23394D",
+            image: "[https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=900&q=80](https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=900&q=80)",
+            stock: { "28": 5, "30": 18, "32": 25, "34": 17, "36": 9 }
+          },
+          {
+            name: "Carbon Black",
+            hex: "#181818",
+            image: "[https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=80](https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=80)",
+            stock: { "28": 4, "30": 12, "32": 18, "34": 14, "36": 6 }
+          }
+        ]
+      },
+      {
+        id: "SO-JK01",
+        sku: "SO-JK01",
+        nameEn: "Heavyweight Raw Denim Trucker Jacket",
+        nameBn: "হেভিওয়েট ডেনিম ট্রাকার জ্যাকেট",
+        category: "Jackets",
+        subCategory: "Denim Jacket",
+        isWinter: true,
+        isBestSeller: true,
+        regularPrice: 2550,
+        discountPrice: 1990,
+        freeDelivery: true,
+        imageFit: "cover",
+        videoUrl: "",
+        fabricSpecs: "14 Oz Raw Unwashed Denim | Rust-Proof Shank Buttons | 4 Functional Pockets",
+        washCare: "Spot clean or gentle cold wash.",
+        colors: [
+          {
+            name: "Vintage Black",
+            hex: "#1E1E1E",
+            image: "[https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=900&q=80](https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=900&q=80)",
+            stock: { "M": 10, "L": 22, "XL": 16, "XXL": 8 }
+          },
+          {
+            name: "Classic Blue",
+            hex: "#2B4C6F",
+            image: "[https://images.unsplash.com/photo-1551537482-f2075a1d41f2?auto=format&fit=crop&w=900&q=80](https://images.unsplash.com/photo-1551537482-f2075a1d41f2?auto=format&fit=crop&w=900&q=80)",
+            stock: { "M": 8, "L": 15, "XL": 12, "XXL": 6 }
+          }
+        ]
+      },
+      {
+        id: "SO-SH01",
+        sku: "SO-SH01",
+        nameEn: "Smart Garment-Dyed Oxford Shirt",
+        nameBn: "স্মার্ট অক্সফোর্ড কটন শার্ট",
+        category: "Shirts",
+        subCategory: "Casual Shirt",
+        isWinter: false,
+        isBestSeller: true,
+        regularPrice: 1390,
+        discountPrice: 990,
+        freeDelivery: false,
+        imageFit: "cover",
+        videoUrl: "",
+        fabricSpecs: "100% Compact Combed Cotton | 165 GSM Breathable Oxford Weave",
+        washCare: "Machine wash cold, warm iron.",
+        colors: [
+          {
+            name: "Rust Terracotta",
+            hex: "#822B17",
+            image: "[https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=900&q=80](https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=900&q=80)",
+            stock: { "M": 14, "L": 24, "XL": 18, "XXL": 9 }
+          },
+          {
+            name: "Pearl White",
+            hex: "#F2F0EB",
+            image: "[https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=900&q=80](https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=900&q=80)",
+            stock: { "M": 10, "L": 20, "XL": 15, "XXL": 7 }
+          }
+        ]
+      }
+    ];
+
+    const DEFAULT_COMBOS = [
+      {
+        id: "CMB-01",
+        titleEn: "2-Piece Cargo + Oxford Shirt Combo",
+        titleBn: "কার্গো প্যান্ট + অক্সফোর্ড শার্ট কম্বো",
+        regularPrice: 2680,
+        comboPrice: 2090,
+        freeDelivery: true,
+        image: "[https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=900&q=80](https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=900&q=80)",
+        itemsIncluded: "1x Six Pocket Cargo Pant + 1x Smart Oxford Shirt"
+      },
+      {
+        id: "CMB-02",
+        titleEn: "3-Pack Multi-Color Cargo Bundle",
+        titleBn: "৩টি ভিন্ন কালারের সিক্স পকেট কার্গো প্যাক",
+        regularPrice: 3870,
+        comboPrice: 3450,
+        freeDelivery: true,
+        image: "[https://images.unsplash.com/photo-1517445312882-bc9910d016b7?auto=format&fit=crop&w=900&q=80](https://images.unsplash.com/photo-1517445312882-bc9910d016b7?auto=format&fit=crop&w=900&q=80)",
+        itemsIncluded: "Camel Brown + Jet Black + Olive Green Cargo Pants"
+      }
+    ];
+
+    const DEFAULT_BLOGS = [
+      {
+        id: "blg-1",
+        titleEn: "How to Identify Export-Grade 280 GSM Twill Cargo",
+        titleBn: "আসল এক্সপোর্ট গ্রেড কার্গো প্যান্ট ও ডেনিম চেনার ৩টি উপায়",
+        summaryEn: "Check fabric density, double chain-stitching inside seams, and YKK brass zipper locking.",
+        summaryBn: "কাপড়ের জিএসএম, ভেতরের ডাবল চেইন সেলাই এবং ওয়াইকেকে (YKK) মেটাল জিপার দেখে আসল প্যান্ট চিনুন।",
+        image: "[https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=800&q=80](https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=800&q=80)",
+        date: "Oct 2026"
+      },
+      {
+        id: "blg-2",
+        titleEn: "Denim & Cargo Wash Guide for 5-Year Longevity",
+        titleBn: "ডেনিম ও কার্গো প্যান্টের রং নতুনের মতো রাখার নিয়ম",
+        summaryEn: "Always turn dark trousers inside out and wash in cold water without bleach.",
+        summaryBn: "প্যান্ট সবসময় উল্টে ঠান্ডা পানিতে ধুবেন এবং কড়া রোদে না শুকিয়ে ছায়ায় শুকাবেন।",
+        image: "[https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=800&q=80](https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=800&q=80)",
+        date: "Oct 2026"
+      }
+    ];
+
+    // ============================================================================
+    // 3. CLIENT-SIDE WEBP IMAGE COMPRESSOR
     // ============================================================================
     const compressImageToWebP = (file, maxWidth = 1000, quality = 0.82) => {
       return new Promise((resolve) => {
@@ -382,7 +2116,7 @@
       // UI & Theme State
       const [lang, setLang] = useState("en");
       const [darkMode, setDarkMode] = useState(false);
-      const [view, setView] = useState("store"); // store | product | checkout | track | trial | profile | admin | policy
+      const [view, setView] = useState("store"); // store | product | checkout | track | trial | profile | admin
       const [activeTab, setActiveTab] = useState("Home");
       const [activeSubCat, setActiveSubCat] = useState("All");
       const [searchOpen, setSearchOpen] = useState(false);
@@ -414,12 +2148,6 @@
         const a = localStorage.getItem("so_v2_abandoned");
         return a ? JSON.parse(a) : [];
       });
-      const [reviews, setReviews] = useState(() => {
-        const r = localStorage.getItem("so_v2_reviews");
-        return r ? JSON.parse(r) : [
-          { id: 1, productId: "SO-CG01", name: "Tanvir Ahmed", rating: 5, comment: "Stitching & 280 GSM twill quality is top notch.", approved: true }
-        ];
-      });
 
       // Product Detail & Multi-Variant State
       const [selectedProduct, setSelectedProduct] = useState(null);
@@ -429,7 +2157,6 @@
       const [multiPackRows, setMultiPackRows] = useState([]);
       const [zoomActive, setZoomActive] = useState(false);
       const [sizeFinderModal, setSizeFinderModal] = useState(false);
-      const [fitHeight, setFitHeight] = useState(170);
       const [fitWeight, setFitWeight] = useState(68);
 
       // Cart & Checkout State
@@ -440,19 +2167,13 @@
         phone: "",
         email: "",
         address: "",
-        zone: "inside",
-        trxId: ""
+        zone: "inside"
       });
       const [confirmedOrder, setConfirmedOrder] = useState(null);
-      const [printOrder, setPrintOrder] = useState(null);
 
       // Tracking, Customer Profile & Admin State
       const [trackInput, setTrackInput] = useState("");
-      const [customerUser, setCustomerUser] = useState(() => {
-        const u = localStorage.getItem("so_v2_customer");
-        return u ? JSON.parse(u) : null;
-      });
-      const [adminSection, setAdminSection] = useState("orders"); // orders | products | combos | settings | abandoned
+      const [adminSection, setAdminSection] = useState("orders");
       const [monthFilter, setMonthFilter] = useState("ALL");
       const [bannerIdx, setBannerIdx] = useState(0);
 
@@ -467,7 +2188,7 @@
         document.body.classList.add(lang === "en" ? "lang-en" : "lang-bn");
       }, [lang]);
 
-      // Refresh Lucide icons when view changes
+      // Refresh Lucide icons
       useEffect(() => {
         if (window.lucide) window.lucide.createIcons();
       });
@@ -489,9 +2210,11 @@
         }
       };
 
-      // Real-time Firestore Listener on Mount
+      // Real-time Firestore Listeners on Mount
       useEffect(() => {
         if (!db) return;
+
+        // Sync Orders
         const unsubOrders = db.collection("orders").orderBy("createdAt", "desc").onSnapshot((snap) => {
           const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
           if (list.length > 0) {
@@ -499,23 +2222,36 @@
             localStorage.setItem("so_v2_orders", JSON.stringify(list));
           }
         }, () => {});
+
+        // Sync Store Products & Settings from Cloud
+        db.collection("smart_outfit_store").doc("products").get().then(doc => {
+          if (doc.exists && doc.data().items) {
+            setProducts(doc.data().items);
+            localStorage.setItem("so_v2_products", JSON.stringify(doc.data().items));
+          }
+        }).catch(() => {});
+
+        db.collection("smart_outfit_store").doc("settings").get().then(doc => {
+          if (doc.exists && doc.data().items) {
+            setSettings(prev => ({ ...prev, ...doc.data().items }));
+            localStorage.setItem("so_v2_settings", JSON.stringify(doc.data().items));
+          }
+        }).catch(() => {});
+
         return () => unsubOrders();
       }, []);
 
-      // Show Quick Toast Notification
       const notify = (msg) => {
         setToast(msg);
         setTimeout(() => setToast(""), 2600);
       };
 
-      // Translation Helper (Zero-Fluff Micro-Copy)
       const t = (en, bn) => (lang === "en" ? en : bn);
 
       // ============================================================================
       // 5. META PIXEL, GOOGLE TAG & CUSTOM BEHAVIOUR TRACKING ENGINE
       // ============================================================================
       const trackEvent = (eventName, payload = {}) => {
-        console.log(`[PIXEL/TAG]: ${eventName}`, payload);
         if (window.fbq) window.fbq("track", eventName, payload);
         if (window.gtag) window.gtag("event", eventName, payload);
       };
@@ -668,7 +2404,7 @@
       // ============================================================================
       const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
       const totalItemsCount = cart.reduce((sum, item) => sum + item.qty, 0);
-      const multiBuyDiscount = totalItemsCount >= 3 ? 150 : 0; // Bonus ৳150 off on 3+ items
+      const multiBuyDiscount = totalItemsCount >= 3 ? 150 : 0;
       const hasProductFreeDelivery = cart.some(i => i.freeDelivery);
       const qualifiesMinSpend = settings.enableMinSpendRule && subtotal >= Number(settings.minSpendFreeDelivery);
       const isFreeDelivery = settings.globalFreeDelivery || hasProductFreeDelivery || qualifiesMinSpend || cart.length === 0;
@@ -704,7 +2440,7 @@
           discount: multiBuyDiscount,
           deliveryCharge,
           grandTotal,
-          status: "Pending", // Pending | Confirmed | Shipped | Delivered | Returned | Cancelled
+          status: "Pending",
           source: "Website",
           courierCode: ""
         };
@@ -765,7 +2501,6 @@
         const targetOrder = orders.find(o => o.orderId === orderId);
         if (!targetOrder) return;
 
-        // If marked Returned, add stock back (+1)
         if (newStatus === "Returned" && targetOrder.status !== "Returned") {
           const restoredProducts = products.map(p => {
             const copy = { ...p };
@@ -790,7 +2525,7 @@
         if (db) db.collection("orders").doc(orderId).update({ status: newStatus }).catch(() => {});
       };
 
-      // Export Orders to Excel/CSV (For Steadfast / Google Sheets)
+      // Export Orders to Excel/CSV
       const downloadOrdersCSV = (listToExport) => {
         const headers = ["OrderID", "Date", "CustomerName", "Phone", "Address", "Items", "COD_Amount", "Status", "Source"];
         const rows = listToExport.map(o => [
@@ -857,7 +2592,7 @@
         if (fitWeight <= 73) return "32 / L";
         if (fitWeight <= 82) return "34 / XL";
         return "36 / XXL";
-      }, [fitHeight, fitWeight]);
+      }, [fitWeight]);
 
       const currentBanner = settings.banners?.[bannerIdx] || DEFAULT_SETTINGS.banners[0];
 
@@ -880,7 +2615,7 @@
           <header className={`sticky top-0 z-40 border-b backdrop-blur-md ${darkMode ? "bg-[#0D0D0D]/95 border-neutral-800" : "bg-[#F3EFE6]/95 border-[#E2DDD2]"}`}>
             <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-2">
               
-              {/* Brand Logo (Minimal S + Hanger Icon) */}
+              {/* Brand Logo */}
               <div
                 onClick={() => { setView("store"); setActiveTab("Home"); setActiveSubCat("All"); }}
                 className="flex items-center gap-2.5 cursor-pointer select-none"
@@ -928,7 +2663,7 @@
                 </button>
               </nav>
 
-              {/* Right Utilities: Search, EN/BN, DarkMode, Profile, Admin, Bag */}
+              {/* Right Utilities */}
               <div className="flex items-center gap-1.5 sm:gap-2.5">
                 <button
                   onClick={() => setSearchOpen(!searchOpen)}
@@ -1025,7 +2760,7 @@
           {view === "store" && (
             <main className="max-w-7xl mx-auto px-4 py-6">
               
-              {/* Multi-Banner Slider (Shown on Home) */}
+              {/* Multi-Banner Slider */}
               {activeTab === "Home" && !searchQuery && (
                 <div className="relative rounded-2xl overflow-hidden mb-8 bg-[#181514] text-white min-h-[250px] sm:min-h-[380px] flex items-center">
                   <img
@@ -1061,7 +2796,7 @@
                 </div>
               )}
 
-              {/* Flash Sale Strip (Admin Toggleable) */}
+              {/* Flash Sale Strip */}
               {activeTab === "Home" && settings.flashSaleActive && (
                 <div className="mb-8 p-4 rounded-xl bg-[#822B17] text-white flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5">
@@ -1080,7 +2815,7 @@
                 </div>
               )}
 
-              {/* Sub-Category Filter Pills for Pants, Jackets, Shirts */}
+              {/* Sub-Category Filter Pills */}
               {["Pants", "Jackets", "Shirts"].includes(activeTab) && (
                 <div className="flex gap-2 mb-6 overflow-x-auto no-scrollbar">
                   {["All", ...(settings.subCategories?.[activeTab] || [])].map(sub => (
@@ -1129,7 +2864,6 @@
                           <p className="text-[10px] opacity-60 uppercase tracking-wider">{prod.subCategory}</p>
                           <h3 className="font-bold text-xs sm:text-sm truncate mt-0.5">{t(prod.nameEn, prod.nameBn)}</h3>
 
-                          {/* Color Dots */}
                           <div className="flex items-center gap-1.5 my-2">
                             {prod.colors.slice(0, 6).map((c, idx) => (
                               <span
@@ -1144,7 +2878,6 @@
                             )}
                           </div>
 
-                          {/* Clean Pricing (Regular Cut + Discount) */}
                           <div className="flex items-baseline gap-2">
                             <span className="font-extrabold text-sm sm:text-base text-[#822B17]">৳{prod.discountPrice}</span>
                             <span className="text-xs line-through opacity-45">৳{prod.regularPrice}</span>
@@ -1269,7 +3002,6 @@
                   {/* SINGLE SELECTION vs MULTI-COLOR & MULTI-SIZE PACK BUILDER */}
                   {!multiPackMode ? (
                     <>
-                      {/* Color Selector */}
                       <div className="mb-4">
                         <p className="text-xs font-bold uppercase mb-2">
                           {t("Color", "কালার")}: <span className="text-[#822B17]">{selectedProduct.colors[selectedColorIdx]?.name}</span>
@@ -1288,7 +3020,6 @@
                         </div>
                       </div>
 
-                      {/* Size Selector + Smart Fit Finder Button */}
                       <div className="mb-5">
                         <div className="flex justify-between items-center mb-2">
                           <span className="text-xs font-bold uppercase">{t("Size", "সাইজ")}</span>
@@ -1314,7 +3045,7 @@
                       </div>
                     </>
                   ) : (
-                    /* MULTI-COLOR & DIFFERENT SIZE BUILDER (For buying 2-3+ Pants together) */
+                    /* MULTI-COLOR & DIFFERENT SIZE BUILDER */
                     <div className="p-4 rounded-xl border-2 border-[#822B17] bg-[#822B17]/5 mb-5">
                       <div className="flex justify-between items-center mb-3">
                         <span className="text-xs font-extrabold uppercase text-[#822B17]">
@@ -1376,7 +3107,6 @@
                     </div>
                   )}
 
-                  {/* Button to Open Multi-Color Pack Selector */}
                   {!multiPackMode && (
                     <button
                       onClick={() => setMultiPackMode(true)}
@@ -1386,11 +3116,10 @@
                     </button>
                   )}
 
-                  {/* Smart Fit Finder Box */}
                   {sizeFinderModal && (
                     <div className="p-3.5 mb-4 rounded-xl border border-current/20 bg-current/5 text-xs space-y-2">
                       <div className="flex justify-between font-bold">
-                        <span>{t("Height & Weight Fit Finder", "উচ্চতা ও ওজন অনুযায়ী সাইজ")}</span>
+                        <span>{t("Weight Fit Finder", "ওজন অনুযায়ী সাইজ")}</span>
                         <button onClick={() => setSizeFinderModal(false)}>✕</button>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
@@ -1406,7 +3135,6 @@
                     </div>
                   )}
 
-                  {/* Main CTA Buttons */}
                   <div className="grid grid-cols-2 gap-3 mb-5">
                     <button
                       onClick={() => handleAddToCart(false)}
@@ -1422,13 +3150,11 @@
                     </button>
                   </div>
 
-                  {/* Short Trust Badges */}
                   <div className="flex flex-wrap gap-4 text-xs font-bold opacity-85 border-y border-current/10 py-3 mb-4">
                     <span>✓ {t("Open Box Delivery", "খুলে দেখে পেমেন্ট")}</span>
                     <span>✓ {t("7-Day Exchange", "৭ দিনে এক্সচেঞ্জ")}</span>
                   </div>
 
-                  {/* Factory Specs & Wash Care */}
                   <div className="space-y-2 text-xs leading-relaxed">
                     <p><strong>{t("Fabric & Specs:", "কাপড়ের বিবরণ:")}</strong> {selectedProduct.fabricSpecs}</p>
                     <p><strong>{t("Wash Care:", "যত্ন:")}</strong> {selectedProduct.washCare}</p>
@@ -1540,7 +3266,6 @@
                       className="w-full p-3 rounded-lg border border-current/20 bg-transparent text-sm"
                     />
 
-                    {/* Delivery Zone */}
                     <div className="grid grid-cols-2 gap-2.5">
                       <button
                         type="button"
@@ -1608,7 +3333,7 @@
           )}
 
           {/* ===================================================================== */}
-          {/* VIEW 4: 100% FREE MIX & MATCH QUICK TRIAL STUDIO                      */}
+          {/* VIEW 4: MIX & MATCH TRIAL STUDIO                                      */}
           {/* ===================================================================== */}
           {view === "trial" && (
             <div className="max-w-4xl mx-auto px-4 py-8">
@@ -1618,7 +3343,6 @@
               </div>
 
               <div className="grid md:grid-cols-2 gap-6 items-center">
-                {/* Top & Bottom Visual Stack */}
                 <div className="p-4 rounded-2xl border border-[#822B17] bg-white text-black max-w-xs mx-auto w-full space-y-2 text-center">
                   {trialUserPhoto && (
                     <img src={trialUserPhoto} alt="User" className="w-20 h-20 rounded-full object-cover mx-auto border-2 border-[#822B17]" />
@@ -1644,7 +3368,6 @@
                   })()}
                 </div>
 
-                {/* Controls */}
                 <div className="space-y-4">
                   <button
                     onClick={() => setTrialTopIdx(trialTopIdx + 1)}
@@ -1703,7 +3426,6 @@
                       <p>{ord.customer.name} • {ord.customer.phone}</p>
                       <p className="font-bold">Total Payable: ৳{ord.grandTotal}</p>
 
-                      {/* Visual Progress Steps */}
                       <div className="grid grid-cols-4 gap-1 pt-2 text-[10px] font-bold text-center">
                         <div className="p-1.5 rounded bg-emerald-600 text-white">1. Placed</div>
                         <div className={`p-1.5 rounded ${["Confirmed","Shipped","Delivered"].includes(ord.status) ? "bg-emerald-600 text-white" : "bg-current/10"}`}>2. Factory QC</div>
@@ -1751,11 +3473,10 @@
           {view === "admin" && (
             <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
               
-              {/* Admin Top Header */}
               <div className="flex flex-wrap justify-between items-center gap-3 border-b border-current/15 pb-4">
                 <div>
                   <h2 className="text-xl sm:text-2xl font-extrabold text-[#822B17]">SMART OUTFIT — Super Admin Control</h2>
-                  <p className="text-xs opacity-70">All Orders in One Place • Monthly Accounting • Product & Delivery Engine</p>
+                  <p className="text-xs opacity-70">Live Firebase Connected (smart-outfit-81663) • All Orders & Monthly Accounting</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {[
@@ -1782,7 +3503,6 @@
               {adminSection === "orders" && (
                 <div className="space-y-6">
                   
-                  {/* Month Filter & Excel Export Bar */}
                   <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border border-current/15">
                     <div className="flex items-center gap-3">
                       <span className="text-xs font-bold">📅 Filter by Month:</span>
@@ -1852,19 +3572,17 @@
                             <span className="text-base font-extrabold">COD: ৳{ord.grandTotal}</span>
 
                             <div className="flex flex-wrap gap-2">
-                              {/* 1-Click Copy for Google Sheet / Steadfast */}
                               <button
                                 onClick={() => {
                                   const text = `${ord.orderId}\t${ord.customer.name}\t${ord.customer.phone}\t${ord.customer.address}\t${ord.items.map(i => `${i.nameEn}(${i.color}-${i.size})x${i.qty}`).join(", ")}\t${ord.grandTotal}`;
                                   navigator.clipboard.writeText(text);
-                                  notify("Copied for Sheet / Steadfast!");
+                                  notify("Copied for Google Sheet / Steadfast!");
                                 }}
                                 className="px-3 py-1.5 rounded-lg border border-current/20 font-bold"
                               >
-                                📋 Copy Row
+                                📋 Copy Info
                               </button>
 
-                              {/* Print Courier Sticker */}
                               <button
                                 onClick={() => { setConfirmedOrder(ord); setView("checkout"); }}
                                 className="px-3 py-1.5 rounded-lg border border-current/20 font-bold"
@@ -1872,7 +3590,6 @@
                                 🖨️ Slip
                               </button>
 
-                              {/* Order Status Dropdown */}
                               <select
                                 value={ord.status}
                                 onChange={e => handleOrderStatusChange(ord.orderId, e.target.value)}
@@ -1938,7 +3655,7 @@
                           {
                             name: "Default Color",
                             hex: "#822B17",
-                            image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=900&q=80",
+                            image: "[https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=900&q=80](https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=900&q=80)",
                             stock: { "30": 10, "32": 15, "34": 10 }
                           }
                         ]
@@ -2140,7 +3857,7 @@
                           setSettings(updated);
                           syncData("so_v2_settings", updated, "settings");
                         }}
-                        placeholder="https://script.google.com/macros/s/..."
+                        placeholder="[https://script.google.com/macros/s/](https://script.google.com/macros/s/)..."
                         className="w-full p-2 rounded border border-current/20 bg-transparent mt-1"
                       />
                     </div>
@@ -2162,7 +3879,6 @@
                     <button onClick={() => setCartOpen(false)} className="text-lg font-bold">✕</button>
                   </div>
 
-                  {/* Free Delivery Progress Bar */}
                   {settings.enableMinSpendRule && subtotal < settings.minSpendFreeDelivery && (
                     <div className="my-3 p-2.5 rounded-lg bg-[#822B17]/10 text-[#822B17] text-xs font-bold text-center">
                       {t(
@@ -2243,14 +3959,14 @@
           {/* CIRCULAR FLOATING WHATSAPP CHAT BUTTON                                */}
           {/* ===================================================================== */}
           <a
-            href={`https://wa.me/${settings.whatsapp}?text=${encodeURIComponent(
+            href={`[https://wa.me/$](https://wa.me/$){settings.whatsapp}?text=${encodeURIComponent(
               selectedProduct
                 ? `Hi SMART OUTFIT, Product: ${selectedProduct.nameEn} (৳${selectedProduct.discountPrice})`
                 : "Hi SMART OUTFIT!"
             )}`}
             target="_blank"
             rel="noreferrer"
-            className="no-print fixed bottom-20 md:bottom-6 right-4 z-40 w-13 h-13 w-12 h-12 rounded-full bg-[#168A45] text-white shadow-xl flex items-center justify-center hover:scale-105 transition"
+            className="no-print fixed bottom-20 md:bottom-6 right-4 z-40 w-12 h-12 rounded-full bg-[#168A45] text-white shadow-xl flex items-center justify-center hover:scale-105 transition"
             title="WhatsApp Support"
           >
             <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
@@ -2288,7 +4004,7 @@
     }
 
     const root = ReactDOM.createRoot(document.getElementById("root"));
-    root.render(<SmartOutfitApp />);
+    root.render(<SmartOutfitApp/>);
   </script>
 </body>
 </html>
