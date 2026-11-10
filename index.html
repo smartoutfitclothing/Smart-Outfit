@@ -122,7 +122,7 @@
     } catch (e) { console.warn("Firebase init notice:", e); }
 
     // ============================================================================
-    // 2. UNIFIED BRAND LOGO MARK & CLEAN LINE SVG ICONS (Correction #7)
+    // 2. UNIFIED BRAND LOGO MARK & CLEAN LINE SVG ICONS
     // ============================================================================
     const BrandLogoMark = ({ logoUrl, brandName = "SMART OUTFIT", sizeClass = "w-9 h-9 sm:w-10 sm:h-10" }) => {
       if (logoUrl) {
@@ -160,7 +160,6 @@
     // ============================================================================
     const FIVE_MAIN_CATEGORIES = ["MEN", "WOMEN", "KIDS", "WINTER", "COMBO"];
 
-    // Correction #4: Default Size Fit Descriptions Preset for Quick 1-Click Fill in Admin
     const DEFAULT_PANT_SIZE_DESCRIPTIONS = {
       "28": "সাইজ ২৮: যাদের কোমর ২৭-২৯ ইঞ্চি, তাদের জন্য পারফেক্ট। লম্বা ৩৮ ইঞ্চি।",
       "30": "সাইজ ৩০: যাদের কোমর ২৯-৩১ ইঞ্চি, তাদের জন্য পারফেক্ট। লম্বা ৩৮.৫ ইঞ্চি।",
@@ -258,7 +257,6 @@
       }
     ];
 
-    // Correction #2: Ultra-Safe Universal JPEG Image Compression (Prevents 1MB Firestore Limit Overflow & Broken WebP)
     const compressImageSafe = (file, maxWidth = 820, quality = 0.78) => {
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -273,7 +271,6 @@
             ctx.fillStyle = "#FAF7F2";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            // Universal JPEG encoding guarantees 100% browser compatibility & ~65KB size
             const dataUrl = canvas.toDataURL("image/jpeg", quality);
             resolve(dataUrl);
           };
@@ -307,7 +304,6 @@
       return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
     };
 
-    // Correction #8: Meta _fbp & _fbc Cookie / Click ID Extractor for High EMQ Score
     const getMetaCookiesAndClickId = () => {
       let fbp = localStorage.getItem("so_meta_fbp") || "";
       let fbc = localStorage.getItem("so_meta_fbc") || "";
@@ -344,7 +340,6 @@
       return "Direct";
     };
 
-    // Correction #2: Bulletproof Color & Product Photo Resolver (Never returns empty if ANY color has a valid image)
     const getColorPhotos = (colorObj) => {
       if (!colorObj) return [];
       const list = [];
@@ -368,7 +363,6 @@
       return "";
     };
 
-    // Correction #9: Direct Product Slug & Sales Ad URL Generator (`?product=six-pocket-cargo-SO-99`)
     const makeProductSlug = (prod) => {
       if (!prod) return "";
       const cleanName = String(prod.nameEn || "item")
@@ -445,7 +439,7 @@
         } catch { return []; }
       });
 
-      // Registered Customer Accounts & Profile View/Edit Mode State (Correction #6)
+      // Registered Customer Accounts & Profile View/Edit Mode State
       const [customersList, setCustomersList] = useState(() => {
         try {
           const c = localStorage.getItem("so_v4_customers");
@@ -477,11 +471,12 @@
       // Hero Slider State
       const [heroSlideIdx, setHeroSlideIdx] = useState(0);
 
-      // Product Detail State (with Quantity Selector `productQty` - Correction #5)
+      // Product Detail State (NEW FIX #1: `selectedSize` starts EMPTY `""` so no size is auto-selected!)
       const [selectedProduct, setSelectedProduct] = useState(null);
       const [selectedColorIdx, setSelectedColorIdx] = useState(0);
       const [selectedPhotoIdx, setSelectedPhotoIdx] = useState(0);
       const [selectedSize, setSelectedSize] = useState("");
+      const [sizePromptWarning, setSizePromptWarning] = useState(false);
       const [productQty, setProductQty] = useState(1);
       const [multiPackMode, setMultiPackMode] = useState(false);
       const [multiPackRows, setMultiPackRows] = useState([]);
@@ -521,7 +516,7 @@
         setTimeout(() => setToast(""), 2800);
       };
 
-      // Fetch Customer Public IP for Meta CAPI High EMQ (Correction #8)
+      // Fetch Customer Public IP for Meta CAPI High EMQ
       useEffect(() => {
         getMetaCookiesAndClickId();
         fetch("https://api.ipify.org?format=json")
@@ -530,7 +525,7 @@
           .catch(() => {});
       }, []);
 
-      // Sync Helper to LocalStorage & Firestore + Individual Product Backup (Correction #2: Never lose images due to 1MB doc limit!)
+      // Sync Helper to LocalStorage & Firestore
       const syncData = (key, data, docName) => {
         try { localStorage.setItem(key, JSON.stringify(data)); } catch (e) { console.warn("LocalStorage quota notice:", e); }
         if (db && docName) {
@@ -563,7 +558,7 @@
         }
       };
 
-      // Update Browser URL cleanly for Direct Product Ad Links & Checkout without breaking BUY NOW (Correction #1 & #9)
+      // Update Browser URL cleanly for Direct Product Ad Links & Checkout
       const setCleanBrowserUrl = (nextView, prod = null, cat = null) => {
         try {
           const basePath = window.location.pathname;
@@ -580,7 +575,7 @@
         } catch {}
       };
 
-      // Deep-Link & URL Listener (`#admin`, `?product=...`, `#product-...`, `?category=...`) - Bulletproof so it NEVER traps Checkout! (Correction #1 & #9)
+      // Deep-Link & URL Listener (`#admin`, `?product=...`, `#product-...`, `?category=...`)
       useEffect(() => {
         const resolveUrlRoute = () => {
           const hash = window.location.hash || "";
@@ -602,8 +597,8 @@
               setSelectedProduct(matched);
               setSelectedColorIdx(0);
               setSelectedPhotoIdx(0);
-              const firstSizes = (matched.colors?.[0]?.sizes || "30,32,34,36").split(",").map(s => s.trim()).filter(Boolean);
-              setSelectedSize(firstSizes[0] || "32");
+              setSelectedSize(""); // NEW FIX #1: No default size selected
+              setSizePromptWarning(false);
               setProductQty(1);
               setView("product");
               return;
@@ -616,8 +611,8 @@
               setSelectedProduct(matched);
               setSelectedColorIdx(0);
               setSelectedPhotoIdx(0);
-              const firstSizes = (matched.colors?.[0]?.sizes || "30,32,34,36").split(",").map(s => s.trim()).filter(Boolean);
-              setSelectedSize(firstSizes[0] || "32");
+              setSelectedSize(""); // NEW FIX #1: No default size selected
+              setSizePromptWarning(false);
               setProductQty(1);
               setView("product");
               return;
@@ -631,7 +626,7 @@
         };
 
         resolveUrlRoute();
-        const onPopState = (e) => {
+        const onPopState = () => {
           if (window.location.hash === "#admin") {
             setView(adminAuthenticated ? "admin" : "adminLogin");
           } else if (window.location.hash === "#checkout") {
@@ -695,7 +690,7 @@
         }
       }, [settings.metaPixelId, settings.ga4Id, settings.googleAdsId]);
 
-      // Correction #8: Pro-Grade Marketing & CAPI Event Dispatcher (_fbp, _fbc, IP, Country, City, SHA-256)
+      // Pro-Grade Marketing & CAPI Event Dispatcher (_fbp, _fbc, IP, Country, City, SHA-256)
       const fireMarketingEvent = async (eventName, payload = {}, userInfo = {}) => {
         const eventId = `evt_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
         const source = getTrafficSource();
@@ -728,7 +723,7 @@
           return next;
         });
 
-        // 1. Browser Meta Pixel with Advanced Matching & EventID Deduplication
+        // 1. Browser Meta Pixel
         if (window.fbq && settings.metaPixelId) {
           if (userInfo.phone) {
             try {
@@ -747,7 +742,7 @@
           }, { eventID: eventId });
         }
 
-        // 2. Meta Conversions API (Server-Side CAPI) with SHA-256 Hashed Customer Info, _fbp, _fbc & IP
+        // 2. Meta Conversions API (Server-Side CAPI)
         if (settings.metaPixelId && settings.metaCapiToken) {
           try {
             const userData = {
@@ -810,7 +805,7 @@
         }
       };
 
-      // 1-Click Live Meta Pixel & CAPI Connection Diagnostic Button (Correction #8)
+      // 1-Click Live Meta Pixel & CAPI Connection Diagnostic Button
       const handleTestMetaConnection = async () => {
         if (!settings.metaPixelId || !settings.metaCapiToken) {
           setCapiTestStatus("⚠️ Please enter both Meta Pixel ID and Meta CAPI Access Token first.");
@@ -872,7 +867,7 @@
         fireMarketingEvent("PageView", {});
       }, []);
 
-      // Real-time Firestore Listeners + Individual Product Recovery (Correction #2: Restores all products & photos!)
+      // Real-time Firestore Listeners + Individual Product Recovery
       useEffect(() => {
         if (!db) return;
         const unsubOrders = db.collection("orders").orderBy("createdAt", "desc").onSnapshot((snap) => {
@@ -881,7 +876,6 @@
           try { localStorage.setItem("so_v4_orders", JSON.stringify(list)); } catch {}
         }, () => {});
 
-        // Load main product list + merge any individually saved products so no image ever disappears
         Promise.all([
           db.collection("smart_outfit_store").doc("products").get().catch(() => null),
           db.collection("smart_outfit_products").get().catch(() => null)
@@ -900,7 +894,6 @@
           if (baseList.length > 0 || indivMap.size > 0) {
             const merged = baseList.map(p => {
               const ind = indivMap.get(p.id);
-              // Prefer whichever has valid photos
               if (ind && getProductPrimaryPhoto(ind) && !getProductPrimaryPhoto(p)) {
                 return ind;
               }
@@ -994,16 +987,17 @@
         }
       }, [customerForm.phone, customerForm.name, customerForm.address]);
 
-      // Open Product Detail Page + Set Direct Product Ad Link (Correction #8 & #9)
+      // Open Product Detail Page (NEW FIX #1: `selectedSize` starts EMPTY `""` so user chooses their own size!)
       const openProductPage = (prod) => {
         setSavedScrollY(window.scrollY || 0);
         setSelectedProduct(prod);
         setSelectedColorIdx(0);
         setSelectedPhotoIdx(0);
-        const firstColorSizes = (prod.colors?.[0]?.sizes || "30,32,34,36").split(",").map(s => s.trim()).filter(Boolean);
-        setSelectedSize(firstColorSizes[0] || "32");
+        setSelectedSize(""); // No auto-selected size!
+        setSizePromptWarning(false);
         setProductQty(1);
         setMultiPackMode(false);
+        const firstColorSizes = (prod.colors?.[0]?.sizes || "30,32,34,36").split(",").map(s => s.trim()).filter(Boolean);
         setMultiPackRows([
           { colorIdx: 0, size: firstColorSizes[0] || "32", qty: 1 },
           { colorIdx: prod.colors.length > 1 ? 1 : 0, size: firstColorSizes[1] || firstColorSizes[0] || "34", qty: 1 }
@@ -1045,7 +1039,7 @@
         setTimeout(() => window.scrollTo({ top: savedScrollY, behavior: "instant" }), 30);
       };
 
-      // Copy Direct Product Link for Facebook Sales Ads (Correction #9)
+      // Copy Direct Product Link for Facebook Sales Ads
       const copyProductAdLink = (prod, e) => {
         if (e) e.stopPropagation();
         const url = getProductDirectAdUrl(prod);
@@ -1053,14 +1047,25 @@
         notify("✓ Product Sales Ad Link Copied!");
       };
 
-      // Correction #1: 100% Bulletproof Quick BUY NOW from ANY Product Card on Storefront
-      const handleQuickBuyNowFromCard = (prod, e) => {
+      // NEW FIX #1 & #3: Clicking "ORDER" on a Storefront Card -> If product has multiple sizes, open product page so customer picks their exact size (never auto-select wrong size!)
+      const handleOrderFromCard = (prod, e) => {
         if (e) e.stopPropagation();
         if (!prod) return;
-        const colorObj = prod.colors?.[0] || { name: "Default", sizes: "32" };
-        const firstSize = (colorObj.sizes || "30,32,34,36").split(",").map(s => s.trim()).filter(Boolean)[0] || "32";
+        const colorObj = prod.colors?.[0] || { name: "Default", sizes: "" };
+        const sizesList = (colorObj.sizes || "").split(",").map(s => s.trim()).filter(Boolean);
+
+        // If the product has multiple sizes or colors, open the product page and highlight size selection
+        if (sizesList.length > 1 || (prod.colors && prod.colors.length > 1)) {
+          openProductPage(prod);
+          setSizePromptWarning(true);
+          notify("Please select your Size to complete Order");
+          return;
+        }
+
+        // Only if the product has a single fixed size (e.g. Free Size), go straight to checkout
+        const singleSize = sizesList[0] || "Free Size";
         const photo = getProductPrimaryPhoto(prod);
-        const key = `${prod.id}-${colorObj.name}-${firstSize}`;
+        const key = `${prod.id}-${colorObj.name}-${singleSize}`;
 
         let updatedCart = [...cart];
         const idx = updatedCart.findIndex(item => item.key === key);
@@ -1074,7 +1079,7 @@
             nameEn: prod.nameEn,
             nameBn: prod.nameBn || prod.nameEn,
             color: colorObj.name,
-            size: firstSize,
+            size: singleSize,
             price: Number(prod.discountPrice),
             freeDelivery: Boolean(prod.freeDelivery),
             image: photo,
@@ -1097,9 +1102,18 @@
         });
       };
 
-      // Correction #1 & #5: Add to Cart / BUY NOW from Product Page with Quantity (`productQty`) & Multi-Size Support
-      const handleAddToCart = (directBuy = false) => {
+      // Add to Cart / ORDER from Product Page (Checks that customer actually clicked a size first! - NEW FIX #1)
+      const handleAddToCart = (directOrder = false) => {
         if (!selectedProduct) return;
+
+        // Require explicit size selection when in single mode
+        if (!multiPackMode && !selectedSize) {
+          setSizePromptWarning(true);
+          notify("⚠️ অনুগ্রহ করে আগে আপনার সাইজ সিলেক্ট করুন (Please select a Size)");
+          return;
+        }
+        setSizePromptWarning(false);
+
         let updatedCart = [...cart];
         const qtyToAdd = Math.max(1, Number(productQty) || 1);
 
@@ -1160,10 +1174,9 @@
           num_items: qtyToAdd
         });
 
-        if (directBuy) {
+        if (directOrder) {
           setCartOpen(false);
           setConfirmedOrder(null);
-          // Clear product URL lock & transition immediately to checkout (Correction #1)
           setCleanBrowserUrl("checkout");
           setView("checkout");
           window.scrollTo({ top: 0, behavior: "instant" });
@@ -1180,7 +1193,7 @@
         }
       };
 
-      // Update Cart Item Quantity (+/-) in Cart Drawer & Checkout Summary (Correction #5)
+      // Update Cart Item Quantity (+/-) in Cart Drawer & Checkout Summary
       const updateCartItemQty = (itemKey, delta) => {
         setCart(prev => {
           return prev
@@ -1356,7 +1369,6 @@
         document.body.removeChild(link);
       };
 
-      // Facebook Catalog CSV Feed Export with Direct Product URLs (Correction #9)
       const downloadFacebookCatalogCSV = () => {
         const headers = ["id", "title", "description", "availability", "condition", "price", "link", "image_link", "brand"];
         const rows = products.map(p => {
@@ -1396,12 +1408,9 @@
         });
       }, [products, activeMainCat, activeSubCat, searchQuery]);
 
-      // Correction #3: Homepage Layout -> 1. BEST SELLING first, 2. Remaining / All Products in ONE Continuous Grid (No half-empty category headers!)
-      const bestSellingProducts = useMemo(() => products.filter(p => p.isBestSeller), [products]);
-      const nonBestSellingProducts = useMemo(() => {
-        const rest = products.filter(p => !p.isBestSeller);
-        return rest.length > 0 ? rest : products;
-      }, [products]);
+      // NEW FIX #2: Strictly Separate Best Selling Products vs Remaining Products
+      const bestSellingProducts = useMemo(() => products.filter(p => Boolean(p.isBestSeller)), [products]);
+      const otherRegularProducts = useMemo(() => products.filter(p => !p.isBestSeller), [products]);
 
       const relatedProducts = useMemo(() => {
         if (!selectedProduct) return [];
@@ -1436,7 +1445,6 @@
         return { totalCount, deliveredCount: delivered.length, deliveredRevenue, pendingCount: pending.length, pendingAmount, returnedCount, list: base };
       }, [orders, monthFilter]);
 
-      // Open Blank Product Form for Admin (With Size Fit Descriptions Support - Correction #4)
       const startNewProduct = () => {
         setColorUrlInputs({});
         setEditingProduct({
@@ -1461,7 +1469,6 @@
         });
       };
 
-      // Correction #2: Auto-capture any typed URL in `colorUrlInputs` even if Admin didn't click `+ Add Photo URL` before clicking `Save Product`!
       const saveEditedProduct = (e) => {
         e.preventDefault();
         if (!editingProduct.nameEn) return;
@@ -1582,7 +1589,7 @@
         </div>
       `;
 
-      // Correction #1 & #2: Storefront Product Card with Automatic Broken Image Recovery & Direct BUY NOW Button
+      // NEW FIX #3: Storefront Product Card with "ORDER" Button
       const renderProductCard = (prod) => {
         const firstPhoto = getProductPrimaryPhoto(prod);
         return html`
@@ -1624,17 +1631,17 @@
             </div>
             <button
               type="button"
-              onClick=${(e) => handleQuickBuyNowFromCard(prod, e)}
+              onClick=${(e) => handleOrderFromCard(prod, e)}
               class="w-full py-2 bg-[#7C2517] hover:bg-[#5E1B10] text-white text-[11px] font-bold uppercase tracking-wider transition"
             >
-              BUY NOW
+              ORDER
             </button>
           </div>
         `;
       };
 
       // ============================================================================
-      // DEDICATED ADMIN VIEW (CLEAN OFFICIAL LOGO & SHORT MENU NAMES - Correction #7)
+      // DEDICATED ADMIN VIEW
       // ============================================================================
       if (view === "adminLogin") {
         return html`
@@ -1678,7 +1685,6 @@
       }
 
       if (view === "admin" && adminAuthenticated) {
-        // Gather all unique sizes for current editing product so Admin can edit Size Fit Guide per size (Correction #4)
         const editingProductUniqueSizes = editingProduct
           ? Array.from(new Set(
               (editingProduct.colors || [])
@@ -1689,7 +1695,7 @@
         return html`
           <div class="min-h-screen w-full max-w-full overflow-x-hidden bg-[#FAF7F2] text-[#1C1614] flex flex-col md:flex-row">
             
-            <!-- Left Sidebar (Correction #7: Official Store Logo + Clean Short Menu Names) -->
+            <!-- Left Sidebar -->
             <aside class="w-full md:w-60 bg-[#231916] text-[#FAF7F2] flex-shrink-0">
               <div class="p-4 border-b border-white/10 flex justify-between items-center gap-2">
                 <div class="flex items-center gap-2.5 min-w-0">
@@ -1729,7 +1735,7 @@
             <main class="flex-1 min-w-0 w-full max-w-full p-3 sm:p-8 overflow-x-hidden">
               ${toast && html`
                 <div class="fixed top-4 right-4 z-50 bg-[#7C2517] text-white text-xs font-bold px-4 py-2.5 shadow-lg">
-                  ✓ ${toast}
+                  ${toast}
                 </div>
               `}
 
@@ -1926,7 +1932,7 @@
                 </div>
               `}
 
-              <!-- TAB 3: PRODUCTS MANAGER (WITH SIZE FIT GUIDE PER SIZE & AD LINK COPY - Corrections #2, #4, #6, #9) -->
+              <!-- TAB 3: PRODUCTS MANAGER -->
               ${adminTab === "products" && html`
                 <div class="space-y-6">
                   <div class="flex flex-wrap justify-between items-center gap-3 bg-white p-4 sm:p-5 border border-[#E6DFD3]">
@@ -2058,12 +2064,12 @@
                         </div>
                       </div>
 
-                      <!-- CORRECTION #4: DYNAMIC SIZE FIT GUIDE PER SIZE (SHOWN WHEN CUSTOMER CLICKS A SIZE) -->
+                      <!-- DYNAMIC SIZE FIT GUIDE PER SIZE -->
                       <div class="p-4 bg-[#FAF7F2] border border-[#7C2517]/40 space-y-3">
                         <div class="flex flex-wrap justify-between items-center gap-2">
                           <div>
                             <h4 class="font-bold uppercase text-[#7C2517]">Size-Wise Fit Guide (কাস্টমার সাইজে ক্লিক করলে নিচে যে লেখা ভেসে উঠবে)</h4>
-                            <p class="text-[11px] text-neutral-500">Leave blank for any size if you don't want a message shown for that size.</p>
+                            <p class="text-[11px] text-neutral-500">Shown only after customer clicks a specific size button.</p>
                           </div>
                           <button
                             type="button"
@@ -2259,7 +2265,7 @@
                     </form>
                   `}
 
-                  <!-- Existing Products List with 1-Click Copy Sales Ad Link (Correction #9) -->
+                  <!-- Existing Products List -->
                   <div class="grid md:grid-cols-2 gap-4">
                     ${products.map((p, idx) => {
                       const thumb = getProductPrimaryPhoto(p);
@@ -2520,7 +2526,7 @@
                 </div>
               `}
 
-              <!-- TAB 6: MARKETING, PIXEL, CAPI & LIVE DIAGNOSTICS (Correction #8) -->
+              <!-- TAB 6: MARKETING, PIXEL, CAPI & LIVE DIAGNOSTICS -->
               ${adminTab === "marketing" && html`
                 <div class="space-y-6 text-xs">
                   <div class="bg-white p-4 sm:p-6 border border-[#E6DFD3] space-y-4">
@@ -2916,7 +2922,7 @@
           </header>
 
           <!-- ===================================================================== -->
-          <!-- VIEW 1: HOMEPAGE (HERO SLIDER -> BEST SELLING -> CONTINUOUS FULL GRID)-->
+          <!-- VIEW 1: HOMEPAGE (1. BEST SELLING SEPARATE, 2. OTHER PRODUCTS BELOW)  -->
           <!-- ===================================================================== -->
           ${view === "store" && html`
             <main class="flex-1 w-full max-w-full overflow-x-hidden">
@@ -2997,24 +3003,29 @@
                   </div>
                 `}
 
-                <!-- Homepage Continuous Full Grid -->
+                <!-- NEW FIX #2: 1. BEST SELLING ONLY shows Best Sellers, 2. Remaining Products shown below in a separate continuous grid -->
                 ${activeMainCat === "ALL" && activeSubCat === "ALL" && !searchQuery ? html`
-                  <div class="space-y-8">
-                    <section>
-                      <div class="flex items-baseline justify-between mb-5 border-b border-[#E6DFD3] pb-2.5">
-                        <h2 class="text-sm sm:text-lg font-extrabold uppercase tracking-tight text-[#1C1614]">
-                          BEST SELLING
-                        </h2>
-                        <span class="text-[11px] font-semibold text-neutral-500">${products.length} Products</span>
-                      </div>
+                  <div class="space-y-10">
+                    ${bestSellingProducts.length > 0 && html`
+                      <section>
+                        <div class="flex items-baseline justify-between mb-5 border-b border-[#E6DFD3] pb-2.5">
+                          <h2 class="text-sm sm:text-lg font-extrabold uppercase tracking-tight text-[#1C1614]">
+                            BEST SELLING
+                          </h2>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
+                          ${bestSellingProducts.map(renderProductCard)}
+                        </div>
+                      </section>
+                    `}
 
-                      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
-                        ${[
-                          ...bestSellingProducts,
-                          ...products.filter(p => !p.isBestSeller)
-                        ].map(renderProductCard)}
-                      </div>
-                    </section>
+                    ${otherRegularProducts.length > 0 && html`
+                      <section class="${bestSellingProducts.length > 0 ? "pt-6 border-t border-[#E6DFD3]" : ""}">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
+                          ${otherRegularProducts.map(renderProductCard)}
+                        </div>
+                      </section>
+                    `}
                   </div>
                 ` : html`
                   <!-- Filtered Category / Sub-Category / Search Grid -->
@@ -3029,7 +3040,7 @@
           `}
 
           <!-- ===================================================================== -->
-          <!-- VIEW 2: PRODUCT DETAIL (SIZE FIT GUIDE + [- 1 +] QTY + COPY AD LINK)  -->
+          <!-- VIEW 2: PRODUCT DETAIL (NO AUTO SIZE + FIT GUIDE + [- 1 +] + ORDER)   -->
           <!-- ===================================================================== -->
           ${view === "product" && selectedProduct && html`
             <div class="max-w-6xl mx-auto px-3 sm:px-6 py-6 sm:py-8 flex-1 w-full overflow-x-hidden">
@@ -3107,7 +3118,7 @@
                   })()}
                 </div>
 
-                <!-- Right: Product Info, Color, Size, Fit Guide, Quantity [- 1 +] & BUY NOW -->
+                <!-- Right: Product Info, Color, Size (Unselected by default), Fit Guide, Quantity [- 1 +] & ORDER -->
                 <div class="md:col-span-6 flex flex-col justify-between min-w-0">
                   <div>
                     <p class="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">SKU: ${selectedProduct.sku}</p>
@@ -3134,7 +3145,7 @@
                                 setSelectedColorIdx(idx);
                                 setSelectedPhotoIdx(0);
                                 const sizes = (c.sizes || "30,32,34,36").split(",").map(s => s.trim()).filter(Boolean);
-                                if (!sizes.includes(selectedSize)) setSelectedSize(sizes[0] || "");
+                                if (selectedSize && !sizes.includes(selectedSize)) setSelectedSize("");
                               }}
                               class="px-3.5 py-2 border text-xs font-semibold flex items-center gap-2 transition ${selectedColorIdx === idx ? "border-[#7C2517] bg-[#7C2517]/12 text-[#7C2517] ring-1 ring-[#7C2517]/40" : "border-[#E6DFD3] bg-white/70 text-[#1C1614] hover:border-[#7C2517]/50"}"
                             >
@@ -3145,11 +3156,11 @@
                         </div>
                       </div>
 
-                      <!-- Size Selector + Dynamic Size Fit Note -->
-                      <div class="mb-5">
+                      <!-- Size Selector (NEW FIX #1: Starts unselected until customer clicks a size!) -->
+                      <div class="mb-5 ${sizePromptWarning && !selectedSize ? "p-3 border-2 border-[#7C2517] bg-[#7C2517]/5" : ""}">
                         <div class="flex justify-between items-center mb-2.5">
                           <span class="text-xs font-semibold uppercase tracking-wider text-neutral-500">
-                            Select Size: <strong class="text-[#1C1614]">${selectedSize}</strong>
+                            Select Size: <strong class="text-[#7C2517]">${selectedSize || "Click a Size"}</strong>
                           </span>
                           <button onClick=${() => setShowSizeChartModal(true)} class="text-xs font-bold underline text-[#7C2517]">
                             📏 Size Chart
@@ -3159,16 +3170,25 @@
                           ${(selectedProduct.colors?.[selectedColorIdx]?.sizes || "30,32,34,36").split(",").map(s => s.trim()).filter(Boolean).map(sz => html`
                             <button
                               key=${sz}
-                              onClick=${() => setSelectedSize(sz)}
-                              class="w-12 h-11 border text-xs font-bold transition ${selectedSize === sz ? "border-[#7C2517] bg-[#7C2517]/12 text-[#7C2517] ring-1 ring-[#7C2517]/40" : "border-[#E6DFD3] bg-white/70 text-[#1C1614] hover:border-[#7C2517]/50"}"
+                              onClick=${() => {
+                                setSelectedSize(sz);
+                                setSizePromptWarning(false);
+                              }}
+                              class="w-12 h-11 border text-xs font-bold transition ${selectedSize === sz ? "border-[#7C2517] bg-[#7C2517] text-white shadow-sm" : "border-[#E6DFD3] bg-white text-[#1C1614] hover:border-[#7C2517]"}"
                             >
                               ${sz}
                             </button>
                           `)}
                         </div>
 
-                        <!-- Dynamic Size Fit Description Box -->
-                        ${(() => {
+                        ${sizePromptWarning && !selectedSize && html`
+                          <p class="text-[11px] font-bold text-[#7C2517] mt-2">
+                            ↑ অনুগ্রহ করে আপনার সাইজে ক্লিক করুন (Please select a size above)
+                          </p>
+                        `}
+
+                        <!-- Dynamic Size Fit Description Box (Appears ONLY after customer clicks a size!) -->
+                        ${selectedSize ? (() => {
                           const fitNote = selectedProduct.sizeDescriptions?.[selectedSize] || DEFAULT_PANT_SIZE_DESCRIPTIONS[selectedSize] || "";
                           if (!fitNote) return null;
                           return html`
@@ -3176,7 +3196,7 @@
                               ${fitNote}
                             </div>
                           `;
-                        })()}
+                        })() : null}
                       </div>
                     ` : html`
                       <!-- Multi-Color / Multi-Size Pack Builder with Quantity per Row -->
@@ -3267,7 +3287,7 @@
                       </button>
                     `}
 
-                    <!-- Direct [ -  1  + ] Quantity Selector Bar alongside ADD TO CART & BUY NOW -->
+                    <!-- Direct [ -  1  + ] Quantity Selector Bar alongside ADD TO CART & ORDER (NEW FIX #3) -->
                     <div class="flex flex-col sm:flex-row items-stretch gap-3 mb-6">
                       ${!multiPackMode && html`
                         <div class="flex items-center justify-between border border-[#1C1614]/30 bg-white px-2 h-12 sm:w-32 shrink-0">
@@ -3302,7 +3322,7 @@
                           onClick=${() => handleAddToCart(true)}
                           class="h-12 bg-[#7C2517] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#5E1B10] transition shadow-sm"
                         >
-                          BUY NOW
+                          ORDER
                         </button>
                       </div>
                     </div>
@@ -3946,7 +3966,7 @@
                       }}
                       class="w-full py-3.5 bg-[#7C2517] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#5E1B10]"
                     >
-                      Proceed to Checkout
+                      ORDER
                     </button>
                   </div>
                 `}
@@ -4068,4 +4088,3 @@
   </script>
 </body>
 </html>
-      
