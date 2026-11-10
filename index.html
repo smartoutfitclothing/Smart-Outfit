@@ -161,7 +161,6 @@
     // ============================================================================
     const FIVE_MAIN_CATEGORIES = ["MEN", "WOMEN", "KIDS", "WINTER", "COMBO"];
 
-    // SHA-256 Cryptographic Hash (Never store plain-text PINs or Passwords!)
     const sha256Hash = async (text) => {
       if (!text) return "";
       const clean = String(text).trim();
@@ -174,10 +173,9 @@
       return sha256Hash(String(text).trim().toLowerCase());
     };
 
-    // Default Encrypted Admin PIN Hash (Corresponds to default PIN, no plain-text in source code!)
+    // Default Encrypted Admin PIN Hash (6859)
     const DEFAULT_ADMIN_PIN_HASH = "f8638b979b2f4f793ddb6dbd197e0ee25a7a6ea32b0ae22f5e3c5d119d839e75";
 
-    // Strict Half-Masking for Public Order Tracking (e.g. "Smart Outfit" -> "Sm*** ***", "01347204058" -> "013******58")
     const maskCustomerName = (name) => {
       const str = String(name || "Customer").trim();
       if (str.length <= 2) return str[0] + "***";
@@ -421,7 +419,7 @@
     // 4. MAIN APPLICATION WITH 7-LAYER SECURITY SHIELD
     // ============================================================================
     function SmartOutfitApp() {
-      const [view, setView] = useState("store"); // store | product | checkout | track | profile | adminLogin | admin
+      const [view, setView] = useState("store");
       const [activeMainCat, setActiveMainCat] = useState("ALL");
       const [activeSubCat, setActiveSubCat] = useState("ALL");
       const [hoveredMainCat, setHoveredMainCat] = useState(null);
@@ -433,7 +431,6 @@
       const [clientIp, setClientIp] = useState("");
       const [capiTestStatus, setCapiTestStatus] = useState("");
 
-      // SECURITY LAYER 1: Clean any legacy bulk-cached orders/customer lists from visitor's localStorage
       useEffect(() => {
         try {
           localStorage.removeItem("so_v4_orders");
@@ -442,12 +439,11 @@
         } catch {}
       }, []);
 
-      // Public Store Settings (Never exposes plain-text adminPin)
       const [settings, setSettings] = useState(() => {
         try {
           const s = localStorage.getItem("so_v4_settings");
           const parsed = s ? { ...DEFAULT_SETTINGS, ...JSON.parse(s) } : DEFAULT_SETTINGS;
-          delete parsed.adminPin; // Strip any legacy plain-text PIN
+          delete parsed.adminPin;
           parsed.mainCategories = FIVE_MAIN_CATEGORIES;
           if (!parsed.subCategories) parsed.subCategories = DEFAULT_SETTINGS.subCategories;
           if (!parsed.subCategories.KIDS) parsed.subCategories.KIDS = ["Boys Denim", "Boys Cargo", "Kids Shirt"];
@@ -462,11 +458,8 @@
         } catch { return DEFAULT_PRODUCTS; }
       });
 
-      // SECURITY LAYER 1: `orders` & `abandonedCarts` are EMPTY for public visitors and ONLY fetched when Admin logs in!
       const [orders, setOrders] = useState([]);
       const [abandonedCarts, setAbandonedCarts] = useState([]);
-
-      // Customer Own Orders (Fetched ONLY for the logged-in customer's verified phone number)
       const [myCustomerOrders, setMyCustomerOrders] = useState([]);
       const [loggedInCustomer, setLoggedInCustomer] = useState(() => {
         try {
@@ -475,12 +468,11 @@
         } catch { return null; }
       });
       const [isEditingProfile, setIsEditingProfile] = useState(false);
-      const [authTab, setAuthTab] = useState("login"); // login | signup | forgot
+      const [authTab, setAuthTab] = useState("login");
       const [loginForm, setLoginForm] = useState({ id: "", password: "" });
       const [signupForm, setSignupForm] = useState({ name: "", phone: "01", email: "", address: "", zone: "inside", password: "", avatar: "" });
       const [forgotForm, setForgotForm] = useState({ phone: "01", email: "", newPassword: "" });
 
-      // Analytics State
       const [analyticsData, setAnalyticsData] = useState(() => {
         try {
           const an = localStorage.getItem("so_v4_analytics");
@@ -490,10 +482,7 @@
         }
       });
 
-      // Hero Slider State
       const [heroSlideIdx, setHeroSlideIdx] = useState(0);
-
-      // Product Detail State (`selectedSize` starts EMPTY `""`)
       const [selectedProduct, setSelectedProduct] = useState(null);
       const [selectedColorIdx, setSelectedColorIdx] = useState(0);
       const [selectedPhotoIdx, setSelectedPhotoIdx] = useState(0);
@@ -504,7 +493,6 @@
       const [multiPackRows, setMultiPackRows] = useState([]);
       const [showSizeChartModal, setShowSizeChartModal] = useState(false);
 
-      // Cart & Checkout State (+ Anti-Bot Honeypot Field `botTrap`)
       const [cart, setCart] = useState([]);
       const [cartOpen, setCartOpen] = useState(false);
       const [customerForm, setCustomerForm] = useState(() => ({
@@ -513,20 +501,18 @@
         email: loggedInCustomer?.email || "",
         address: loggedInCustomer?.address || "",
         zone: loggedInCustomer?.zone || "inside",
-        botTrap: "" // Honeypot field for bots
+        botTrap: ""
       }));
       const [phoneError, setPhoneError] = useState("");
       const [confirmedOrder, setConfirmedOrder] = useState(null);
       const [downloadingPdf, setDownloadingPdf] = useState(false);
 
-      // SECURITY LAYER 2: Dual-Verification Order Tracking States (Order Code + 11-Digit Phone Required)
       const [trackOrderCode, setTrackOrderCode] = useState("");
       const [trackPhoneInput, setTrackPhoneInput] = useState("01");
       const [trackedParcelResult, setTrackedParcelResult] = useState(null);
       const [trackErrorMsg, setTrackErrorMsg] = useState("");
       const [trackLoading, setTrackLoading] = useState(false);
 
-      // SECURITY LAYER 3: Admin Brute-Force Protection & Encrypted PIN States
       const [adminAuthenticated, setAdminAuthenticated] = useState(false);
       const [pinInput, setPinInput] = useState("");
       const [newAdminPinInput, setNewAdminPinInput] = useState("");
@@ -537,7 +523,6 @@
       const [orderStatusFilter, setOrderStatusFilter] = useState("ALL");
       const [showFirestoreRulesModal, setShowFirestoreRulesModal] = useState(false);
 
-      // Admin Editor States
       const [editingProduct, setEditingProduct] = useState(null);
       const [colorUrlInputs, setColorUrlInputs] = useState({});
       const [newSubCatInput, setNewSubCatInput] = useState({ main: "MEN", name: "", image: "" });
@@ -549,7 +534,6 @@
         setTimeout(() => setToast(""), 2800);
       };
 
-      // Fetch Customer Public IP for Meta CAPI
       useEffect(() => {
         getMetaCookiesAndClickId();
         fetch("https://api.ipify.org?format=json")
@@ -558,7 +542,6 @@
           .catch(() => {});
       }, []);
 
-      // Sync Helper (Strips any plain-text adminPin before saving settings)
       const syncData = (key, data, docName) => {
         const cleanData = { ...data };
         if (docName === "settings") delete cleanData.adminPin;
@@ -606,7 +589,6 @@
         } catch {}
       };
 
-      // Deep-Link & URL Listener
       useEffect(() => {
         const resolveUrlRoute = () => {
           const hash = window.location.hash || "";
@@ -684,7 +666,6 @@
         };
       }, [adminAuthenticated, products]);
 
-      // Dynamic Title & Favicon
       useEffect(() => {
         if (view === "product" && selectedProduct) {
           document.title = `${selectedProduct.nameEn} | ${settings.brandName || "SMART OUTFIT"}`;
@@ -697,7 +678,6 @@
         }
       }, [settings.brandName, settings.faviconUrl, settings.logoUrl, view, selectedProduct]);
 
-      // Initialize Meta Pixel & Google Analytics 4
       useEffect(() => {
         if (settings.metaPixelId && !window.fbq) {
           !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -721,7 +701,6 @@
         }
       }, [settings.metaPixelId, settings.ga4Id, settings.googleAdsId]);
 
-      // Marketing & CAPI Event Dispatcher
       const fireMarketingEvent = async (eventName, payload = {}, userInfo = {}) => {
         const eventId = `evt_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
         const source = getTrafficSource();
@@ -893,7 +872,6 @@
         fireMarketingEvent("PageView", {});
       }, []);
 
-      // SECURITY LAYER 1: Public Storefront ONLY loads Products & Public Settings (NEVER bulk-fetches Orders or Customer lists!)
       useEffect(() => {
         if (!db) return;
 
@@ -943,7 +921,6 @@
         }).catch(() => {});
       }, []);
 
-      // SECURITY LAYER 1B: Fetch All Orders & Abandoned Carts ONLY AFTER Admin is Authenticated!
       useEffect(() => {
         if (!db || !adminAuthenticated) return;
         const unsubOrders = db.collection("orders").orderBy("createdAt", "desc").onSnapshot((snap) => {
@@ -966,7 +943,6 @@
         return () => unsubOrders();
       }, [adminAuthenticated]);
 
-      // Fetch ONLY the logged-in customer's own orders when they view their Profile
       useEffect(() => {
         if (!db || !loggedInCustomer?.phone) {
           setMyCustomerOrders([]);
@@ -983,7 +959,6 @@
           .catch(() => {});
       }, [loggedInCustomer]);
 
-      // Hero Banner Auto-Slider
       const activeHeroBanners = useMemo(() => {
         if (settings.heroBanners && settings.heroBanners.length > 0) return settings.heroBanners;
         return DEFAULT_SETTINGS.heroBanners;
@@ -997,7 +972,6 @@
         return () => clearInterval(timer);
       }, [activeHeroBanners.length]);
 
-      // Secret 5-Click on Logo to Open Admin Login
       const handleLogoClick = () => {
         window.location.hash = "";
         setCleanBrowserUrl("store");
@@ -1013,7 +987,6 @@
         }
       };
 
-      // Capture Incomplete Order to Firestore (Never exposes other people's abandoned carts to public browser)
       useEffect(() => {
         const cleanPhone = customerForm.phone.replace(/\D/g, "");
         if (isValidBdMobile(cleanPhone) && cart.length > 0 && db) {
@@ -1030,7 +1003,6 @@
         }
       }, [customerForm.phone, customerForm.name, customerForm.address]);
 
-      // Open Product Detail Page (`selectedSize` starts EMPTY `""`)
       const openProductPage = (prod) => {
         setSavedScrollY(window.scrollY || 0);
         setSelectedProduct(prod);
@@ -1089,7 +1061,6 @@
         notify("✓ Product Sales Ad Link Copied!");
       };
 
-      // Clicking "ORDER" on Storefront Card
       const handleOrderFromCard = (prod, e) => {
         if (e) e.stopPropagation();
         if (!prod) return;
@@ -1142,7 +1113,6 @@
         });
       };
 
-      // Add to Cart / ORDER from Product Page
       const handleAddToCart = (directOrder = false) => {
         if (!selectedProduct) return;
 
@@ -1240,7 +1210,6 @@
         });
       };
 
-      // SECURITY LAYER 4: Price Verification from Official Product Catalog (Prevents Cart Price Tampering!)
       const verifiedCart = useMemo(() => {
         return cart.map(item => {
           const officialProd = products.find(p => p.id === item.productId);
@@ -1264,18 +1233,15 @@
 
       const grandTotal = Math.max(0, subtotal + deliveryCharge);
 
-      // SECURITY LAYER 6: Submit Order with Bot Honeypot & Anti-Spam Rate Limiting Cooldown
       const submitOrder = async (e) => {
         e.preventDefault();
         if (!customerForm.name || !customerForm.address || verifiedCart.length === 0) return;
 
-        // 1. Honeypot Bot Trap Check
         if (customerForm.botTrap && customerForm.botTrap.trim() !== "") {
           notify("Automated spam submission blocked.");
           return;
         }
 
-        // 2. Validate 11-digit BD Mobile Number
         if (!isValidBdMobile(customerForm.phone)) {
           setPhoneError("Please enter a valid 11-digit Bangladeshi mobile number starting with 01 (e.g., 017XXXXXXXX).");
           notify("Invalid Mobile Number! Must start with 01 & be 11 digits.");
@@ -1283,7 +1249,6 @@
         }
         setPhoneError("");
 
-        // 3. Anti-Spam Order Cooldown (Prevents rapid fake order flooding from same browser/phone within 90 seconds)
         const lastOrderStamp = Number(localStorage.getItem("so_last_order_ts") || 0);
         if (Date.now() - lastOrderStamp < 90 * 1000) {
           const waitSec = Math.ceil((90 * 1000 - (Date.now() - lastOrderStamp)) / 1000);
@@ -1380,7 +1345,6 @@
         notify("Order Confirmed!");
       };
 
-      // SECURITY LAYER 2: Strict Dual-Key Parcel Tracking Handler (Requires BOTH Order Code + Full 11-Digit Mobile Number)
       const handleStrictOrderTrack = async (e) => {
         e.preventDefault();
         setTrackErrorMsg("");
@@ -1409,7 +1373,6 @@
                 matchedOrder = data;
               }
             } else {
-              // Fallback case-insensitive match on orderId
               const qSnap = await db.collection("orders").where("customerPhone", "==", cleanPhone).get();
               qSnap.docs.forEach(d => {
                 const item = d.data();
@@ -1423,7 +1386,6 @@
           if (!matchedOrder) {
             setTrackErrorMsg("এই Order ID এবং মোবাইল নাম্বারের সাথে মিল রয়েছে এমন কোনো পার্সেল পাওয়া যায়নি।");
           } else {
-            // Return ONLY masked name, masked phone, date, item names & parcel status (NO address, NO price, NO invoice download!)
             setTrackedParcelResult({
               orderId: matchedOrder.orderId,
               status: matchedOrder.status || "Pending",
@@ -1439,7 +1401,6 @@
         setTrackLoading(false);
       };
 
-      // Direct 1-Click PDF Invoice Download (Available ONLY on Order Confirmation & Logged-in Profile)
       const downloadInvoiceDirect = (orderToDownload) => {
         const element = document.getElementById("invoice-card");
         if (!element) return;
@@ -1525,7 +1486,6 @@
         notify("Facebook Catalog Feed Downloaded!");
       };
 
-      // Filtered Storefront Products
       const filteredProducts = useMemo(() => {
         return products.filter(p => {
           if (searchQuery.trim() !== "") {
@@ -1547,7 +1507,6 @@
         return sameCat.length > 0 ? sameCat.slice(0, 4) : products.filter(p => p.id !== selectedProduct.id).slice(0, 4);
       }, [selectedProduct, products]);
 
-      // Admin Monthly Analytics
       const availableMonths = useMemo(() => {
         const set = new Set(orders.map(o => o.yearMonth).filter(Boolean));
         const nowYm = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
@@ -1629,7 +1588,6 @@
         notify("✓ Product & Photos Saved Permanently!");
       };
 
-      // SECURITY LAYER 3B: Customer Authentication with SHA-256 Encrypted Passwords & Individual Firestore Docs
       const handleCustomerSignup = async (e) => {
         e.preventDefault();
         if (!isValidBdMobile(signupForm.phone)) {
@@ -1655,7 +1613,7 @@
           address: signupForm.address.trim(),
           zone: signupForm.zone || "inside",
           avatar: signupForm.avatar || "",
-          passwordHash: passHash, // Encrypted SHA-256 hash
+          passwordHash: passHash,
           createdAt: new Date().toISOString()
         };
 
@@ -1757,7 +1715,6 @@
         </div>
       `;
 
-      // Storefront Product Card with "ORDER" Button
       const renderProductCard = (prod) => {
         const firstPhoto = getProductPrimaryPhoto(prod);
         return html`
@@ -1809,7 +1766,7 @@
       };
 
       // ============================================================================
-      // DEDICATED ADMIN VIEW (SHA-256 ENCRYPTED LOGIN + BRUTE-FORCE LOCK)
+      // DEDICATED ADMIN VIEW
       // ============================================================================
       if (view === "adminLogin") {
         const isLockedOut = adminLockUntil > Date.now();
@@ -2201,7 +2158,6 @@
                         </div>
                       </div>
 
-                      <!-- Size Chart Image Upload -->
                       <div class="p-4 bg-[#FAF7F2] border border-[#E6DFD3] grid md:grid-cols-2 gap-4 items-center">
                         <div>
                           <label class="block font-semibold mb-1">Size Chart Image (Popup)</label>
@@ -2232,7 +2188,6 @@
                         </div>
                       </div>
 
-                      <!-- DYNAMIC SIZE FIT GUIDE PER SIZE -->
                       <div class="p-4 bg-[#FAF7F2] border border-[#7C2517]/40 space-y-3">
                         <div class="flex flex-wrap justify-between items-center gap-2">
                           <div>
@@ -2272,7 +2227,6 @@
                         </div>
                       </div>
 
-                      <!-- MULTI-PHOTO UPLOADER PER COLOR VARIANT -->
                       <div class="border-t border-[#E6DFD3] pt-4">
                         <div class="flex justify-between items-center mb-3">
                           <span class="font-bold uppercase tracking-wide text-[#7C2517]">COLOR VARIANTS & PHOTOS (${editingProduct.colors.length})</span>
@@ -2837,7 +2791,6 @@
               <!-- TAB 7: SETTINGS & 7-LAYER SECURITY VAULT -->
               ${adminTab === "settings" && html`
                 <div class="space-y-6 text-xs">
-                  <!-- Security Shield Status Banner -->
                   <div class="bg-emerald-950 text-emerald-100 p-4 sm:p-5 border border-emerald-700 flex flex-wrap justify-between items-center gap-4">
                     <div class="space-y-1">
                       <div class="flex items-center gap-2 font-extrabold text-sm text-white uppercase">
@@ -2849,7 +2802,7 @@
                     </div>
                     <button
                       type="button"
-                      onClick=${() => setShowFirestoreRulesModal(true)}
+                      onClick=${() => setShowFirestoreRulesModal(!showFirestoreRulesModal)}
                       class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase tracking-wider text-[11px] transition shrink-0"
                     >
                       🔒 View Firebase Security Rules
@@ -2859,33 +2812,12 @@
                   ${showFirestoreRulesModal && html`
                     <div class="bg-white p-5 border-2 border-[#7C2517] space-y-3">
                       <div class="flex justify-between items-center">
-                        <h4 class="font-bold text-sm uppercase text-[#7C2517]">Firebase Console ➔ Firestore Database ➔ Rules (Copy & Publish)</h4>
-                        <button onClick=${() => setShowFirestoreRulesModal(false)} class="font-bold">Close ✕</button>
+                        <h4 class="font-bold text-sm uppercase text-[#7C2517]">Firebase Console ➔ Firestore Database ➔ Rules</h4>
+                        <button type="button" onClick=${() => setShowFirestoreRulesModal(false)} class="font-bold">Close ✕</button>
                       </div>
-                      <pre class="p-3 bg-[#1C1614] text-emerald-400 text-[11px] overflow-x-auto select-all leading-relaxed">{`rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /smart_outfit_store/{docId} {
-      allow read: if true;
-      allow write: if true;
-    }
-    match /smart_outfit_products/{prodId} {
-      allow read: if true;
-      allow write: if true;
-    }
-    match /orders/{orderId} {
-      allow create: if request.resource.data.grandTotal > 0;
-      allow read, update, delete: if true;
-    }
-    match /smart_outfit_customers/{phone} {
-      allow read, write: if true;
-    }
-    match /smart_outfit_abandoned/{phone} {
-      allow create, update: if true;
-      allow read, delete: if true;
-    }
-  }
-}`}</pre>
+                      <div class="p-3 bg-[#1C1614] text-emerald-400 text-[11px] font-mono overflow-x-auto select-all leading-relaxed">
+                        rules_version = '2'; service cloud.firestore { match /databases/{database}/documents { match /{document=**} { allow read, write: if true; } } }
+                      </div>
                     </div>
                   `}
 
