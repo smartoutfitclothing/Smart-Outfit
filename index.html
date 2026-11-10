@@ -2780,864 +2780,6 @@
         `;
       }
       // ============================================================================
-      // PUBLIC STOREFRONT VIEW (PART 2: HEADER, CONTINUOUS GRID, PRODUCT, CHECKOUT, PROFILE & FOOTER)
-      // ============================================================================
-      return html`
-        <div class="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col bg-[#FAF7F2] text-[#1C1614]">
-          
-          ${toast && html`
-            <div class="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#7C2517] text-white text-xs font-semibold px-5 py-2.5 shadow-md">
-              ✓ ${toast}
-            </div>
-          `}
-
-          <!-- WARM CLEAN STICKY HEADER -->
-          <header class="sticky top-0 z-40 bg-[#FAF7F2]/95 backdrop-blur-md border-b border-[#E6DFD3] w-full">
-            <div class="max-w-7xl mx-auto px-3 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-4">
-              
-              <!-- Left: Unified Brand Logo + Brand Name SMART OUTFIT & 5 Main Categories -->
-              <div class="flex items-center gap-6 lg:gap-8 min-w-0">
-                <div
-                  onClick=${handleLogoClick}
-                  class="cursor-pointer flex items-center gap-2.5 select-none shrink-0"
-                >
-                  <${BrandLogoMark} logoUrl=${settings.logoUrl} brandName=${settings.brandName} />
-                  <span class="brand-wordmark text-sm sm:text-xl tracking-wider">${settings.brandName}</span>
-                </div>
-
-                <!-- 5 Main Categories: MEN | WOMEN | KIDS | WINTER | COMBO -->
-                <nav class="hidden lg:flex items-center gap-7 text-xs font-bold uppercase tracking-wider">
-                  ${FIVE_MAIN_CATEGORIES.map(mc => html`
-                    <div
-                      key=${mc}
-                      class="relative py-6"
-                      onMouseEnter=${() => setHoveredMainCat(mc)}
-                      onMouseLeave=${() => setHoveredMainCat(null)}
-                    >
-                      <button
-                        onClick=${() => { window.location.hash = ""; setCleanBrowserUrl("store", null, mc); setView("store"); setActiveMainCat(mc); setActiveSubCat("ALL"); }}
-                        class="hover:text-[#7C2517] transition ${activeMainCat === mc && view === "store" ? "text-[#7C2517] underline underline-offset-8 decoration-2" : "text-[#1C1614]"}"
-                      >
-                        ${mc}
-                      </button>
-
-                      ${hoveredMainCat === mc && (settings.subCategories?.[mc]?.length > 0) && html`
-                        <div class="absolute left-0 top-full w-52 bg-[#FAF7F2] border border-[#E6DFD3] shadow-lg py-2 z-50">
-                          ${settings.subCategories[mc].map(sc => html`
-                            <button
-                              key=${sc}
-                              onClick=${() => {
-                                window.location.hash = "";
-                                setCleanBrowserUrl("store", null, mc);
-                                setView("store");
-                                setActiveMainCat(mc);
-                                setActiveSubCat(sc);
-                                setHoveredMainCat(null);
-                              }}
-                              class="block w-full text-left px-4 py-2 text-xs font-medium text-[#1C1614] hover:bg-[#7C2517]/10 hover:text-[#7C2517] capitalize tracking-normal"
-                            >
-                              ${sc}
-                            </button>
-                          `)}
-                        </div>
-                      `}
-                    </div>
-                  `)}
-                </nav>
-              </div>
-
-              <!-- Right: Search Box + Track, Profile, Cart -->
-              <div class="flex items-center gap-3.5 sm:gap-6 shrink-0">
-                <div class="hidden md:flex items-center bg-[#F3EFE8] px-3.5 py-2 w-56 lg:w-72 border border-[#E6DFD3] focus-within:border-[#7C2517] focus-within:bg-white transition">
-                  <span class="text-neutral-400 mr-2"><${IconSearch}/></span>
-                  <input
-                    value=${searchQuery}
-                    onInput=${e => { setSearchQuery(e.target.value); setView("store"); }}
-                    placeholder="Search Cargo, Denim, Shirt..."
-                    class="bg-transparent text-xs w-full outline-none text-[#1C1614]"
-                  />
-                </div>
-
-                <div class="flex items-center gap-3.5 sm:gap-5 text-[#1C1614]">
-                  <button onClick=${() => { window.location.hash = ""; setCleanBrowserUrl("store"); setView("track"); }} class="flex flex-col items-center gap-0.5 hover:text-[#7C2517] transition">
-                    <${IconTrack}/>
-                    <span class="text-[10px] font-semibold">Track</span>
-                  </button>
-
-                  <button onClick=${() => { window.location.hash = ""; setCleanBrowserUrl("store"); setIsEditingProfile(false); setView("profile"); }} class="flex flex-col items-center gap-0.5 hover:text-[#7C2517] transition">
-                    <${IconUser}/>
-                    <span class="text-[10px] font-semibold">${loggedInCustomer ? loggedInCustomer.name.split(" ")[0] : "Profile"}</span>
-                  </button>
-
-                  <button onClick=${() => setCartOpen(true)} class="relative flex flex-col items-center gap-0.5 hover:text-[#7C2517] transition">
-                    <${IconCart}/>
-                    <span class="text-[10px] font-semibold">Cart</span>
-                    ${totalItemsCount > 0 && html`<span class="absolute -top-1 -right-1.5 w-4 h-4 rounded-full bg-[#7C2517] text-white text-[9px] flex items-center justify-center font-bold">${totalItemsCount}</span>`}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Mobile Search & 5 Main Categories Strip -->
-            <div class="lg:hidden border-t border-[#E6DFD3] px-3 py-2 space-y-2">
-              <div class="md:hidden flex items-center bg-[#F3EFE8] px-3 py-1.5 w-full border border-[#E6DFD3]">
-                <span class="text-neutral-400 mr-2"><${IconSearch}/></span>
-                <input
-                  value=${searchQuery}
-                  onInput=${e => { setSearchQuery(e.target.value); setView("store"); }}
-                  placeholder="Search Cargo, Denim, Shirt..."
-                  class="bg-transparent text-xs w-full outline-none text-[#1C1614]"
-                />
-              </div>
-              <div class="flex items-center justify-between sm:justify-center gap-4 overflow-x-auto no-scrollbar text-xs font-bold uppercase tracking-wider pt-0.5">
-                ${FIVE_MAIN_CATEGORIES.map(mc => html`
-                  <button
-                    key=${mc}
-                    onClick=${() => { window.location.hash = ""; setCleanBrowserUrl("store", null, mc); setView("store"); setActiveMainCat(mc); setActiveSubCat("ALL"); }}
-                    class="whitespace-nowrap py-0.5 ${activeMainCat === mc && view === "store" ? "text-[#7C2517] underline underline-offset-4" : "text-neutral-700"}"
-                  >
-                    ${mc}
-                  </button>
-                `)}
-              </div>
-            </div>
-          </header>
-
-          <!-- ===================================================================== -->
-          <!-- VIEW 1: HOMEPAGE (HERO SLIDER -> BEST SELLING -> CONTINUOUS PRODUCT GRID) -->
-          <!-- Correction #3: No separate category headers below Best Selling!       -->
-          <!-- ===================================================================== -->
-          ${view === "store" && html`
-            <main class="flex-1 w-full max-w-full overflow-x-hidden">
-              
-              <!-- Multi-Banner Hero Slider -->
-              ${activeMainCat === "ALL" && activeSubCat === "ALL" && !searchQuery && html`
-                <div class="relative w-full overflow-hidden bg-[#F3EFE8] group">
-                  <img
-                    onClick=${() => {
-                      const targetCat = activeHeroBanners[heroSlideIdx]?.linkCategory || "MEN";
-                      setActiveMainCat(targetCat);
-                      setCleanBrowserUrl("store", null, targetCat);
-                    }}
-                    src=${activeHeroBanners[heroSlideIdx]?.image}
-                    alt=${settings.brandName}
-                    class="w-full h-[210px] sm:h-[420px] lg:h-[520px] object-cover block cursor-pointer transition-all duration-500"
-                  />
-
-                  ${activeHeroBanners.length > 1 && html`
-                    <button
-                      onClick=${() => setHeroSlideIdx((heroSlideIdx - 1 + activeHeroBanners.length) % activeHeroBanners.length)}
-                      class="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-white/80 hover:bg-white text-[#1C1614] flex items-center justify-center shadow transition"
-                    >
-                      <${IconChevronLeft}/>
-                    </button>
-                    <button
-                      onClick=${() => setHeroSlideIdx((heroSlideIdx + 1) % activeHeroBanners.length)}
-                      class="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-white/80 hover:bg-white text-[#1C1614] flex items-center justify-center shadow transition"
-                    >
-                      <${IconChevronRight}/>
-                    </button>
-                    <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
-                      ${activeHeroBanners.map((_, i) => html`
-                        <button
-                          key=${i}
-                          onClick=${() => setHeroSlideIdx(i)}
-                          class="h-2 rounded-full transition-all ${heroSlideIdx === i ? "w-6 bg-[#7C2517]" : "w-2 bg-white/80"}"
-                        />
-                      `)}
-                    </div>
-                  `}
-                </div>
-              `}
-
-              <div class="max-w-7xl mx-auto px-3 sm:px-6 py-7 sm:py-10">
-                
-                <!-- Sub-Category Filter Pills (When inside a Main Category or Sub-Category) -->
-                ${(activeMainCat !== "ALL" || activeSubCat !== "ALL") && html`
-                  <div class="mb-7 pb-4 border-b border-[#E6DFD3] flex items-center justify-between flex-wrap gap-3">
-                    <div>
-                      <p class="text-xs text-neutral-500 uppercase tracking-widest">
-                        <button onClick=${() => { setCleanBrowserUrl("store"); setActiveMainCat("ALL"); setActiveSubCat("ALL"); }} class="hover:text-[#7C2517]">Home</button>
-                        ${activeMainCat !== "ALL" && html` / ${activeMainCat}`}
-                      </p>
-                      <h1 class="text-xl sm:text-2xl font-extrabold uppercase tracking-tight text-[#1C1614] mt-0.5">
-                        ${activeSubCat === "ALL" ? activeMainCat : activeSubCat}
-                      </h1>
-                    </div>
-                    ${activeMainCat !== "ALL" && html`
-                      <div class="flex gap-2 overflow-x-auto no-scrollbar">
-                        <button
-                          onClick=${() => setActiveSubCat("ALL")}
-                          class="px-3.5 py-1.5 text-xs font-semibold border transition ${activeSubCat === "ALL" ? "border-[#7C2517] bg-[#7C2517]/10 text-[#7C2517]" : "border-[#E6DFD3] text-[#1C1614]"}"
-                        >
-                          All ${activeMainCat}
-                        </button>
-                        ${(settings.subCategories?.[activeMainCat] || []).map(sc => html`
-                          <button
-                            key=${sc}
-                            onClick=${() => setActiveSubCat(sc)}
-                            class="px-3.5 py-1.5 text-xs font-semibold border whitespace-nowrap transition ${activeSubCat === sc ? "border-[#7C2517] bg-[#7C2517]/10 text-[#7C2517]" : "border-[#E6DFD3] text-[#1C1614]"}"
-                          >
-                            ${sc}
-                          </button>
-                        `)}
-                      </div>
-                    `}
-                  </div>
-                `}
-
-                <!-- Correction #3: ONLY "BEST SELLING" HEADER ON TOP, THEN ALL OTHER PRODUCTS IN ONE UNIFIED CONTINUOUS GRID -->
-                ${activeMainCat === "ALL" && activeSubCat === "ALL" && !searchQuery ? html`
-                  <div class="space-y-10">
-                    
-                    <!-- 1. BEST SELLING SECTION -->
-                    ${bestSellingProducts.length > 0 && html`
-                      <section>
-                        <div class="flex items-baseline justify-between mb-5 border-b border-[#E6DFD3] pb-2.5">
-                          <h2 class="text-sm sm:text-lg font-extrabold uppercase tracking-tight text-[#1C1614]">
-                            BEST SELLING
-                          </h2>
-                        </div>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3.5 sm:gap-6">
-                          ${bestSellingProducts.map(renderProductCard)}
-                        </div>
-                      </section>
-                    `}
-
-                    <!-- 2. ALL REMAINING PRODUCTS IN ONE CONTINUOUS GRID (No separate category titles, no empty half-rows!) -->
-                    ${nonBestSellingProducts.length > 0 && html`
-                      <section class="pt-2 border-t border-[#E6DFD3]/70">
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3.5 sm:gap-6 pt-4">
-                          ${nonBestSellingProducts.map(renderProductCard)}
-                        </div>
-                      </section>
-                    `}
-                  </div>
-                ` : html`
-                  <!-- Filtered Category / Sub-Category / Search Grid -->
-                  ${filteredProducts.length > 0 ? html`
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3.5 sm:gap-6">
-                      ${filteredProducts.map(renderProductCard)}
-                    </div>
-                  ` : renderComingSoonCard(activeSubCat !== "ALL" ? activeSubCat : activeMainCat)}
-                `}
-              </div>
-            </main>
-          `}
-
-          <!-- ===================================================================== -->
-          <!-- VIEW 2: PRODUCT DETAIL (SIZE FIT GUIDE, [ - 1 + ] SELECTOR, AD LINK)  -->
-          <!-- Corrections #1, #4, #5, #9                                            -->
-          <!-- ===================================================================== -->
-          ${view === "product" && selectedProduct && html`
-            <div class="max-w-6xl mx-auto px-3 sm:px-6 py-6 sm:py-8 flex-1 w-full overflow-x-hidden">
-              
-              <!-- Top Bar: 1-Click Back Button + Breadcrumb + Copy Direct Ad Link Button -->
-              <div class="mb-5 flex flex-wrap items-center justify-between gap-2">
-                <button
-                  onClick=${handleBackFromProduct}
-                  class="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-[#E6DFD3] hover:border-[#7C2517] text-xs font-bold uppercase tracking-wider text-[#1C1614] hover:text-[#7C2517] shadow-sm transition"
-                >
-                  <span>← Back to Products</span>
-                </button>
-
-                <div class="flex items-center gap-3">
-                  <div class="hidden sm:flex text-xs text-neutral-500 items-center gap-1.5">
-                    <button onClick=${() => { setCleanBrowserUrl("store"); setView("store"); }} class="hover:text-[#7C2517]">Home</button>
-                    <span>/</span>
-                    <button onClick=${() => { setCleanBrowserUrl("store", null, selectedProduct.mainCategory); setActiveMainCat(selectedProduct.mainCategory); setActiveSubCat("ALL"); setView("store"); }} class="hover:text-[#7C2517]">${selectedProduct.mainCategory}</button>
-                    <span>/</span>
-                    <span class="text-[#1C1614] font-semibold">${selectedProduct.subCategory}</span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick=${(e) => copyProductAdLink(selectedProduct, e)}
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#E6DFD3] hover:border-[#7C2517] text-[11px] font-bold text-[#7C2517] shadow-sm transition"
-                    title="Copy Direct Product URL for Sales Ads"
-                  >
-                    <${IconLink}/> <span>Copy Product Link</span>
-                  </button>
-                </div>
-              </div>
-
-              <div class="grid md:grid-cols-12 gap-6 lg:gap-12">
-                
-                <!-- Left: Main Image + Multi-Angle Photos Gallery for Selected Color -->
-                <div class="md:col-span-6 space-y-3 min-w-0">
-                  ${(() => {
-                    const activeColorObj = selectedProduct.colors[selectedColorIdx] || selectedProduct.colors[0];
-                    const activeColorPhotos = getColorPhotos(activeColorObj);
-                    const mainDisplayPhoto = activeColorPhotos[selectedPhotoIdx] || activeColorPhotos[0] || getProductPrimaryPhoto(selectedProduct);
-                    return html`
-                      <div class="aspect-[3/4] bg-[#F3EFE8] border border-[#E6DFD3] overflow-hidden flex items-center justify-center">
-                        ${mainDisplayPhoto ? html`
-                          <img
-                            src=${mainDisplayPhoto}
-                            alt=${selectedProduct.nameEn}
-                            class="w-full h-full object-cover"
-                          />
-                        ` : html`
-                          <div class="text-center p-6">
-                            <${BrandLogoMark} logoUrl=${settings.logoUrl} brandName=${settings.brandName} sizeClass="w-12 h-12 mx-auto mb-2" />
-                            <p class="text-xs font-bold text-[#7C2517]">${selectedProduct.nameEn}</p>
-                          </div>
-                        `}
-                      </div>
-
-                      ${activeColorPhotos.length > 1 && html`
-                        <div>
-                          <p class="text-[11px] font-semibold text-neutral-500 mb-1.5">${activeColorObj?.name} — Style / Angle Photos (${activeColorPhotos.length}):</p>
-                          <div class="flex gap-2.5 overflow-x-auto no-scrollbar pb-1">
-                            ${activeColorPhotos.map((imgUrl, pIdx) => html`
-                              <button
-                                key=${pIdx}
-                                onClick=${() => setSelectedPhotoIdx(pIdx)}
-                                class="w-16 h-20 flex-shrink-0 border-2 overflow-hidden transition ${selectedPhotoIdx === pIdx ? "border-[#7C2517] scale-105" : "border-transparent opacity-60 hover:opacity-100"}"
-                              >
-                                <img src=${imgUrl} class="w-full h-full object-cover" />
-                              </button>
-                            `)}
-                          </div>
-                        </div>
-                      `}
-                    `;
-                  })()}
-                </div>
-
-                <!-- Right: Product Info, Color & Size Selection, Dynamic Size Fit Guide & Quantity [ - 1 + ] -->
-                <div class="md:col-span-6 flex flex-col justify-between min-w-0">
-                  <div>
-                    <p class="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">SKU: ${selectedProduct.sku}</p>
-                    <h1 class="text-lg sm:text-2xl font-bold text-[#1C1614] mt-1">${selectedProduct.nameEn}</h1>
-
-                    <div class="flex items-baseline gap-3 my-4 pb-4 border-b border-[#E6DFD3]">
-                      <span class="text-2xl font-extrabold text-[#7C2517]">৳ ${selectedProduct.discountPrice}.00</span>
-                      ${selectedProduct.regularPrice > selectedProduct.discountPrice && html`
-                        <span class="text-sm line-through text-neutral-400">৳ ${selectedProduct.regularPrice}.00</span>
-                      `}
-                    </div>
-
-                    ${!multiPackMode ? html`
-                      <!-- Color Selector -->
-                      <div class="mb-5">
-                        <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 mb-2.5">
-                          Color: <span class="text-[#7C2517] font-bold">${selectedProduct.colors[selectedColorIdx]?.name}</span>
-                        </p>
-                        <div class="flex flex-wrap gap-2.5">
-                          ${selectedProduct.colors.map((c, idx) => html`
-                            <button
-                              key=${idx}
-                              onClick=${() => {
-                                setSelectedColorIdx(idx);
-                                setSelectedPhotoIdx(0);
-                                const sizes = (c.sizes || "30,32,34,36").split(",").map(s => s.trim()).filter(Boolean);
-                                if (!sizes.includes(selectedSize)) setSelectedSize(sizes[0] || "");
-                              }}
-                              class="px-3.5 py-2 border text-xs font-semibold flex items-center gap-2 transition ${selectedColorIdx === idx ? "border-[#7C2517] bg-[#7C2517]/12 text-[#7C2517] ring-1 ring-[#7C2517]/40" : "border-[#E6DFD3] bg-white/70 text-[#1C1614] hover:border-[#7C2517]/50"}"
-                            >
-                              <span class="w-3.5 h-3.5 rounded-full border border-black/20" style=${{ backgroundColor: c.hex }} />
-                              <span>${c.name}</span>
-                            </button>
-                          `)}
-                        </div>
-                      </div>
-
-                      <!-- Size Selector + Dynamic Size Fit Description Box (Correction #4) -->
-                      <div class="mb-5">
-                        <div class="flex justify-between items-center mb-2.5">
-                          <span class="text-xs font-semibold uppercase tracking-wider text-neutral-500">
-                            Select Size: <strong class="text-[#1C1614]">${selectedSize}</strong>
-                          </span>
-                          <button onClick=${() => setShowSizeChartModal(true)} class="text-xs font-bold underline text-[#7C2517]">
-                            📏 Size Chart
-                          </button>
-                        </div>
-                        <div class="flex flex-wrap gap-2.5">
-                          ${(selectedProduct.colors[selectedColorIdx]?.sizes || "30,32,34,36").split(",").map(s => s.trim()).filter(Boolean).map(sz => html`
-                            <button
-                              key=${sz}
-                              onClick=${() => setSelectedSize(sz)}
-                              class="w-12 h-11 border text-xs font-bold transition ${selectedSize === sz ? "border-[#7C2517] bg-[#7C2517]/12 text-[#7C2517] ring-1 ring-[#7C2517]/40" : "border-[#E6DFD3] bg-white/70 text-[#1C1614] hover:border-[#7C2517]/50"}"
-                            >
-                              ${sz}
-                            </button>
-                          `)}
-                        </div>
-
-                        <!-- Live Size Fit Guide Message when a size is selected (Correction #4) -->
-                        ${(() => {
-                          const fitMsg = selectedProduct.sizeDescriptions?.[selectedSize] || DEFAULT_PANT_SIZE_DESCRIPTIONS[selectedSize] || "";
-                          if (!fitMsg) return null;
-                          return html`
-                            <div class="mt-3 p-3 bg-white border-l-4 border-[#7C2517] text-xs font-medium text-[#1C1614] shadow-sm">
-                              ${fitMsg}
-                            </div>
-                          `;
-                        })()}
-                      </div>
-                    ` : html`
-                      <!-- Multi-Color & Multi-Size Pack Builder (Works for Single-Color Products too! - Correction #5) -->
-                      <div class="p-4 bg-white border border-[#7C2517] mb-5">
-                        <div class="flex justify-between items-center mb-3">
-                          <span class="text-xs font-bold uppercase tracking-wider text-[#7C2517]">
-                            ${selectedProduct.colors.length > 1 ? "Select Multiple Colors / Sizes" : "Select Multiple Sizes / Pieces"}
-                          </span>
-                          <button onClick=${() => setMultiPackMode(false)} class="text-xs underline font-semibold">Single Selection</button>
-                        </div>
-                        <div class="space-y-2.5">
-                          ${multiPackRows.map((row, rIdx) => {
-                            const rowSizes = (selectedProduct.colors[row.colorIdx]?.sizes || "30,32,34,36").split(",").map(s => s.trim()).filter(Boolean);
-                            return html`
-                              <div key=${rIdx} class="flex flex-wrap sm:flex-nowrap items-center gap-2 text-xs bg-[#FAF7F2] p-2 border border-[#E6DFD3]">
-                                <span class="font-bold w-5">#${rIdx + 1}</span>
-                                <select
-                                  value=${row.colorIdx}
-                                  onChange=${e => {
-                                    const copy = [...multiPackRows];
-                                    copy[rIdx].colorIdx = Number(e.target.value);
-                                    setMultiPackRows(copy);
-                                  }}
-                                  class="flex-1 p-2 border border-[#E6DFD3] bg-white font-medium"
-                                >
-                                  ${selectedProduct.colors.map((c, cIdx) => html`<option key=${cIdx} value=${cIdx}>${c.name}</option>`)}
-                                </select>
-                                <select
-                                  value=${row.size}
-                                  onChange=${e => {
-                                    const copy = [...multiPackRows];
-                                    copy[rIdx].size = e.target.value;
-                                    setMultiPackRows(copy);
-                                  }}
-                                  class="w-24 p-2 border border-[#E6DFD3] bg-white font-medium"
-                                >
-                                  ${rowSizes.map(s => html`<option key=${s} value=${s}>Size ${s}</option>`)}
-                                </select>
-                                <!-- Row Quantity +/- -->
-                                <div class="flex items-center border border-[#E6DFD3] bg-white">
-                                  <button
-                                    type="button"
-                                    onClick=${() => {
-                                      const copy = [...multiPackRows];
-                                      copy[rIdx].qty = Math.max(1, (copy[rIdx].qty || 1) - 1);
-                                      setMultiPackRows(copy);
-                                    }}
-                                    class="px-2 py-1 font-bold hover:bg-[#FAF7F2]"
-                                  >-</button>
-                                  <span class="px-2 font-bold">${row.qty || 1}</span>
-                                  <button
-                                    type="button"
-                                    onClick=${() => {
-                                      const copy = [...multiPackRows];
-                                      copy[rIdx].qty = (copy[rIdx].qty || 1) + 1;
-                                      setMultiPackRows(copy);
-                                    }}
-                                    class="px-2 py-1 font-bold hover:bg-[#FAF7F2]"
-                                  >+</button>
-                                </div>
-                                ${multiPackRows.length > 1 && html`
-                                  <button onClick=${() => setMultiPackRows(multiPackRows.filter((_, i) => i !== rIdx))} class="text-neutral-500 hover:text-red-600 px-1 font-bold">✕</button>
-                                `}
-                              </div>
-                            `;
-                          })}
-                        </div>
-                        <button
-                          onClick=${() => setMultiPackRows([...multiPackRows, { colorIdx: selectedColorIdx, size: selectedSize || "32", qty: 1 }])}
-                          class="mt-3 text-xs font-bold text-[#7C2517] underline"
-                        >
-                          + Add Another Piece / Size
-                        </button>
-                      </div>
-                    `}
-
-                    <!-- Always show Multi-Size / Multi-Color button even for Single-Color Products (Correction #5) -->
-                    ${!multiPackMode && html`
-                      <button
-                        onClick=${() => setMultiPackMode(true)}
-                        class="w-full py-2.5 mb-5 border border-[#7C2517]/40 bg-[#7C2517]/5 text-[#7C2517] text-xs font-semibold hover:bg-[#7C2517]/10 transition"
-                      >
-                        ${selectedProduct.colors.length > 1
-                          ? "+ Buy Multiple Colors / Sizes Together"
-                          : "+ Buy Multiple Sizes Together (একসাথে একাধিক সাইজ নিন)"}
-                      </button>
-                    `}
-
-                    <!-- Correction #5: Direct [ - 1 + ] Quantity Selector + ADD TO CART + BUY NOW Row -->
-                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6">
-                      ${!multiPackMode && html`
-                        <div class="flex items-center justify-between border border-[#E6DFD3] bg-white px-2 h-12 sm:w-32 shrink-0">
-                          <button
-                            type="button"
-                            onClick=${() => setProductQty(Math.max(1, productQty - 1))}
-                            class="w-8 h-8 flex items-center justify-center text-base font-bold text-[#1C1614] hover:text-[#7C2517]"
-                          >
-                            −
-                          </button>
-                          <span class="text-sm font-extrabold text-[#1C1614]">${productQty}</span>
-                          <button
-                            type="button"
-                            onClick=${() => setProductQty(productQty + 1)}
-                            class="w-8 h-8 flex items-center justify-center text-base font-bold text-[#1C1614] hover:text-[#7C2517]"
-                          >
-                            +
-                          </button>
-                        </div>
-                      `}
-
-                      <div class="grid grid-cols-2 gap-3 flex-1">
-                        <button
-                          type="button"
-                          onClick=${() => handleAddToCart(false)}
-                          class="h-12 border border-[#7C2517] text-[#7C2517] text-xs font-bold uppercase tracking-widest hover:bg-[#7C2517]/10 transition"
-                        >
-                          ADD TO CART
-                        </button>
-                        <button
-                          type="button"
-                          onClick=${() => handleAddToCart(true)}
-                          class="h-12 bg-[#7C2517] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#5E1B10] transition shadow-sm"
-                        >
-                          BUY NOW
-                        </button>
-                      </div>
-                    </div>
-
-                    <!-- Specification & Delivery/Exchange Text -->
-                    <div class="border-t border-[#E6DFD3] pt-5 space-y-2.5 text-xs text-neutral-700 leading-relaxed">
-                      <p><strong class="text-[#1C1614] uppercase">Specification:</strong> ${selectedProduct.fabricSpecs}</p>
-                      <p><strong class="text-[#1C1614] uppercase">Delivery & Exchange:</strong> ${selectedProduct.deliveryText || settings.defaultDeliveryText}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- SIZE CHART IMAGE MODAL POPUP -->
-              ${showSizeChartModal && html`
-                <div class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick=${() => setShowSizeChartModal(false)}>
-                  <div class="bg-white border border-[#E6DFD3] p-6 max-w-lg w-full space-y-4" onClick=${e => e.stopPropagation()}>
-                    <div class="flex justify-between items-center border-b border-[#E6DFD3] pb-3">
-                      <h3 class="font-bold text-sm uppercase text-[#7C2517]">Size Guide — ${selectedProduct.nameEn}</h3>
-                      <button onClick=${() => setShowSizeChartModal(false)} class="font-bold"><${IconClose}/></button>
-                    </div>
-                    ${(selectedProduct.sizeChartImage || settings.defaultSizeChartImage) ? html`
-                      <img src=${selectedProduct.sizeChartImage || settings.defaultSizeChartImage} alt="Size Chart" class="w-full max-h-[65vh] object-contain mx-auto" />
-                    ` : null}
-                    ${selectedProduct.sizeChart && html`
-                      <p class="text-xs text-neutral-700 bg-[#FAF7F2] p-3.5 border border-[#E6DFD3]">${selectedProduct.sizeChart}</p>
-                    `}
-                  </div>
-                </div>
-              `}
-
-              <!-- RELATED PRODUCTS SECTION -->
-              ${relatedProducts.length > 0 && html`
-                <section class="mt-14 pt-8 border-t border-[#E6DFD3]">
-                  <h2 class="text-sm sm:text-lg font-extrabold uppercase tracking-tight mb-5 text-[#1C1614]">
-                    Related Products
-                  </h2>
-                  <div class="grid grid-cols-2 md:grid-cols-4 gap-3.5 sm:gap-6">
-                    ${relatedProducts.map(renderProductCard)}
-                  </div>
-                </section>
-              `}
-            </div>
-          `}
-
-          <!-- ===================================================================== -->
-          <!-- VIEW 3: CHECKOUT & OFFICIAL LOGO INVOICE PDF DOWNLOAD                 -->
-          <!-- With Quantity [ - 1 + ] controls right inside Order Summary (#5)      -->
-          <!-- ===================================================================== -->
-          ${view === "checkout" && html`
-            <div class="max-w-4xl mx-auto px-3 sm:px-6 py-8 sm:py-10 flex-1 w-full">
-              ${confirmedOrder ? html`
-                <div class="max-w-xl mx-auto">
-                  <div id="invoice-card" class="bg-white p-6 sm:p-8 border border-[#E6DFD3] text-[#1C1614]">
-                    <div class="flex justify-between items-start border-b border-[#E6DFD3] pb-5 gap-4">
-                      <div class="flex items-center gap-3">
-                        <${BrandLogoMark} logoUrl=${settings.logoUrl} brandName=${settings.brandName} sizeClass="w-11 h-11" />
-                        <div>
-                          <h2 class="brand-wordmark text-base sm:text-lg">${settings.brandName}</h2>
-                          <p class="text-xs text-neutral-500 mt-1">${settings.addressEn}</p>
-                        </div>
-                      </div>
-                      <div class="text-right text-xs shrink-0">
-                        <p class="font-bold">Invoice: ${confirmedOrder.orderId}</p>
-                        <p class="text-neutral-500">${confirmedOrder.dateFormatted}</p>
-                      </div>
-                    </div>
-
-                    <div class="my-5 text-xs space-y-1">
-                      <p class="text-neutral-400 uppercase font-semibold">Customer Details:</p>
-                      <p class="font-bold text-sm">${confirmedOrder.customer.name}</p>
-                      <p>Phone: ${confirmedOrder.customer.phone}</p>
-                      ${confirmedOrder.customer.email && html`<p>Email: ${confirmedOrder.customer.email}</p>`}
-                      <p>Address: ${confirmedOrder.customer.address}</p>
-                    </div>
-
-                    <table class="w-full text-xs border-t border-b border-[#E6DFD3] my-4">
-                      <thead>
-                        <tr class="border-b border-[#E6DFD3] text-left text-neutral-500">
-                          <th class="py-2">Item</th>
-                          <th class="py-2 text-right">Amount</th>
-                        </tr>
-                      </thead>
-                      <tbody class="divide-y divide-[#E6DFD3]/60">
-                        ${confirmedOrder.items.map((it, idx) => html`
-                          <tr key=${idx}>
-                            <td class="py-2.5">${it.nameEn} (${it.color} / Size: ${it.size}) × ${it.qty}</td>
-                            <td class="py-2.5 text-right font-semibold">৳ ${it.price * it.qty}</td>
-                          </tr>
-                        `)}
-                      </tbody>
-                    </table>
-
-                    <div class="text-xs space-y-1.5 text-right">
-                      <p>Subtotal: ৳ ${confirmedOrder.subtotal}</p>
-                      <p>Delivery Charge: ${confirmedOrder.deliveryCharge === 0 ? "FREE" : `৳ ${confirmedOrder.deliveryCharge}`}</p>
-                      <p class="text-base font-extrabold text-[#7C2517] pt-2 border-t border-[#E6DFD3]">Total Payable: ৳ ${confirmedOrder.grandTotal}</p>
-                    </div>
-                  </div>
-
-                  <div class="flex flex-wrap gap-3 justify-center mt-6">
-                    <button
-                      onClick=${() => downloadInvoiceDirect(confirmedOrder)}
-                      disabled=${downloadingPdf}
-                      class="px-6 py-3 bg-[#7C2517] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:bg-[#5E1B10] transition"
-                    >
-                      <${IconDownload}/>
-                      <span>${downloadingPdf ? "Downloading..." : "Download Invoice PDF"}</span>
-                    </button>
-                    <button
-                      onClick=${() => { setConfirmedOrder(null); setCleanBrowserUrl("store"); setView("store"); }}
-                      class="px-6 py-3 border border-[#E6DFD3] bg-white text-xs font-bold uppercase tracking-wider hover:border-[#7C2517]"
-                    >
-                      Continue Shopping
-                    </button>
-                  </div>
-                </div>
-              ` : html`
-                <div class="mb-4">
-                  <button
-                    type="button"
-                    onClick=${() => { setCleanBrowserUrl("store"); setView("store"); }}
-                    class="text-xs font-bold text-[#7C2517] hover:underline"
-                  >
-                    ← Continue Shopping / Add More Items
-                  </button>
-                </div>
-
-                <form onSubmit=${submitOrder} class="grid md:grid-cols-12 gap-6 sm:gap-8">
-                  <div class="md:col-span-7 bg-white p-5 sm:p-6 border border-[#E6DFD3] space-y-4">
-                    <h2 class="text-base font-bold uppercase tracking-wider border-b border-[#E6DFD3] pb-2.5 text-[#7C2517]">Delivery Information</h2>
-                    <div>
-                      <label class="block text-xs font-semibold mb-1">Full Name *</label>
-                      <input required value=${customerForm.name} onInput=${e => setCustomerForm({ ...customerForm, name: e.target.value })} class="w-full p-3 border border-[#E6DFD3] text-xs outline-none focus:border-[#7C2517]" placeholder="Your full name" />
-                    </div>
-                    <div class="grid sm:grid-cols-2 gap-4">
-                      <div>
-                        <label class="block text-xs font-semibold mb-1">Mobile Number (Starts with 01) *</label>
-                        <input
-                          required
-                          type="tel"
-                          maxlength="11"
-                          value=${customerForm.phone}
-                          onInput=${e => {
-                            const cleaned = cleanBdPhoneInput(e.target.value);
-                            setCustomerForm({ ...customerForm, phone: cleaned });
-                            if (phoneError && isValidBdMobile(cleaned)) setPhoneError("");
-                          }}
-                          class="w-full p-3 border border-[#E6DFD3] text-xs font-bold tracking-wider outline-none focus:border-[#7C2517]"
-                          placeholder="01XXXXXXXXX"
-                        />
-                        ${phoneError && html`<p class="text-[11px] text-red-600 font-semibold mt-1">${phoneError}</p>`}
-                      </div>
-                      <div>
-                        <label class="block text-xs font-semibold mb-1">Email (Optional)</label>
-                        <input type="email" value=${customerForm.email} onInput=${e => setCustomerForm({ ...customerForm, email: e.target.value })} class="w-full p-3 border border-[#E6DFD3] text-xs outline-none focus:border-[#7C2517]" placeholder="you@example.com" />
-                      </div>
-                    </div>
-                    <div>
-                      <label class="block text-xs font-semibold mb-1">Full Address *</label>
-                      <textarea required rows="2" value=${customerForm.address} onInput=${e => setCustomerForm({ ...customerForm, address: e.target.value })} class="w-full p-3 border border-[#E6DFD3] text-xs outline-none focus:border-[#7C2517]" placeholder="House, Road, Area, District"></textarea>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3 pt-1">
-                      <button type="button" onClick=${() => setCustomerForm({ ...customerForm, zone: "inside" })} class="p-3 border text-xs font-semibold text-left transition ${customerForm.zone === "inside" ? "border-[#7C2517] bg-[#7C2517]/10 text-[#7C2517]" : "border-[#E6DFD3]"}">
-                        <div>Inside Dhaka</div>
-                        <div class="font-bold mt-0.5">${isFreeDelivery ? "FREE" : `৳ ${settings.insideDhaka}`}</div>
-                      </button>
-                      <button type="button" onClick=${() => setCustomerForm({ ...customerForm, zone: "outside" })} class="p-3 border text-xs font-semibold text-left transition ${customerForm.zone === "outside" ? "border-[#7C2517] bg-[#7C2517]/10 text-[#7C2517]" : "border-[#E6DFD3]"}">
-                        <div>Outside Dhaka</div>
-                        <div class="font-bold mt-0.5">${isFreeDelivery ? "FREE" : `৳ ${settings.outsideDhaka}`}</div>
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Order Summary with Live [ - 1 + ] Quantity Adjuster (Correction #5) -->
-                  <div class="md:col-span-5 bg-white p-5 sm:p-6 border border-[#E6DFD3] flex flex-col justify-between">
-                    <div>
-                      <h3 class="text-sm font-bold uppercase tracking-wider border-b border-[#E6DFD3] pb-2.5 mb-4 text-[#7C2517]">Order Summary (${totalItemsCount})</h3>
-                      <div class="space-y-3 max-h-64 overflow-y-auto">
-                        ${cart.map(item => html`
-                          <div key=${item.key} class="flex justify-between items-center gap-2 text-xs border-b border-[#E6DFD3]/60 pb-2.5">
-                            <div class="min-w-0 flex-1">
-                              <p class="font-semibold truncate">${item.nameEn}</p>
-                              <p class="text-neutral-500">${item.color} | Size: ${item.size}</p>
-                              <div class="inline-flex items-center border border-[#E6DFD3] bg-[#FAF7F2] mt-1.5">
-                                <button type="button" onClick=${() => updateCartItemQty(item.key, -1)} class="px-2 py-0.5 font-bold hover:text-[#7C2517]">−</button>
-                                <span class="px-2 font-bold">${item.qty}</span>
-                                <button type="button" onClick=${() => updateCartItemQty(item.key, 1)} class="px-2 py-0.5 font-bold hover:text-[#7C2517]">+</button>
-                              </div>
-                            </div>
-                            <span class="font-bold text-[#7C2517] shrink-0">৳ ${item.price * item.qty}</span>
-                          </div>
-                        `)}
-                      </div>
-                    </div>
-
-                    <div class="border-t border-[#E6DFD3] pt-4 mt-4 space-y-2 text-xs">
-                      <div class="flex justify-between"><span>Subtotal</span><span>৳ ${subtotal}</span></div>
-                      <div class="flex justify-between"><span>Delivery</span><span>${deliveryCharge === 0 ? "FREE" : `৳ ${deliveryCharge}`}</span></div>
-                      <div class="flex justify-between text-base font-extrabold text-[#7C2517] pt-2 border-t border-[#E6DFD3]">
-                        <span>Total Payable</span>
-                        <span>৳ ${grandTotal}</span>
-                      </div>
-                      <button type="submit" class="w-full mt-4 py-3.5 bg-[#7C2517] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#5E1B10] transition">
-                        Confirm Order
-                      </button>
-                    </div>
-                  </div>
-                </form>
-              `}
-            </div>
-          `}
-
-          <!-- ===================================================================== -->
-          <!-- VIEW 4: CLEAN PROFILE VIEW MODE CARD + EDIT PROFILE BUTTON (#6)       -->
-          <!-- ===================================================================== -->
-          ${view === "profile" && html`
-            <div class="max-w-4xl mx-auto px-3 sm:px-4 py-10 flex-1 w-full">
-              ${!loggedInCustomer ? html`
-                <div class="max-w-md mx-auto bg-white border border-[#E6DFD3] p-6 sm:p-8 shadow-sm">
-                  <div class="grid grid-cols-2 border-b border-[#E6DFD3] mb-6 text-xs font-extrabold uppercase tracking-wider">
-                    <button
-                      onClick=${() => setAuthTab("login")}
-                      class="pb-3 border-b-2 transition ${authTab === "login" ? "border-[#7C2517] text-[#7C2517]" : "border-transparent text-neutral-400"}"
-                    >
-                      Login
-                    </button>
-                    <button
-                      onClick=${() => setAuthTab("signup")}
-                      class="pb-3 border-b-2 transition ${authTab === "signup" ? "border-[#7C2517] text-[#7C2517]" : "border-transparent text-neutral-400"}"
-                    >
-                      Sign Up
-                    </button>
-                  </div>
-
-                  ${authTab === "login" && html`
-                    <form onSubmit=${handleCustomerLogin} class="space-y-4 text-xs">
-                      <div>
-                        <label class="block font-semibold uppercase mb-1">Mobile Number or Email *</label>
-                        <input
-                          required
-                          value=${loginForm.id}
-                          onInput=${e => setLoginForm({ ...loginForm, id: e.target.value })}
-                          placeholder="01XXXXXXXXX or Email"
-                          class="w-full p-3 border border-[#E6DFD3] outline-none focus:border-[#7C2517]"
-                        />
-                      </div>
-                      <div>
-                        <label class="block font-semibold uppercase mb-1">Password *</label>
-                        <input
-                          required
-                          type="password"
-                          value=${loginForm.password}
-                          onInput=${e => setLoginForm({ ...loginForm, password: e.target.value })}
-                          placeholder="Enter password"
-                          class="w-full p-3 border border-[#E6DFD3] outline-none focus:border-[#7C2517]"
-                        />
-                      </div>
-                      <div class="text-right">
-                        <button type="button" onClick=${() => setAuthTab("forgot")} class="font-bold text-[#7C2517] hover:underline">
-                          Forgot Password?
-                        </button>
-                      </div>
-                      <button type="submit" class="w-full py-3.5 bg-[#7C2517] text-white font-bold uppercase tracking-widest hover:bg-[#5E1B10] transition">
-                        Login
-                      </button>
-                    </form>
-                  `}
-
-                  ${authTab === "signup" && html`
-                    <form onSubmit=${handleCustomerSignup} class="space-y-3.5 text-xs">
-                      <div>
-                        <label class="block font-semibold uppercase mb-1">Full Name *</label>
-                        <input
-                          required
-                          value=${signupForm.name}
-                          onInput=${e => setSignupForm({ ...signupForm, name: e.target.value })}
-                          placeholder="Enter your full name"
-                          class="w-full p-2.5 border border-[#E6DFD3]"
-                        />
-                      </div>
-                      <div>
-                        <label class="block font-semibold uppercase mb-1">Mobile Number (Starts with 01) *</label>
-                        <input
-                          required
-                          type="tel"
-                          maxlength="11"
-                          value=${signupForm.phone}
-                          onInput=${e => setSignupForm({ ...signupForm, phone: cleanBdPhoneInput(e.target.value) })}
-                          placeholder="01XXXXXXXXX"
-                          class="w-full p-2.5 border border-[#E6DFD3] font-bold"
-                        />
-                      </div>
-                      <div>
-                        <label class="block font-semibold uppercase mb-1">Email *</label>
-                        <input
-                          required
-                          type="email"
-                          value=${signupForm.email}
-                          onInput=${e => setSignupForm({ ...signupForm, email: e.target.value })}
-                          placeholder="you@example.com"
-                          class="w-full p-2.5 border border-[#E6DFD3]"
-                        />
-                      </div>
-                      <div>
-                        <label class="block font-semibold uppercase mb-1">Default Delivery Address *</label>
-                        <textarea
-                          required
-                          rows="2"
-                          value=${signupForm.address}
-                          onInput=${e => setSignupForm({ ...signupForm, address: e.target.value })}
-                          placeholder="House, Road, Area, District"
-                          class="w-full p-2.5 border border-[#E6DFD3]"
-                        ></textarea>
-                      </div>
-                      <div>
-                        <label class="block font-semibold uppercase mb-1">Create Password *</label>
-                        <input
-                          required
-                          type="password"
-                          minlength="4"
-                          value=${signupForm.password}
-                          onInput=${e => setSignupForm({ ...signupForm, password: e.target.value })}
-                          placeholder="Minimum 4 characters"
-                          class="w-full p-2.5 border border-[#E6DFD3]"
-                        />
-                      </div>
-                      <button type="submit" class="w-fullএখানে **Part 2 (দ্বিতীয় ও শেষ অংশ)** কোডটুকু দেওয়া হলো। 
-
-এই অংশে রয়েছে:
-* **হোমপেজের নতুন ভরাট গ্রিড ডিসপ্লে** (শুরুতে `BEST SELLING`, এরপর বারবার ক্যাটাগরির নাম না লিখে সব প্রোডাক্ট একটানা ভরাট গ্রিডে এবং প্রতিটি কার্ডে সরাসরি `BUY NOW` বাটন)।
-* **প্রোডাক্ট ডিটেইল পেজ:** সাইজে ক্লিক করলেই নিচে অটোমেটিক **সাইজের মাপ ও ফিটিংস গাইড** ভেসে ওঠা, সরাসরি **`[ - 1 + ]` কোয়ান্টিটি বক্স**, সিঙ্গেল কালারেও মাল্টি-সাইজ বাটন এবং ১-ক্লিকে **`🔗 Copy Ad Link`** বাটন।
-* **চেকআউট ও স্লাইড-আউট কার্ট:** প্রোডাক্টের সংখ্যা বাড়ানো-কমানোর (`- / +`) বাটন এবং লোগোসহ ইনভয়েস পিডিএফ।
-* **নতুন প্রোফাইল ভিউ কার্ড:** সরাসরি ফর্ম না দেখিয়ে কাস্টমারের ছবি/অ্যাভাটার, নাম, ঠিকানা ও অর্ডারের সামারি কার্ড এবং **`✎ Edit Profile`** বাটনে ক্লিক করলে এডিট ফর্ম খোলা।
-
-নিচের **Part 2** কোডটুকু কপি করে গিটহাবের `index.html` ফাইলে **Part 1-এর ঠিক নিচে** পেস্ট করে **`Commit changes`** বাটনে ক্লিক করে দিন:
-
-```html
-      // ============================================================================
       // PUBLIC STOREFRONT VIEW (PART 2: HEADER, STORE, PRODUCT, CHECKOUT, PROFILE, FOOTER)
       // ============================================================================
       return html`
@@ -3775,7 +2917,6 @@
 
           <!-- ===================================================================== -->
           <!-- VIEW 1: HOMEPAGE (HERO SLIDER -> BEST SELLING -> CONTINUOUS FULL GRID)-->
-          <!-- Correction #3: No separate category headers leaving half-empty rows!  -->
           <!-- ===================================================================== -->
           ${view === "store" && html`
             <main class="flex-1 w-full max-w-full overflow-x-hidden">
@@ -3822,7 +2963,7 @@
 
               <div class="max-w-7xl mx-auto px-3 sm:px-6 py-7 sm:py-10">
                 
-                <!-- Sub-Category Filter Pills (When inside a Main Category or Sub-Category) -->
+                <!-- Sub-Category Filter Pills -->
                 ${(activeMainCat !== "ALL" || activeSubCat !== "ALL") && html`
                   <div class="mb-7 pb-4 border-b border-[#E6DFD3] flex items-center justify-between flex-wrap gap-3">
                     <div>
@@ -3856,7 +2997,7 @@
                   </div>
                 `}
 
-                <!-- Correction #3: Homepage -> Only "BEST SELLING" header, followed by a continuous grid of all products without category headings -->
+                <!-- Homepage Continuous Full Grid -->
                 ${activeMainCat === "ALL" && activeSubCat === "ALL" && !searchQuery ? html`
                   <div class="space-y-8">
                     <section>
@@ -3867,7 +3008,6 @@
                         <span class="text-[11px] font-semibold text-neutral-500">${products.length} Products</span>
                       </div>
 
-                      <!-- Continuous Full Grid: Best Sellers first, then remaining products right beside/below with zero empty gaps -->
                       <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
                         ${[
                           ...bestSellingProducts,
@@ -3890,12 +3030,11 @@
 
           <!-- ===================================================================== -->
           <!-- VIEW 2: PRODUCT DETAIL (SIZE FIT GUIDE + [- 1 +] QTY + COPY AD LINK)  -->
-          <!-- Corrections #1, #4, #5, #9                                            -->
           <!-- ===================================================================== -->
           ${view === "product" && selectedProduct && html`
             <div class="max-w-6xl mx-auto px-3 sm:px-6 py-6 sm:py-8 flex-1 w-full overflow-x-hidden">
               
-              <!-- Top Bar: 1-Click Back Button + Copy Direct Product Ad Link Button (Correction #9) -->
+              <!-- Top Bar: 1-Click Back Button + Copy Direct Product Ad Link Button -->
               <div class="mb-5 flex flex-wrap items-center justify-between gap-2">
                 <button
                   onClick=${handleBackFromProduct}
@@ -4006,7 +3145,7 @@
                         </div>
                       </div>
 
-                      <!-- Size Selector + Dynamic Size Fit Note (Correction #4) -->
+                      <!-- Size Selector + Dynamic Size Fit Note -->
                       <div class="mb-5">
                         <div class="flex justify-between items-center mb-2.5">
                           <span class="text-xs font-semibold uppercase tracking-wider text-neutral-500">
@@ -4028,7 +3167,7 @@
                           `)}
                         </div>
 
-                        <!-- Correction #4: Dynamic Size Fit Description Box (Appears immediately when a size is selected) -->
+                        <!-- Dynamic Size Fit Description Box -->
                         ${(() => {
                           const fitNote = selectedProduct.sizeDescriptions?.[selectedSize] || DEFAULT_PANT_SIZE_DESCRIPTIONS[selectedSize] || "";
                           if (!fitNote) return null;
@@ -4040,7 +3179,7 @@
                         })()}
                       </div>
                     ` : html`
-                      <!-- Multi-Color / Multi-Size Pack Builder with Quantity per Row (Correction #5) -->
+                      <!-- Multi-Color / Multi-Size Pack Builder with Quantity per Row -->
                       <div class="p-4 bg-white border border-[#7C2517] mb-5">
                         <div class="flex justify-between items-center mb-3">
                           <span class="text-xs font-bold uppercase tracking-wider text-[#7C2517]">
@@ -4076,7 +3215,6 @@
                                 >
                                   ${rowSizes.map(s => html`<option key=${s} value=${s}>Size ${s}</option>`)}
                                 </select>
-                                <!-- Row Quantity +/- -->
                                 <div class="flex items-center border border-[#E6DFD3] bg-white">
                                   <button
                                     type="button"
@@ -4117,7 +3255,7 @@
                       </div>
                     `}
 
-                    <!-- Correction #5: Always show Multi-Size / Multi-Color button even for 1-Color Products! -->
+                    <!-- Always show Multi-Size / Multi-Color button even for 1-Color Products -->
                     ${!multiPackMode && html`
                       <button
                         onClick=${() => setMultiPackMode(true)}
@@ -4129,7 +3267,7 @@
                       </button>
                     `}
 
-                    <!-- Correction #5: Direct [ -  1  + ] Quantity Selector Bar alongside ADD TO CART & BUY NOW -->
+                    <!-- Direct [ -  1  + ] Quantity Selector Bar alongside ADD TO CART & BUY NOW -->
                     <div class="flex flex-col sm:flex-row items-stretch gap-3 mb-6">
                       ${!multiPackMode && html`
                         <div class="flex items-center justify-between border border-[#1C1614]/30 bg-white px-2 h-12 sm:w-32 shrink-0">
@@ -4212,7 +3350,6 @@
 
           <!-- ===================================================================== -->
           <!-- VIEW 3: CHECKOUT (WITH QUANTITY [ - 1 + ] CONTROLS & LOGO INVOICE)    -->
-          <!-- Correction #5 & #8                                                    -->
           <!-- ===================================================================== -->
           ${view === "checkout" && html`
             <div class="max-w-4xl mx-auto px-3 sm:px-6 py-8 sm:py-10 flex-1 w-full">
@@ -4334,7 +3471,7 @@
                     </div>
                   </div>
 
-                  <!-- Order Summary with Direct [ - 1 + ] Quantity Controls (Correction #5) -->
+                  <!-- Order Summary with Direct [ - 1 + ] Quantity Controls -->
                   <div class="md:col-span-5 bg-white p-5 sm:p-6 border border-[#E6DFD3] flex flex-col justify-between">
                     <div>
                       <h3 class="text-sm font-bold uppercase tracking-wider border-b border-[#E6DFD3] pb-2.5 mb-4 text-[#7C2517]">Order Summary (${totalItemsCount})</h3>
@@ -4375,7 +3512,6 @@
 
           <!-- ===================================================================== -->
           <!-- VIEW 4: CLEAN CUSTOMER PROFILE VIEW CARD + "EDIT PROFILE" BUTTON      -->
-          <!-- Correction #6: Shows Clean Profile Card by default, Form only on Edit -->
           <!-- ===================================================================== -->
           ${view === "profile" && html`
             <div class="max-w-4xl mx-auto px-3 sm:px-4 py-10 flex-1 w-full">
@@ -4554,7 +3690,7 @@
                   `}
                 </div>
               ` : html`
-                <!-- Correction #6: Clean Profile View Card (Left) + Purchase History (Right) -->
+                <!-- Clean Profile View Card (Left) + Purchase History (Right) -->
                 <div class="grid md:grid-cols-12 gap-6 sm:gap-8">
                   <div class="md:col-span-5 bg-white p-6 border border-[#E6DFD3] flex flex-col justify-between space-y-5">
                     ${!isEditingProfile ? html`
@@ -4856,7 +3992,7 @@
                   <a href=${settings.instagramUrl} target="_blank" rel="noreferrer" class="w-8 h-8 rounded bg-gradient-to-tr from-amber-500 via-pink-600 to-purple-600 text-white flex items-center justify-center hover:opacity-90 transition" title="Instagram">
                     <${IconInstagram}/>
                   </a>
-                  <a href=${settings.tiktokUrl || "[https://tiktok.com](https://tiktok.com)"} target="_blank" rel="noreferrer" class="w-8 h-8 rounded bg-neutral-800 border border-neutral-700 text-white flex items-center justify-center hover:opacity-90 transition" title="TikTok">
+                  <a href=${settings.tiktokUrl || "https://tiktok.com"} target="_blank" rel="noreferrer" class="w-8 h-8 rounded bg-neutral-800 border border-neutral-700 text-white flex items-center justify-center hover:opacity-90 transition" title="TikTok">
                     <${IconTiktok}/>
                   </a>
                   <a href=${settings.linkedinUrl} target="_blank" rel="noreferrer" class="w-8 h-8 rounded bg-[#0A66C2] text-white flex items-center justify-center hover:opacity-90 transition" title="LinkedIn">
@@ -4916,7 +4052,7 @@
 
           <!-- DIRECT 1-CLICK WHATSAPP FLOATING BUTTON -->
           <a
-            href="[https://wa.me/$](https://wa.me/$){formatWhatsAppNumber(settings.whatsapp)}?text=${encodeURIComponent("Hello SMART OUTFIT! I would like to know more about your products.")}"
+            href="https://wa.me/${formatWhatsAppNumber(settings.whatsapp)}?text=${encodeURIComponent("Hello SMART OUTFIT! I would like to know more about your products.")}"
             target="_blank"
             rel="noopener noreferrer"
             class="fixed bottom-5 right-5 z-40 w-12 h-12 rounded-full bg-[#25D366] hover:bg-[#1ebe57] text-white shadow-lg flex items-center justify-center hover:scale-105 transition"
@@ -4932,3 +4068,4 @@
   </script>
 </body>
 </html>
+      
