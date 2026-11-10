@@ -99,8 +99,10 @@
     const html = htm.bind(h);
 
     // ============================================================================
-    // 1. LIVE FIREBASE CONNECTION (smart-outfit-81663)
+    // 1. LIVE FIREBASE CONNECTION (smart-outfit-81663) & SUPER ADMIN EMAIL
     // ============================================================================
+    const SUPER_ADMIN_EMAIL = "smartoutfitbd@gmail.com";
+
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyBKZzZsVfmPyz0qoGyQOpyJBTHQgOtxuRg",
       authDomain: "smart-outfit-81663.firebaseapp.com",
@@ -112,12 +114,14 @@
     };
 
     let db = null;
+    let auth = null;
     try {
       if (window.firebase && !window.firebase.apps.length) {
         window.firebase.initializeApp(FIREBASE_CONFIG);
       }
       if (window.firebase) {
         db = window.firebase.firestore();
+        auth = window.firebase.auth();
       }
     } catch (e) { console.warn("Firebase init notice:", e); }
 
@@ -149,6 +153,7 @@
     const IconTrash = () => html`<svg class="w-4 h-4 stroke-current" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>`;
     const IconLink = () => html`<svg class="w-3.5 h-3.5 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`;
     const IconShield = () => html`<svg class="w-4 h-4 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+    const IconGoogle = () => html`<svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.8C6.2 7.2 8.9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.6l3.7 2.9c2.2-2 3.7-5 3.7-8.7z"/><path fill="#FBBC05" d="M5.3 14.8c-.2-.8-.4-1.6-.4-2.5s.2-1.7.4-2.5L1.6 7C.6 9 0 11.2 0 13.5s.6 4.5 1.6 6.5l3.7-2.9z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.1-6.7-5l-3.7 2.8C3.5 21.4 7.4 24 12 24z"/></svg>`;
 
     const IconFacebook = () => html`<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>`;
     const IconYoutube = () => html`<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33zM9.75 15.02l5.75-3.27-5.75-3.27v6.54z"/></svg>`;
@@ -157,9 +162,32 @@
     const IconLinkedin = () => html`<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>`;
 
     // ============================================================================
-    // 3. SECURITY HELPERS, ENCRYPTION & DATA MASKING ENGINE
+    // 3. SECURITY HELPERS, ENCRYPTION, ROLE PRESETS & DATA MASKING ENGINE
     // ============================================================================
     const FIVE_MAIN_CATEGORIES = ["MEN", "WOMEN", "KIDS", "WINTER", "COMBO"];
+
+    const ROLE_PRESETS = {
+      order_manager: {
+        label: "Order Manager (স্টাফ / কুরিয়ার মডারেটর)",
+        tabs: ["orders"],
+        canDelete: false
+      },
+      product_editor: {
+        label: "Product & Catalog Editor (প্রোডাক্ট আপলোডার)",
+        tabs: ["products", "categories", "branding"],
+        canDelete: false
+      },
+      marketing_manager: {
+        label: "Marketing & Pixel Manager (অ্যাড এক্সপার্ট)",
+        tabs: ["marketing", "products"],
+        canDelete: false
+      },
+      full_manager: {
+        label: "Full Store Manager (সব ট্যাব — Team ব্যতীত)",
+        tabs: ["dashboard", "orders", "products", "categories", "branding", "marketing", "settings"],
+        canDelete: true
+      }
+    };
 
     const sha256Hash = async (text) => {
       if (!text) return "";
@@ -173,8 +201,6 @@
       return sha256Hash(String(text).trim().toLowerCase());
     };
 
-    // Default Encrypted Admin PIN Hash (6859)
-const DEFAULT_ADMIN_PIN_HASH = "be9d687d76f820b289f5ad02be2669f2136f85c48142ca813f2cb7cf2e2da957";
     const maskCustomerName = (name) => {
       const str = String(name || "Customer").trim();
       if (str.length <= 2) return str[0] + "***";
@@ -215,8 +241,8 @@ const DEFAULT_ADMIN_PIN_HASH = "be9d687d76f820b289f5ad02be2669f2136f85c48142ca81
         { id: "hb2", image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=1800&q=85", linkCategory: "MEN" },
         { id: "hb3", image: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=1800&q=85", linkCategory: "WINTER" }
       ],
-      adminPinHash: DEFAULT_ADMIN_PIN_HASH,
-      adminEmail: "smartoutfitbd@gmail.com",
+      adminEmail: SUPER_ADMIN_EMAIL,
+      teamMembers: [], // Role-Based Staff Access List
       whatsapp: "01347204058",
       helpline: "01347204058",
       addressEn: "Tokyo Tower (5th Floor) Zia Sarani Road, SonirAkhra, Jatrabari, 1362",
@@ -415,10 +441,10 @@ const DEFAULT_ADMIN_PIN_HASH = "be9d687d76f820b289f5ad02be2669f2136f85c48142ca81
     };
 
     // ============================================================================
-    // 4. MAIN APPLICATION WITH 7-LAYER SECURITY SHIELD
+    // 4. MAIN APPLICATION WITH GOOGLE SUPER ADMIN & ROLE-BASED ACCESS CONTROL
     // ============================================================================
     function SmartOutfitApp() {
-      const [view, setView] = useState("store");
+      const [view, setView] = useState("store"); // store | product | checkout | track | profile | adminLogin | admin
       const [activeMainCat, setActiveMainCat] = useState("ALL");
       const [activeSubCat, setActiveSubCat] = useState("ALL");
       const [hoveredMainCat, setHoveredMainCat] = useState(null);
@@ -435,6 +461,8 @@ const DEFAULT_ADMIN_PIN_HASH = "be9d687d76f820b289f5ad02be2669f2136f85c48142ca81
           localStorage.removeItem("so_v4_orders");
           localStorage.removeItem("so_v4_customers");
           localStorage.removeItem("so_v4_abandoned");
+          localStorage.removeItem("so_admin_fails");
+          localStorage.removeItem("so_admin_lock_until");
         } catch {}
       }, []);
 
@@ -443,7 +471,9 @@ const DEFAULT_ADMIN_PIN_HASH = "be9d687d76f820b289f5ad02be2669f2136f85c48142ca81
           const s = localStorage.getItem("so_v4_settings");
           const parsed = s ? { ...DEFAULT_SETTINGS, ...JSON.parse(s) } : DEFAULT_SETTINGS;
           delete parsed.adminPin;
+          delete parsed.adminPinHash;
           parsed.mainCategories = FIVE_MAIN_CATEGORIES;
+          if (!Array.isArray(parsed.teamMembers)) parsed.teamMembers = [];
           if (!parsed.subCategories) parsed.subCategories = DEFAULT_SETTINGS.subCategories;
           if (!parsed.subCategories.KIDS) parsed.subCategories.KIDS = ["Boys Denim", "Boys Cargo", "Kids Shirt"];
           return parsed;
@@ -506,22 +536,32 @@ const DEFAULT_ADMIN_PIN_HASH = "be9d687d76f820b289f5ad02be2669f2136f85c48142ca81
       const [confirmedOrder, setConfirmedOrder] = useState(null);
       const [downloadingPdf, setDownloadingPdf] = useState(false);
 
+      // Dual-Lock Tracking States
       const [trackOrderCode, setTrackOrderCode] = useState("");
       const [trackPhoneInput, setTrackPhoneInput] = useState("01");
       const [trackedParcelResult, setTrackedParcelResult] = useState(null);
       const [trackErrorMsg, setTrackErrorMsg] = useState("");
       const [trackLoading, setTrackLoading] = useState(false);
 
-      const [adminAuthenticated, setAdminAuthenticated] = useState(false);
-      const [pinInput, setPinInput] = useState("");
-      const [newAdminPinInput, setNewAdminPinInput] = useState("");
-      const [adminFailedAttempts, setAdminFailedAttempts] = useState(() => Number(localStorage.getItem("so_admin_fails") || 0));
-      const [adminLockUntil, setAdminLockUntil] = useState(() => Number(localStorage.getItem("so_admin_lock_until") || 0));
+      // GOOGLE SUPER ADMIN & RBAC TEAM STATES
+      const [googleAdminUser, setGoogleAdminUser] = useState(null);
+      const [authLoading, setAuthLoading] = useState(true);
+      const [adminAuthError, setAdminAuthError] = useState("");
       const [adminTab, setAdminTab] = useState("dashboard");
       const [monthFilter, setMonthFilter] = useState("ALL");
       const [orderStatusFilter, setOrderStatusFilter] = useState("ALL");
       const [showFirestoreRulesModal, setShowFirestoreRulesModal] = useState(false);
 
+      // New Team Member Form State
+      const [newMemberForm, setNewMemberForm] = useState({
+        email: "",
+        name: "",
+        rolePreset: "order_manager",
+        tabs: ["orders"],
+        canDelete: false
+      });
+
+      // Admin Editor States
       const [editingProduct, setEditingProduct] = useState(null);
       const [colorUrlInputs, setColorUrlInputs] = useState({});
       const [newSubCatInput, setNewSubCatInput] = useState({ main: "MEN", name: "", image: "" });
@@ -531,6 +571,108 @@ const DEFAULT_ADMIN_PIN_HASH = "be9d687d76f820b289f5ad02be2669f2136f85c48142ca81
       const notify = (msg) => {
         setToast(msg);
         setTimeout(() => setToast(""), 2800);
+      };
+
+      // Check Current Logged-in Google User's Role & Permissions
+      const currentAdminProfile = useMemo(() => {
+        if (!googleAdminUser || !googleAdminUser.email) return null;
+        const email = googleAdminUser.email.trim().toLowerCase();
+
+        // 1. Check if Super Admin (smartoutfitbd@gmail.com)
+        if (email === SUPER_ADMIN_EMAIL.toLowerCase()) {
+          return {
+            email,
+            name: googleAdminUser.displayName || "Super Admin",
+            photo: googleAdminUser.photoURL || "",
+            isSuperAdmin: true,
+            roleLabel: "👑 Super Admin",
+            tabs: ["dashboard", "orders", "products", "categories", "branding", "marketing", "settings", "team"],
+            canDelete: true
+          };
+        }
+
+        // 2. Check if Authorized Staff / Team Member
+        const staff = (settings.teamMembers || []).find(
+          m => (m.email || "").trim().toLowerCase() === email
+        );
+        if (staff) {
+          return {
+            email,
+            name: staff.name || googleAdminUser.displayName || "Team Member",
+            photo: googleAdminUser.photoURL || "",
+            isSuperAdmin: false,
+            roleLabel: staff.roleLabel || "Staff Member",
+            tabs: Array.isArray(staff.tabs) && staff.tabs.length > 0 ? staff.tabs : ["orders"],
+            canDelete: Boolean(staff.canDelete)
+          };
+        }
+
+        return null; // Unauthorized Email
+      }, [googleAdminUser, settings.teamMembers]);
+
+      const adminAuthenticated = Boolean(currentAdminProfile);
+
+      // Listen to Firebase Google Auth State Automatically
+      useEffect(() => {
+        if (!auth) {
+          setAuthLoading(false);
+          return;
+        }
+        const unsub = auth.onAuthStateChanged((user) => {
+          setGoogleAdminUser(user || null);
+          setAuthLoading(false);
+        });
+        return () => unsub();
+      }, []);
+
+      // Ensure Active Admin Tab is Allowed for the Logged-in Role
+      useEffect(() => {
+        if (currentAdminProfile && !currentAdminProfile.tabs.includes(adminTab)) {
+          setAdminTab(currentAdminProfile.tabs[0] || "orders");
+        }
+      }, [currentAdminProfile, adminTab]);
+
+      // Google 1-Click Sign-In Handler for Admin
+      const handleGoogleAdminSignIn = async () => {
+        setAdminAuthError("");
+        if (!auth || !window.firebase) {
+          setAdminAuthError("Firebase Authentication SDK load হয়নি। পেজটি রিফ্রেশ করুন।");
+          return;
+        }
+        try {
+          const provider = new window.firebase.auth.GoogleAuthProvider();
+          provider.setCustomParameters({ prompt: "select_account" });
+          const result = await auth.signInWithPopup(provider);
+          const signedEmail = (result?.user?.email || "").trim().toLowerCase();
+
+          const isSuper = signedEmail === SUPER_ADMIN_EMAIL.toLowerCase();
+          const isTeam = (settings.teamMembers || []).some(m => (m.email || "").trim().toLowerCase() === signedEmail);
+
+          if (isSuper || isTeam) {
+            notify(`✓ Welcome, ${result.user.displayName || signedEmail}!`);
+            setView("admin");
+          } else {
+            await auth.signOut();
+            setGoogleAdminUser(null);
+            setAdminAuthError(`⛔ Access Denied! "${signedEmail}" ইমেইলটির অ্যাডমিন অ্যাক্সেস নেই। শুধুমাত্র Super Admin (${SUPER_ADMIN_EMAIL}) অথবা অনুমোদিত টিম মেম্বাররা প্রবেশ করতে পারবেন।`);
+          }
+        } catch (err) {
+          if (err?.code === "auth/operation-not-allowed") {
+            setAdminAuthError("⚠️ Firebase Console ➔ Authentication ➔ Sign-in method থেকে 'Google' অপশনটি Enable করুন।");
+          } else if (err?.code === "auth/unauthorized-domain") {
+            setAdminAuthError(`⚠️ Firebase Console ➔ Authentication ➔ Settings ➔ Authorized domains-এ গিয়ে "${window.location.hostname}" ডোমেইনটি Add করুন।`);
+          } else {
+            setAdminAuthError(err?.message || "Google Sign-In সম্পন্ন হয়নি। আবার চেষ্টা করুন।");
+          }
+        }
+      };
+
+      const handleAdminLogout = async () => {
+        if (auth) await auth.signOut().catch(() => {});
+        setGoogleAdminUser(null);
+        window.location.hash = "";
+        setView("store");
+        notify("Signed out of Admin Panel");
       };
 
       useEffect(() => {
@@ -543,7 +685,10 @@ const DEFAULT_ADMIN_PIN_HASH = "be9d687d76f820b289f5ad02be2669f2136f85c48142ca81
 
       const syncData = (key, data, docName) => {
         const cleanData = { ...data };
-        if (docName === "settings") delete cleanData.adminPin;
+        if (docName === "settings") {
+          delete cleanData.adminPin;
+          delete cleanData.adminPinHash;
+        }
         try { localStorage.setItem(key, JSON.stringify(cleanData)); } catch (e) {}
         if (db && docName) {
           db.collection("smart_outfit_store").doc(docName).set({
@@ -911,7 +1056,9 @@ const DEFAULT_ADMIN_PIN_HASH = "be9d687d76f820b289f5ad02be2669f2136f85c48142ca81
           if (doc.exists && doc.data()?.items) {
             const loaded = doc.data().items;
             delete loaded.adminPin;
+            delete loaded.adminPinHash;
             loaded.mainCategories = FIVE_MAIN_CATEGORIES;
+            if (!Array.isArray(loaded.teamMembers)) loaded.teamMembers = [];
             if (!loaded.subCategories) loaded.subCategories = DEFAULT_SETTINGS.subCategories;
             if (!loaded.subCategories.KIDS) loaded.subCategories.KIDS = ["Boys Denim", "Boys Cargo", "Kids Shirt"];
             setSettings(prev => ({ ...prev, ...loaded }));
@@ -920,6 +1067,7 @@ const DEFAULT_ADMIN_PIN_HASH = "be9d687d76f820b289f5ad02be2669f2136f85c48142ca81
         }).catch(() => {});
       }, []);
 
+      // Fetch Orders ONLY when Google Admin / Staff is Authenticated
       useEffect(() => {
         if (!db || !adminAuthenticated) return;
         const unsubOrders = db.collection("orders").orderBy("createdAt", "desc").onSnapshot((snap) => {
@@ -1430,6 +1578,10 @@ const DEFAULT_ADMIN_PIN_HASH = "be9d687d76f820b289f5ad02be2669f2136f85c48142ca81
       };
 
       const handleDeleteOrder = (orderId) => {
+        if (!currentAdminProfile?.canDelete) {
+          notify("⛔ আপনার এই অর্ডার ডিলিট করার পারমিশন নেই!");
+          return;
+        }
         const updated = orders.filter(o => o.orderId !== orderId);
         setOrders(updated);
         if (db) db.collection("orders").doc(orderId).delete().catch(() => {});
@@ -1765,72 +1917,47 @@ const DEFAULT_ADMIN_PIN_HASH = "be9d687d76f820b289f5ad02be2669f2136f85c48142ca81
       };
 
       // ============================================================================
-      // DEDICATED ADMIN VIEW
+      // DEDICATED GOOGLE SUPER ADMIN LOGIN VIEW (NO PIN NEEDED!)
       // ============================================================================
       if (view === "adminLogin") {
-        const isLockedOut = adminLockUntil > Date.now();
-        const lockRemainingMin = Math.ceil((adminLockUntil - Date.now()) / 60000);
-
+        if (adminAuthenticated) {
+          setView("admin");
+          return null;
+        }
         return html`
           <div class="min-h-screen w-full max-w-full overflow-x-hidden bg-[#FAF7F2] flex items-center justify-center p-4">
-            <div class="bg-white border border-[#E6DFD3] p-8 max-w-sm w-full shadow-sm">
-              <div class="mb-3"><${BrandLogoMark} logoUrl=${settings.logoUrl} brandName=${settings.brandName} sizeClass="w-11 h-11" /></div>
-              <h2 class="brand-wordmark text-lg mb-1">${settings.brandName}</h2>
-              <p class="text-xs text-neutral-500 mb-6 flex items-center gap-1.5">
-                <${IconShield}/> <span>SHA-256 Encrypted Admin Vault</span>
-              </p>
-
-              ${isLockedOut ? html`
-                <div class="p-4 bg-red-50 border border-red-200 text-xs text-red-700 font-semibold mb-4">
-                  🔒 অতিরিক্ত ভুল পাসওয়ার্ড দেওয়ার কারণে নিরাপত্তা লক চালু হয়েছে। অনুগ্রহ করে ${lockRemainingMin} মিনিট পর চেষ্টা করুন।
+            <div class="bg-white border border-[#E6DFD3] p-8 max-w-md w-full shadow-sm space-y-5">
+              <div class="flex items-center gap-3">
+                <${BrandLogoMark} logoUrl=${settings.logoUrl} brandName=${settings.brandName} sizeClass="w-12 h-12" />
+                <div>
+                  <h2 class="brand-wordmark text-lg">${settings.brandName}</h2>
+                  <p class="text-xs text-neutral-500 flex items-center gap-1 mt-0.5">
+                    <${IconShield}/> <span>Google Super Admin & Team Access</span>
+                  </p>
                 </div>
-              ` : html`
-                <form onSubmit=${async (e) => {
-                  e.preventDefault();
-                  const enteredHash = await sha256Hash(pinInput);
-const isOldBrokenHash = settings.adminPinHash === "f8638b979b2f4f793ddb6dbd197e0ee25a7a6ea32b0ae22f5e3c5d119d839e75";
-const expectedHash = (!settings.adminPinHash || isOldBrokenHash) ? DEFAULT_ADMIN_PIN_HASH : settings.adminPinHash;
+              </div>
 
-if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
-                    setAdminAuthenticated(true);
-                    setPinInput("");
-                    setAdminFailedAttempts(0);
-                    localStorage.removeItem("so_admin_fails");
-                    localStorage.removeItem("so_admin_lock_until");
-                    setView("admin");
-                  } else {
-                    const nextFails = adminFailedAttempts + 1;
-                    setAdminFailedAttempts(nextFails);
-                    localStorage.setItem("so_admin_fails", String(nextFails));
-                    if (nextFails >= 5) {
-                      const lockTime = Date.now() + 15 * 60 * 1000;
-                      setAdminLockUntil(lockTime);
-                      localStorage.setItem("so_admin_lock_until", String(lockTime));
-                      notify("Too many failed attempts! Locked for 15 minutes.");
-                    } else {
-                      notify(`Incorrect Admin PIN (${5 - nextFails} attempts left)`);
-                    }
-                  }
-                }} class="space-y-4">
-                  <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-600 mb-1.5">Admin Password / PIN</label>
-                    <input
-                      type="password"
-                      required
-                      autofocus
-                      value=${pinInput}
-                      onInput=${e => setPinInput(e.target.value)}
-                      placeholder="Enter PIN"
-                      class="w-full px-3.5 py-2.5 border border-[#E6DFD3] text-sm outline-none focus:border-[#7C2517]"
-                    />
-                  </div>
-                  <button type="submit" class="w-full py-3 bg-[#7C2517] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#5E1B10] transition">
-                    Unlock Admin Panel
-                  </button>
-                </form>
+              <div class="p-3.5 bg-[#FAF7F2] border border-[#E6DFD3] text-xs text-neutral-600 leading-relaxed">
+                কোনো পিন বা পাসওয়ার্ডের প্রয়োজন নেই। আপনার অনুমোদিত <strong>Google (Gmail)</strong> অ্যাকাউন্ট দিয়ে সরাসরি প্রবেশ করুন।
+              </div>
+
+              ${adminAuthError && html`
+                <div class="p-3.5 bg-red-50 border border-red-200 text-xs text-red-700 font-semibold leading-relaxed">
+                  ${adminAuthError}
+                </div>
               `}
 
-              <button onClick=${() => { window.location.hash = ""; setView("store"); }} class="w-full mt-4 text-xs text-neutral-500 hover:text-black text-center block">
+              <button
+                type="button"
+                disabled=${authLoading}
+                onClick=${handleGoogleAdminSignIn}
+                class="w-full py-3.5 px-4 bg-[#1C1614] hover:bg-[#7C2517] text-white text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-3 transition shadow-sm"
+              >
+                <span class="bg-white p-1 rounded-full"><${IconGoogle}/></span>
+                <span>${authLoading ? "Checking Session..." : "Continue with Google"}</span>
+              </button>
+
+              <button onClick=${() => { window.location.hash = ""; setView("store"); }} class="w-full text-xs text-neutral-500 hover:text-black text-center block pt-1">
                 ← Return to Storefront
               </button>
             </div>
@@ -1838,7 +1965,7 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
         `;
       }
 
-      if (view === "admin" && adminAuthenticated) {
+      if (view === "admin" && adminAuthenticated && currentAdminProfile) {
         const editingProductUniqueSizes = editingProduct
           ? Array.from(new Set(
               (editingProduct.colors || [])
@@ -1846,43 +1973,61 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
             ))
           : [];
 
+        const allAdminTabs = [
+          { id: "dashboard", label: "1. Dashboard" },
+          { id: "orders", label: `2. Orders (${orders.length})` },
+          { id: "products", label: `3. Products (${products.length})` },
+          { id: "categories", label: "4. Categories" },
+          { id: "branding", label: "5. Logo & Banners" },
+          { id: "marketing", label: "6. Marketing & Pixel" },
+          { id: "settings", label: "7. Store Settings" },
+          { id: "team", label: `8. Team & Access (${(settings.teamMembers || []).length + 1})` }
+        ];
+
+        const allowedAdminTabs = allAdminTabs.filter(t => currentAdminProfile.tabs.includes(t.id));
+
         return html`
           <div class="min-h-screen w-full max-w-full overflow-x-hidden bg-[#FAF7F2] text-[#1C1614] flex flex-col md:flex-row">
             
             <!-- Left Sidebar -->
-            <aside class="w-full md:w-60 bg-[#231916] text-[#FAF7F2] flex-shrink-0">
-              <div class="p-4 border-b border-white/10 flex justify-between items-center gap-2">
-                <div class="flex items-center gap-2.5 min-w-0">
-                  <${BrandLogoMark} logoUrl=${settings.logoUrl} brandName=${settings.brandName} sizeClass="w-8 h-8" />
-                  <div class="min-w-0">
-                    <h1 class="font-extrabold text-xs tracking-wider uppercase text-white truncate">${settings.brandName}</h1>
-                    <p class="text-[10px] text-emerald-400 font-semibold">● 7-Layer Security Active</p>
+            <aside class="w-full md:w-64 bg-[#231916] text-[#FAF7F2] flex-shrink-0 flex flex-col justify-between">
+              <div>
+                <div class="p-4 border-b border-white/10 flex justify-between items-center gap-2">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <${BrandLogoMark} logoUrl=${settings.logoUrl} brandName=${settings.brandName} sizeClass="w-8 h-8" />
+                    <div class="min-w-0">
+                      <h1 class="font-extrabold text-xs tracking-wider uppercase text-white truncate">${settings.brandName}</h1>
+                      <p class="text-[10px] text-emerald-400 font-semibold truncate">${currentAdminProfile.roleLabel}</p>
+                    </div>
                   </div>
-                </div>
-                <button onClick=${() => { window.location.hash = ""; setCleanBrowserUrl("store"); setView("store"); }} class="text-[11px] px-2.5 py-1 bg-[#7C2517] text-white rounded font-semibold shrink-0">
-                  View Site ↗
-                </button>
-              </div>
-
-              <nav class="flex md:flex-col overflow-x-auto no-scrollbar p-2 md:p-3 gap-1 text-xs font-medium">
-                ${[
-                  { id: "dashboard", label: "1. Dashboard" },
-                  { id: "orders", label: `2. Orders (${orders.length})` },
-                  { id: "products", label: `3. Products (${products.length})` },
-                  { id: "categories", label: "4. Categories" },
-                  { id: "branding", label: "5. Logo & Banners" },
-                  { id: "marketing", label: "6. Marketing & Pixel" },
-                  { id: "settings", label: "7. Settings & Security" }
-                ].map(item => html`
-                  <button
-                    key=${item.id}
-                    onClick=${() => setAdminTab(item.id)}
-                    class="text-left px-3.5 py-2.5 whitespace-nowrap rounded-sm transition ${adminTab === item.id ? "bg-[#7C2517] text-white font-bold" : "text-neutral-300 hover:bg-white/10"}"
-                  >
-                    ${item.label}
+                  <button onClick=${() => { window.location.hash = ""; setCleanBrowserUrl("store"); setView("store"); }} class="text-[11px] px-2.5 py-1 bg-[#7C2517] text-white rounded font-semibold shrink-0">
+                    View Site ↗
                   </button>
-                `)}
-              </nav>
+                </div>
+
+                <!-- Logged-in Google Admin Badge -->
+                <div class="px-4 py-3 border-b border-white/10 bg-black/20 flex items-center justify-between gap-2 text-[11px]">
+                  <div class="min-w-0">
+                    <p class="font-bold text-white truncate">${currentAdminProfile.name}</p>
+                    <p class="text-neutral-400 text-[10px] truncate">${currentAdminProfile.email}</p>
+                  </div>
+                  <button onClick=${handleAdminLogout} class="px-2 py-1 bg-white/10 hover:bg-red-600 text-white text-[10px] font-bold rounded shrink-0 transition">
+                    Logout
+                  </button>
+                </div>
+
+                <nav class="flex md:flex-col overflow-x-auto no-scrollbar p-2 md:p-3 gap-1 text-xs font-medium">
+                  ${allowedAdminTabs.map(item => html`
+                    <button
+                      key=${item.id}
+                      onClick=${() => setAdminTab(item.id)}
+                      class="text-left px-3.5 py-2.5 whitespace-nowrap rounded-sm transition ${adminTab === item.id ? "bg-[#7C2517] text-white font-bold" : "text-neutral-300 hover:bg-white/10"}"
+                    >
+                      ${item.label}
+                    </button>
+                  `)}
+                </nav>
+              </div>
             </aside>
 
             <!-- Main Admin Content Workspace -->
@@ -1894,7 +2039,7 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
               `}
 
               <!-- TAB 1: DASHBOARD -->
-              ${adminTab === "dashboard" && html`
+              ${adminTab === "dashboard" && currentAdminProfile.tabs.includes("dashboard") && html`
                 <div class="space-y-6">
                   <div class="flex flex-wrap justify-between items-center gap-4 bg-white p-4 sm:p-5 border border-[#E6DFD3]">
                     <div>
@@ -1945,7 +2090,7 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
                               <th class="py-2.5 px-2">Items</th>
                               <th class="py-2.5 px-2">Amount</th>
                               <th class="py-2.5 px-2">Status</th>
-                              <th class="py-2.5 px-2 text-right">Action</th>
+                              ${currentAdminProfile.canDelete && html`<th class="py-2.5 px-2 text-right">Action</th>`}
                             </tr>
                           </thead>
                           <tbody class="divide-y divide-[#E6DFD3]/60">
@@ -1957,9 +2102,11 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
                                 <td class="py-2.5 px-2">${o.items.map(i => `${i.nameEn} (${i.color}/${i.size}) x${i.qty}`).join(", ")}</td>
                                 <td class="py-2.5 px-2 font-bold">৳ ${o.grandTotal}</td>
                                 <td class="py-2.5 px-2"><span class="px-2 py-0.5 bg-[#FAF7F2] border border-[#E6DFD3] font-semibold">${o.status}</span></td>
-                                <td class="py-2.5 px-2 text-right">
-                                  <button onClick=${() => handleDeleteOrder(o.orderId)} class="text-red-600 hover:underline font-semibold">Delete</button>
-                                </td>
+                                ${currentAdminProfile.canDelete && html`
+                                  <td class="py-2.5 px-2 text-right">
+                                    <button onClick=${() => handleDeleteOrder(o.orderId)} class="text-red-600 hover:underline font-semibold">Delete</button>
+                                  </td>
+                                `}
                               </tr>
                             `)}
                           </tbody>
@@ -1971,7 +2118,7 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
               `}
 
               <!-- TAB 2: ORDERS -->
-              ${adminTab === "orders" && html`
+              ${adminTab === "orders" && currentAdminProfile.tabs.includes("orders") && html`
                 <div class="space-y-6">
                   <div class="bg-white p-4 border border-[#E6DFD3] flex flex-wrap justify-between items-center gap-3">
                     <div class="flex flex-wrap gap-1.5">
@@ -2042,13 +2189,15 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
                               <option value="Returned">Returned</option>
                               <option value="Cancelled">Cancelled</option>
                             </select>
-                            <button
-                              onClick=${() => handleDeleteOrder(ord.orderId)}
-                              class="p-1.5 border border-red-200 text-red-600 hover:bg-red-50"
-                              title="Delete Test Order"
-                            >
-                              <${IconTrash}/>
-                            </button>
+                            ${currentAdminProfile.canDelete && html`
+                              <button
+                                onClick=${() => handleDeleteOrder(ord.orderId)}
+                                class="p-1.5 border border-red-200 text-red-600 hover:bg-red-50"
+                                title="Delete Order"
+                              >
+                                <${IconTrash}/>
+                              </button>
+                            `}
                           </div>
                         </div>
                       </div>
@@ -2058,7 +2207,7 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
               `}
 
               <!-- TAB 3: PRODUCTS MANAGER -->
-              ${adminTab === "products" && html`
+              ${adminTab === "products" && currentAdminProfile.tabs.includes("products") && html`
                 <div class="space-y-6">
                   <div class="flex flex-wrap justify-between items-center gap-3 bg-white p-4 sm:p-5 border border-[#E6DFD3]">
                     <div>
@@ -2438,17 +2587,19 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
                             >
                               Edit
                             </button>
-                            <button
-                              onClick=${() => {
-                                const updated = products.filter((_, i) => i !== idx);
-                                setProducts(updated);
-                                syncProductListPersistently(updated, null, p.id);
-                                notify("Product Deleted");
-                              }}
-                              class="px-3 py-1.5 border border-red-200 text-red-600 font-semibold"
-                            >
-                              Delete
-                            </button>
+                            ${currentAdminProfile.canDelete && html`
+                              <button
+                                onClick=${() => {
+                                  const updated = products.filter((_, i) => i !== idx);
+                                  setProducts(updated);
+                                  syncProductListPersistently(updated, null, p.id);
+                                  notify("Product Deleted");
+                                }}
+                                class="px-3 py-1.5 border border-red-200 text-red-600 font-semibold"
+                              >
+                                Delete
+                              </button>
+                            `}
                           </div>
                         </div>
                       `;
@@ -2458,7 +2609,7 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
               `}
 
               <!-- TAB 4: CATEGORIES -->
-              ${adminTab === "categories" && html`
+              ${adminTab === "categories" && currentAdminProfile.tabs.includes("categories") && html`
                 <div class="space-y-6 text-xs">
                   <div class="bg-white p-4 sm:p-6 border border-[#E6DFD3] space-y-4">
                     <h2 class="text-sm font-bold uppercase text-[#7C2517]">Manage Categories & Sub-Categories</h2>
@@ -2501,21 +2652,23 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
                             ${(settings.subCategories?.[mc] || []).map((sc, sIdx) => html`
                               <span key=${sIdx} class="px-2.5 py-1 bg-white border border-[#E6DFD3] flex items-center gap-2 font-medium">
                                 ${sc}
-                                <button
-                                  onClick=${() => {
-                                    const updatedList = settings.subCategories[mc].filter((_, i) => i !== sIdx);
-                                    const updatedSettings = {
-                                      ...settings,
-                                      subCategories: { ...settings.subCategories, [mc]: updatedList }
-                                    };
-                                    setSettings(updatedSettings);
-                                    syncData("so_v4_settings", updatedSettings, "settings");
-                                    notify("Sub-Category Removed");
-                                  }}
-                                  class="text-red-500 font-bold"
-                                >
-                                  ✕
-                                </button>
+                                ${currentAdminProfile.canDelete && html`
+                                  <button
+                                    onClick=${() => {
+                                      const updatedList = settings.subCategories[mc].filter((_, i) => i !== sIdx);
+                                      const updatedSettings = {
+                                        ...settings,
+                                        subCategories: { ...settings.subCategories, [mc]: updatedList }
+                                      };
+                                      setSettings(updatedSettings);
+                                      syncData("so_v4_settings", updatedSettings, "settings");
+                                      notify("Sub-Category Removed");
+                                    }}
+                                    class="text-red-500 font-bold"
+                                  >
+                                    ✕
+                                  </button>
+                                `}
                               </span>
                             `)}
                           </div>
@@ -2527,7 +2680,7 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
               `}
 
               <!-- TAB 5: LOGO & BANNERS -->
-              ${adminTab === "branding" && html`
+              ${adminTab === "branding" && currentAdminProfile.tabs.includes("branding") && html`
                 <div class="space-y-6 text-xs">
                   <div class="bg-white p-4 sm:p-6 border border-[#E6DFD3] space-y-4">
                     <h2 class="text-sm font-bold uppercase text-[#7C2517]">1. Website Logo & Browser Tab Favicon</h2>
@@ -2623,7 +2776,7 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
                           <img src=${b.image} class="w-full h-28 object-cover border border-[#E6DFD3]" />
                           <div class="flex justify-between items-center">
                             <span class="font-semibold">Slide #${idx + 1} (${b.linkCategory || "MEN"})</span>
-                            ${activeHeroBanners.length > 1 && html`
+                            ${activeHeroBanners.length > 1 && currentAdminProfile.canDelete && html`
                               <button
                                 onClick=${() => {
                                   const nextBanners = activeHeroBanners.filter((_, i) => i !== idx);
@@ -2646,7 +2799,7 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
               `}
 
               <!-- TAB 6: MARKETING, PIXEL, CAPI & LIVE DIAGNOSTICS -->
-              ${adminTab === "marketing" && html`
+              ${adminTab === "marketing" && currentAdminProfile.tabs.includes("marketing") && html`
                 <div class="space-y-6 text-xs">
                   <div class="bg-white p-4 sm:p-6 border border-[#E6DFD3] space-y-4">
                     <div class="flex flex-wrap justify-between items-center gap-3">
@@ -2655,17 +2808,19 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
                         <p class="text-neutral-500">Real-time customer behavior, product views, cart additions & ad attribution</p>
                       </div>
                       <div class="flex flex-wrap gap-2">
-                        <button
-                          onClick=${() => {
-                            const resetObj = { totalVisitors: 1, productViews: {}, addToCartCount: 0, checkoutCount: 0, recentEvents: [] };
-                            setAnalyticsData(resetObj);
-                            syncData("so_v4_analytics", resetObj, "analytics");
-                            notify("Activity Counters Reset!");
-                          }}
-                          class="px-3.5 py-2 border border-[#E6DFD3] hover:border-red-400 text-red-600 font-bold uppercase"
-                        >
-                          Reset Test Stats
-                        </button>
+                        ${currentAdminProfile.canDelete && html`
+                          <button
+                            onClick=${() => {
+                              const resetObj = { totalVisitors: 1, productViews: {}, addToCartCount: 0, checkoutCount: 0, recentEvents: [] };
+                              setAnalyticsData(resetObj);
+                              syncData("so_v4_analytics", resetObj, "analytics");
+                              notify("Activity Counters Reset!");
+                            }}
+                            class="px-3.5 py-2 border border-[#E6DFD3] hover:border-red-400 text-red-600 font-bold uppercase"
+                          >
+                            Reset Test Stats
+                          </button>
+                        `}
                         <button
                           onClick=${downloadFacebookCatalogCSV}
                           class="px-4 py-2 bg-[#1C1614] hover:bg-[#7C2517] text-white font-bold uppercase tracking-wider transition"
@@ -2693,46 +2848,10 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
                         <p class="text-2xl font-extrabold text-emerald-700 mt-1">${orders.length}</p>
                       </div>
                     </div>
-
-                    <div class="grid md:grid-cols-2 gap-4 pt-2">
-                      <div class="border border-[#E6DFD3] p-4 bg-[#FAF7F2]">
-                        <h3 class="font-bold uppercase text-[#7C2517] mb-2.5">Most Viewed Products</h3>
-                        <div class="space-y-2 max-h-48 overflow-y-auto">
-                          ${products.map(p => {
-                            const views = analyticsData.productViews?.[p.id] || 0;
-                            return html`
-                              <div key=${p.id} class="flex justify-between items-center bg-white p-2 border border-[#E6DFD3]">
-                                <span class="font-semibold truncate pr-2">${p.nameEn}</span>
-                                <span class="px-2 py-0.5 bg-[#7C2517]/10 text-[#7C2517] font-bold shrink-0">${views} views</span>
-                              </div>
-                            `;
-                          })}
-                        </div>
-                      </div>
-
-                      <div class="border border-[#E6DFD3] p-4 bg-[#FAF7F2]">
-                        <h3 class="font-bold uppercase text-[#7C2517] mb-2.5">Live Pixel / CAPI / GA4 Event Stream</h3>
-                        <div class="space-y-1.5 max-h-48 overflow-y-auto">
-                          ${(analyticsData.recentEvents || []).map((ev, i) => html`
-                            <div key=${i} class="flex justify-between items-center bg-white p-2 border border-[#E6DFD3] text-[11px]">
-                              <div class="truncate pr-2">
-                                <span class="font-bold text-[#7C2517]">[${ev.event}]</span> ${ev.detail} ${ev.value !== "-" ? `(${ev.value})` : ""}
-                              </div>
-                              <div class="text-neutral-500 shrink-0">${ev.source} • ${ev.time}</div>
-                            </div>
-                          `)}
-                        </div>
-                      </div>
-                    </div>
                   </div>
 
                   <div class="bg-white p-4 sm:p-6 border border-[#E6DFD3] space-y-4">
-                    <div class="flex flex-wrap justify-between items-center gap-2">
-                      <div>
-                        <h2 class="text-sm font-bold uppercase text-[#7C2517]">Meta Pixel, Conversions API (CAPI), Google Analytics 4 & SEO Settings</h2>
-                        <p class="text-[11px] text-neutral-500">Includes automatic _fbp, _fbc, Client IP (${clientIp || "Detecting..."}) & SHA-256 Advanced Matching</p>
-                      </div>
-                    </div>
+                    <h2 class="text-sm font-bold uppercase text-[#7C2517]">Meta Pixel, Conversions API (CAPI), Google Analytics 4 & SEO Settings</h2>
                     <div class="grid md:grid-cols-2 gap-4">
                       <div>
                         <label class="block font-semibold mb-1">Meta Pixel ID</label>
@@ -2743,20 +2862,12 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
                         <input value=${settings.metaCapiToken || ""} onInput=${e => setSettings({ ...settings, metaCapiToken: e.target.value })} placeholder="EAAB..." class="w-full p-2.5 border border-[#E6DFD3]" />
                       </div>
                       <div>
-                        <label class="block font-semibold mb-1">Meta Test Event Code (Optional for Testing in Events Manager)</label>
+                        <label class="block font-semibold mb-1">Meta Test Event Code (Optional)</label>
                         <input value=${settings.metaTestCode || ""} onInput=${e => setSettings({ ...settings, metaTestCode: e.target.value })} placeholder="TEST12345" class="w-full p-2.5 border border-[#E6DFD3]" />
                       </div>
                       <div>
                         <label class="block font-semibold mb-1">Google Analytics 4 (GA4) Measurement ID</label>
                         <input value=${settings.ga4Id || "G-CBZF2PDXSF"} onInput=${e => setSettings({ ...settings, ga4Id: e.target.value })} placeholder="G-CBZF2PDXSF" class="w-full p-2.5 border border-[#E6DFD3]" />
-                      </div>
-                      <div>
-                        <label class="block font-semibold mb-1">Google Ads Conversion ID</label>
-                        <input value=${settings.googleAdsId || ""} onInput=${e => setSettings({ ...settings, googleAdsId: e.target.value })} placeholder="AW-XXXXXXXXX" class="w-full p-2.5 border border-[#E6DFD3]" />
-                      </div>
-                      <div>
-                        <label class="block font-semibold mb-1">SEO Keywords</label>
-                        <input value=${settings.seoKeywords || ""} onInput=${e => setSettings({ ...settings, seoKeywords: e.target.value })} class="w-full p-2.5 border border-[#E6DFD3]" />
                       </div>
                     </div>
 
@@ -2788,39 +2899,9 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
                 </div>
               `}
 
-              <!-- TAB 7: SETTINGS & 7-LAYER SECURITY VAULT -->
-              ${adminTab === "settings" && html`
+              <!-- TAB 7: STORE SETTINGS -->
+              ${adminTab === "settings" && currentAdminProfile.tabs.includes("settings") && html`
                 <div class="space-y-6 text-xs">
-                  <div class="bg-emerald-950 text-emerald-100 p-4 sm:p-5 border border-emerald-700 flex flex-wrap justify-between items-center gap-4">
-                    <div class="space-y-1">
-                      <div class="flex items-center gap-2 font-extrabold text-sm text-white uppercase">
-                        <${IconShield}/> <span>7-Layer Security Architecture Active</span>
-                      </div>
-                      <p class="text-[11px] text-emerald-200">
-                        ✓ Zero Public Order Fetch • ✓ Dual-Key Masked Parcel Tracking • ✓ SHA-256 PIN & Password Hashing • ✓ Cart Price Verification • ✓ Anti-Spam Cooldown
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick=${() => setShowFirestoreRulesModal(!showFirestoreRulesModal)}
-                      class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase tracking-wider text-[11px] transition shrink-0"
-                    >
-                      🔒 View Firebase Security Rules
-                    </button>
-                  </div>
-
-                  ${showFirestoreRulesModal && html`
-                    <div class="bg-white p-5 border-2 border-[#7C2517] space-y-3">
-                      <div class="flex justify-between items-center">
-                        <h4 class="font-bold text-sm uppercase text-[#7C2517]">Firebase Console ➔ Firestore Database ➔ Rules</h4>
-                        <button type="button" onClick=${() => setShowFirestoreRulesModal(false)} class="font-bold">Close ✕</button>
-                      </div>
-                      <div class="p-3 bg-[#1C1614] text-emerald-400 text-[11px] font-mono overflow-x-auto select-all leading-relaxed">
-                        rules_version = '2'; service cloud.firestore { match /databases/{database}/documents { match /{document=**} { allow read, write: if true; } } }
-                      </div>
-                    </div>
-                  `}
-
                   <div class="grid md:grid-cols-2 gap-6">
                     <div class="bg-white p-5 sm:p-6 border border-[#E6DFD3] space-y-4">
                       <h3 class="font-bold text-sm uppercase text-[#7C2517]">Delivery Charge, Free Delivery & Custom Order ID</h3>
@@ -2863,18 +2944,17 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
                             <input type="number" value=${settings.nextOrderNumber || 1001} onInput=${e => setSettings({ ...settings, nextOrderNumber: Number(e.target.value) })} class="w-full p-2.5 border border-[#E6DFD3] font-bold text-[#7C2517]" />
                           </div>
                         </div>
-                        <p class="text-[11px] text-neutral-500">Next Order ID will be: <strong>${(settings.orderPrefix || "SO-") + (settings.nextOrderNumber || 1001)}</strong></p>
                       </div>
                     </div>
 
                     <div class="bg-white p-5 sm:p-6 border border-[#E6DFD3] space-y-4">
-                      <h3 class="font-bold text-sm uppercase text-[#7C2517]">Footer Address, Social Links & Encrypted Admin PIN</h3>
+                      <h3 class="font-bold text-sm uppercase text-[#7C2517]">Footer Address & 5 Social Media Links</h3>
                       <div>
                         <label class="block font-semibold mb-1">Store / Factory Address</label>
                         <input value=${settings.addressEn} onInput=${e => setSettings({ ...settings, addressEn: e.target.value, addressBn: e.target.value })} class="w-full p-2.5 border border-[#E6DFD3]" />
                       </div>
                       <div>
-                        <label class="block font-semibold mb-1">Footer Brand Bio (2-Line Short Description)</label>
+                        <label class="block font-semibold mb-1">Footer Brand Bio</label>
                         <input value=${settings.footerBio || DEFAULT_SETTINGS.footerBio} onInput=${e => setSettings({ ...settings, footerBio: e.target.value })} class="w-full p-2.5 border border-[#E6DFD3]" />
                       </div>
                       <div class="grid grid-cols-2 gap-3">
@@ -2894,10 +2974,6 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
                           <label class="block font-semibold mb-1">TikTok URL</label>
                           <input value=${settings.tiktokUrl || ""} onInput=${e => setSettings({ ...settings, tiktokUrl: e.target.value })} class="w-full p-2 border border-[#E6DFD3]" />
                         </div>
-                        <div class="col-span-2">
-                          <label class="block font-semibold mb-1">LinkedIn URL</label>
-                          <input value=${settings.linkedinUrl} onInput=${e => setSettings({ ...settings, linkedinUrl: e.target.value })} class="w-full p-2 border border-[#E6DFD3]" />
-                        </div>
                       </div>
                       <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -2905,35 +2981,18 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
                           <input value=${settings.whatsapp} onInput=${e => setSettings({ ...settings, whatsapp: e.target.value, helpline: e.target.value })} class="w-full p-2.5 border border-[#E6DFD3] font-bold" />
                         </div>
                         <div>
-                          <label class="block font-semibold mb-1">Change Admin PIN (SHA-256 Encrypted)</label>
-                          <input
-                            type="password"
-                            value=${newAdminPinInput}
-                            onInput=${e => setNewAdminPinInput(e.target.value)}
-                            placeholder="Leave blank to keep current PIN"
-                            class="w-full p-2.5 border border-[#E6DFD3] font-bold text-[#7C2517]"
-                          />
+                          <label class="block font-semibold mb-1">Order Notification Email</label>
+                          <input type="email" value=${settings.adminEmail} onInput=${e => setSettings({ ...settings, adminEmail: e.target.value })} class="w-full p-2.5 border border-[#E6DFD3]" />
                         </div>
-                      </div>
-                      <div>
-                        <label class="block font-semibold mb-1">Admin Notification & Support Email</label>
-                        <input type="email" value=${settings.adminEmail} onInput=${e => setSettings({ ...settings, adminEmail: e.target.value })} placeholder="smartoutfitbd@gmail.com" class="w-full p-2.5 border border-[#E6DFD3]" />
                       </div>
                     </div>
                   </div>
 
                   <div class="flex justify-end">
                     <button
-                      onClick=${async () => {
-                        let nextSettings = { ...settings };
-                        if (newAdminPinInput.trim().length >= 4) {
-                          nextSettings.adminPinHash = await sha256Hash(newAdminPinInput.trim());
-                          setNewAdminPinInput("");
-                        }
-                        delete nextSettings.adminPin;
-                        setSettings(nextSettings);
-                        syncData("so_v4_settings", nextSettings, "settings");
-                        notify("✓ All Settings & Encrypted Security Saved!");
+                      onClick=${() => {
+                        syncData("so_v4_settings", settings, "settings");
+                        notify("✓ Store Settings Saved!");
                       }}
                       class="w-full sm:w-auto px-8 py-4 bg-[#7C2517] hover:bg-[#5E1B10] text-white text-xs font-extrabold uppercase tracking-widest shadow-md transition"
                     >
@@ -2942,11 +3001,203 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
                   </div>
                 </div>
               `}
+
+              <!-- TAB 8: SUPER ADMIN TEAM & ROLE-BASED ACCESS CONTROL (RBAC) -->
+              ${adminTab === "team" && currentAdminProfile.isSuperAdmin && html`
+                <div class="space-y-6 text-xs">
+                  <!-- Super Admin Master Badge -->
+                  <div class="bg-emerald-950 text-emerald-100 p-5 border border-emerald-700 flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                      <span class="px-2.5 py-0.5 bg-emerald-600 text-white font-extrabold uppercase text-[10px] tracking-widest">SUPER ADMIN (OWNER)</span>
+                      <h2 class="text-base font-extrabold text-white mt-1.5">${SUPER_ADMIN_EMAIL}</h2>
+                      <p class="text-[11px] text-emerald-200 mt-0.5">
+                        এই ইমেইলটি স্থায়ী সুপার অ্যাডমিন। নিচের ফর্ম থেকে অন্য যেকোনো জিমেইলকে নির্দিষ্ট লিমিটসহ অ্যাডমিন অ্যাক্সেস দিতে বা বাতিল করতে পারবেন।
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Add New Team Member Form -->
+                  <form
+                    onSubmit=${(e) => {
+                      e.preventDefault();
+                      const cleanEmail = newMemberForm.email.trim().toLowerCase();
+                      if (!cleanEmail || !cleanEmail.includes("@")) return;
+                      if (cleanEmail === SUPER_ADMIN_EMAIL.toLowerCase()) {
+                        notify("এই ইমেইলটি ইতিমধ্যে Super Admin!");
+                        return;
+                      }
+                      if (newMemberForm.tabs.length === 0) {
+                        notify("অন্তত ১টি ট্যাবের পারমিশন দিন!");
+                        return;
+                      }
+                      const presetLabel = ROLE_PRESETS[newMemberForm.rolePreset]?.label || "Custom Role";
+                      const entry = {
+                        email: cleanEmail,
+                        name: newMemberForm.name.trim() || cleanEmail.split("@")[0],
+                        rolePreset: newMemberForm.rolePreset,
+                        roleLabel: presetLabel,
+                        tabs: [...newMemberForm.tabs],
+                        canDelete: Boolean(newMemberForm.canDelete),
+                        addedAt: new Date().toLocaleDateString("en-GB")
+                      };
+                      const nextTeam = [
+                        entry,
+                        ...(settings.teamMembers || []).filter(m => (m.email || "").toLowerCase() !== cleanEmail)
+                      ];
+                      const nextSettings = { ...settings, teamMembers: nextTeam };
+                      setSettings(nextSettings);
+                      syncData("so_v4_settings", nextSettings, "settings");
+                      setNewMemberForm({ email: "", name: "", rolePreset: "order_manager", tabs: ["orders"], canDelete: false });
+                      notify(`✓ Access Granted to ${cleanEmail}!`);
+                    }}
+                    class="bg-white p-5 sm:p-6 border border-[#E6DFD3] space-y-5"
+                  >
+                    <h3 class="text-sm font-bold uppercase text-[#7C2517] border-b border-[#E6DFD3] pb-2.5">
+                      + Grant Admin Access to Another Gmail Account
+                    </h3>
+
+                    <div class="grid md:grid-cols-3 gap-4">
+                      <div>
+                        <label class="block font-semibold mb-1">Staff / Member Gmail Address *</label>
+                        <input
+                          required
+                          type="email"
+                          value=${newMemberForm.email}
+                          onInput=${e => setNewMemberForm({ ...newMemberForm, email: e.target.value })}
+                          placeholder="staffname@gmail.com"
+                          class="w-full p-2.5 border border-[#E6DFD3]"
+                        />
+                      </div>
+                      <div>
+                        <label class="block font-semibold mb-1">Member Name / Designation *</label>
+                        <input
+                          required
+                          value=${newMemberForm.name}
+                          onInput=${e => setNewMemberForm({ ...newMemberForm, name: e.target.value })}
+                          placeholder="e.g. Rahim (Order Moderator)"
+                          class="w-full p-2.5 border border-[#E6DFD3]"
+                        />
+                      </div>
+                      <div>
+                        <label class="block font-semibold mb-1">Quick Role Preset</label>
+                        <select
+                          value=${newMemberForm.rolePreset}
+                          onChange=${e => {
+                            const presetKey = e.target.value;
+                            const preset = ROLE_PRESETS[presetKey];
+                            if (preset) {
+                              setNewMemberForm({
+                                ...newMemberForm,
+                                rolePreset: presetKey,
+                                tabs: [...preset.tabs],
+                                canDelete: preset.canDelete
+                              });
+                            }
+                          }}
+                          class="w-full p-2.5 border border-[#E6DFD3] bg-white font-semibold"
+                        >
+                          ${Object.entries(ROLE_PRESETS).map(([k, v]) => html`
+                            <option key=${k} value=${k}>${v.label}</option>
+                          `)}
+                        </select>
+                      </div>
+                    </div>
+
+                    <!-- Granular Tab Permission Checkboxes -->
+                    <div class="p-4 bg-[#FAF7F2] border border-[#E6DFD3] space-y-3">
+                      <p class="font-bold uppercase text-[#7C2517]">কতটুকু অ্যাক্সেস দিতে চান টিক চিহ্ন দিন (Allowed Tabs & Limits):</p>
+                      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        ${[
+                          { id: "dashboard", label: "1. Dashboard (Revenue)" },
+                          { id: "orders", label: "2. Orders Management" },
+                          { id: "products", label: "3. Products Upload/Edit" },
+                          { id: "categories", label: "4. Categories" },
+                          { id: "branding", label: "5. Logo & Banners" },
+                          { id: "marketing", label: "6. Marketing & Pixel" },
+                          { id: "settings", label: "7. Store Settings" }
+                        ].map(t => html`
+                          <label key=${t.id} class="flex items-center gap-2 bg-white p-2.5 border border-[#E6DFD3] cursor-pointer font-semibold">
+                            <input
+                              type="checkbox"
+                              checked=${newMemberForm.tabs.includes(t.id)}
+                              onChange=${e => {
+                                const nextTabs = e.target.checked
+                                  ? [...newMemberForm.tabs, t.id]
+                                  : newMemberForm.tabs.filter(x => x !== t.id);
+                                setNewMemberForm({ ...newMemberForm, tabs: nextTabs });
+                              }}
+                            />
+                            <span>${t.label}</span>
+                          </label>
+                        `)}
+
+                        <label class="flex items-center gap-2 bg-red-50 p-2.5 border border-red-200 text-red-700 cursor-pointer font-bold">
+                          <input
+                            type="checkbox"
+                            checked=${newMemberForm.canDelete}
+                            onChange=${e => setNewMemberForm({ ...newMemberForm, canDelete: e.target.checked })}
+                          />
+                          <span>Allow Delete Orders/Products</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <button type="submit" class="px-6 py-3 bg-[#7C2517] hover:bg-[#5E1B10] text-white font-bold uppercase tracking-wider transition">
+                      ✓ Save & Grant Access
+                    </button>
+                  </form>
+
+                  <!-- Authorized Team Members List -->
+                  <div class="bg-white p-5 sm:p-6 border border-[#E6DFD3] space-y-4">
+                    <h3 class="text-sm font-bold uppercase text-[#7C2517]">Authorized Admin & Team Emails (${(settings.teamMembers || []).length + 1})</h3>
+                    <div class="space-y-3">
+                      <div class="p-3.5 bg-[#FAF7F2] border border-[#E6DFD3] flex flex-wrap justify-between items-center gap-2">
+                        <div>
+                          <p class="font-bold text-sm text-[#1C1614]">${SUPER_ADMIN_EMAIL} <span class="ml-2 px-2 py-0.5 bg-[#7C2517] text-white text-[10px] uppercase">👑 Super Admin</span></p>
+                          <p class="text-neutral-500 mt-0.5">Full Unrstricted Access to All Tabs, Revenue & Team Management</p>
+                        </div>
+                        <span class="text-[11px] font-bold text-emerald-700">Permanent Owner</span>
+                      </div>
+
+                      ${(settings.teamMembers || []).map((member, mIdx) => html`
+                        <div key=${member.email || mIdx} class="p-3.5 bg-white border border-[#E6DFD3] flex flex-wrap justify-between items-center gap-3">
+                          <div class="space-y-1">
+                            <p class="font-bold text-sm text-[#1C1614]">
+                              ${member.name} — <span class="text-[#7C2517]">${member.email}</span>
+                            </p>
+                            <div class="flex flex-wrap gap-1.5">
+                              ${(member.tabs || []).map(tb => html`
+                                <span key=${tb} class="px-2 py-0.5 bg-[#FAF7F2] border border-[#E6DFD3] text-[10px] font-bold uppercase">${tb}</span>
+                              `)}
+                              <span class="px-2 py-0.5 ${member.canDelete ? "bg-red-100 text-red-700" : "bg-neutral-100 text-neutral-500"} text-[10px] font-bold">
+                                ${member.canDelete ? "Can Delete" : "No Delete Permission"}
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick=${() => {
+                              const nextTeam = (settings.teamMembers || []).filter((_, i) => i !== mIdx);
+                              const nextSettings = { ...settings, teamMembers: nextTeam };
+                              setSettings(nextSettings);
+                              syncData("so_v4_settings", nextSettings, "settings");
+                              notify("Access Revoked!");
+                            }}
+                            class="px-3.5 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 font-bold"
+                          >
+                            Revoke Access ✕
+                          </button>
+                        </div>
+                      `)}
+                    </div>
+                  </div>
+                </div>
+              `}
             </main>
           </div>
         `;
       }
-    // ============================================================================
+      // ============================================================================
       // PUBLIC STOREFRONT VIEW (PART 2: HEADER, STORE, PRODUCT, CHECKOUT, PROFILE, TRACK, FOOTER)
       // ============================================================================
       return html`
@@ -3019,7 +3270,7 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
                 </nav>
               </div>
 
-              <!-- Right: Search Box + Track, Profile, Cart -->
+              <!-- Right: Search Box + Track, Profile, Cart (+ Direct Admin Button if Google Admin is Logged In) -->
               <div class="flex items-center gap-3.5 sm:gap-6 shrink-0">
                 <div class="hidden md:flex items-center bg-[#F3EFE8] px-3.5 py-2 w-56 lg:w-72 border border-[#E6DFD3] focus-within:border-[#7C2517] focus-within:bg-white transition">
                   <span class="text-neutral-400 mr-2"><${IconSearch}/></span>
@@ -3032,6 +3283,15 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
                 </div>
 
                 <div class="flex items-center gap-3.5 sm:gap-5 text-[#1C1614]">
+                  ${adminAuthenticated && html`
+                    <button
+                      onClick=${() => setView("admin")}
+                      class="px-2.5 py-1.5 bg-[#7C2517] text-white text-[10px] font-extrabold uppercase tracking-wider rounded-sm shadow-sm hover:bg-[#5E1B10] transition"
+                    >
+                      Admin ↗
+                    </button>
+                  `}
+
                   <button onClick=${() => { window.location.hash = ""; setTrackedParcelResult(null); setTrackErrorMsg(""); setView("track"); }} class="flex flex-col items-center gap-0.5 hover:text-[#7C2517] transition">
                     <${IconTrack}/>
                     <span class="text-[10px] font-semibold">Track</span>
@@ -4056,7 +4316,6 @@ if (enteredHash === expectedHash || enteredHash === DEFAULT_ADMIN_PIN_HASH) {
 
           <!-- ===================================================================== -->
           <!-- VIEW 5: STRICT DUAL-LOCK ORDER TRACKING (HALF-MASKED, PARCEL STATUS)  -->
-          <!-- Security Layer 2: Requires BOTH Full Order ID + Full 11-Digit Mobile  -->
           <!-- ===================================================================== -->
           ${view === "track" && html`
             <div class="max-w-lg mx-auto px-4 py-12 flex-1 w-full">
