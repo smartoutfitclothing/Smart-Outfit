@@ -91,46 +91,14 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-    /* Instant Pre-Loader to 100% Prevent FOUC / Old Design Flash on Facebook In-App Browser */
-    #so-initial-loader {
-      position: fixed;
-      inset: 0;
-      z-index: 99999;
+    /* Hide root until Tailwind CSS finishes parsing so raw unstyled HTML never flashes */
+    #root:empty {
+      min-height: 100vh;
       background-color: #FAF7F2;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.25s ease, visibility 0.25s ease;
-    }
-    #so-initial-loader.so-loaded {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-    .so-spinner {
-      width: 34px;
-      height: 34px;
-      border: 3px solid #E6DFD3;
-      border-top-color: #7C2517;
-      border-radius: 50%;
-      animation: soSpin 0.65s linear infinite;
-    }
-    @keyframes soSpin {
-      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body class="bg-[#FAF7F2] text-[#1C1614] antialiased selection:bg-[#7C2517] selection:text-white">
-  <!-- Instant Zero-Flash Pre-loader -->
-  <div id="so-initial-loader">
-    <div style="width:48px;height:48px;border-radius:9999px;background:#7C2517;color:#FAF7F2;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:14px;box-shadow:0 2px 8px rgba(124,37,23,0.18);">
-      <span style="font-weight:800;font-size:20px;line-height:1;">S</span>
-      <span style="width:14px;height:2px;background:#FAF7F2;border-radius:2px;margin-top:2px;"></span>
-    </div>
-    <div class="so-spinner"></div>
-  </div>
-
   <div id="root" class="w-full max-w-full overflow-x-hidden"></div>
 
   <script type="module">
@@ -167,24 +135,14 @@
       }
     } catch (e) { console.warn("Firebase init notice:", e); }
 
-    const hideInitialLoader = () => {
-      const el = document.getElementById("so-initial-loader");
-      if (el) el.classList.add("so-loaded");
-    };
-
     // ============================================================================
-    // 2. UNIFIED BRAND LOGO MARK & CLEAN LINE SVG ICONS
+    // 2. UNIFIED BRAND LOGO MARK (NO DEMO "S" FLASH ON STOREFRONT) & SVG ICONS
     // ============================================================================
     const BrandLogoMark = ({ logoUrl, brandName = "SMART OUTFIT", sizeClass = "w-9 h-9 sm:w-10 sm:h-10" }) => {
       if (logoUrl) {
         return html`<img src=${logoUrl} alt=${brandName} crossorigin="anonymous" class="${sizeClass} object-contain rounded-full flex-shrink-0 bg-white border border-[#E6DFD3]/60" />`;
       }
-      return html`
-        <div class="${sizeClass} rounded-full bg-[#7C2517] text-[#FAF7F2] flex flex-col items-center justify-center shadow-sm flex-shrink-0 select-none">
-          <span class="font-extrabold text-sm sm:text-base leading-none tracking-tighter">S</span>
-          <span class="w-3.5 h-0.5 bg-[#FAF7F2] rounded-full mt-0.5"></span>
-        </div>
-      `;
+      return html`<div class="${sizeClass} rounded-full bg-[#F3EFE8] border border-[#E6DFD3] flex-shrink-0"></div>`;
     };
 
     const IconSearch = () => html`<svg class="w-4 h-4 stroke-current" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`;
@@ -286,17 +244,14 @@
       "XXL": "Size XXL: Chest 44-46 inches | Length 30.5 inches — Regular Comfort Fit."
     };
 
+    // ZERO HARDCODED DEMO BANNERS OR DEMO PRODUCTS (100% Eliminates Old Page Flash)
     const DEFAULT_SETTINGS = {
       brandName: "SMART OUTFIT",
       tagline: "",
       logoUrl: "",
       faviconUrl: "",
       footerBio: "One of the leading contemporary lifestyle & fashion brands in Bangladesh.",
-      heroBanners: [
-        { id: "hb1", image: "https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?auto=format&fit=crop&w=1800&q=85", linkCategory: "MEN" },
-        { id: "hb2", image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=1800&q=85", linkCategory: "MEN" },
-        { id: "hb3", image: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=1800&q=85", linkCategory: "WINTER" }
-      ],
+      heroBanners: [],
       promoPopupEnabled: false,
       promoPopupImage: "",
       promoPopupLink: "",
@@ -337,41 +292,14 @@
       }
     };
 
-    const DEFAULT_PRODUCTS = [
-      {
-        id: "SO-CG01",
-        sku: "SO-CG01",
-        nameEn: "Six Pocket Cargo",
-        nameBn: "Six Pocket Heavy Twill Cargo Pant",
-        mainCategory: "MEN",
-        subCategory: "Six Pocket Cargo",
-        isBestSeller: true,
-        regularPrice: 900,
-        discountPrice: 690,
-        freeDelivery: false,
-        fabricSpecs: "98% Cotton, 2% Spandex | Export Quality",
-        deliveryText: "Open Box Delivery Available. Easy 7-Day Size Exchange.",
-        sizeChart: "Waist 28 (Length 38\") | Waist 30 (Length 38.5\") | Waist 32 (Length 39\") | Waist 34 (Length 39.5\") | Waist 36 (Length 40\")",
-        sizeChartImage: "",
-        sizeDescriptions: { ...DEFAULT_PANT_SIZE_DESCRIPTIONS },
-        colors: [
-          {
-            name: "Olive",
-            hex: "#4B5830",
-            image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=900&q=80",
-            images: ["https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=900&q=80"],
-            sizes: "30,32,34,36"
-          },
-          {
-            name: "Black",
-            hex: "#141414",
-            image: "https://images.unsplash.com/photo-1517445312882-bc9910d016b7?auto=format&fit=crop&w=900&q=80",
-            images: ["https://images.unsplash.com/photo-1517445312882-bc9910d016b7?auto=format&fit=crop&w=900&q=80"],
-            sizes: "30,32,34,36"
-          }
-        ]
-      }
-    ];
+    const DEFAULT_PRODUCTS = [];
+
+    const isDemoSuitBanner = (url) => {
+      if (!url) return true;
+      return String(url).includes("photo-1490114538077") ||
+             String(url).includes("photo-1624378439575") ||
+             String(url).includes("photo-1576995853123");
+    };
 
     const compressImageSafe = (file, maxWidth = 820, quality = 0.78) => {
       return new Promise((resolve) => {
@@ -531,12 +459,18 @@
       const [settings, setSettings] = useState(() => {
         try {
           const s = localStorage.getItem("so_v4_settings");
-          const parsed = s ? { ...DEFAULT_SETTINGS, ...JSON.parse(s) } : DEFAULT_SETTINGS;
+          if (!s) return DEFAULT_SETTINGS;
+          const parsed = { ...DEFAULT_SETTINGS, ...JSON.parse(s) };
           delete parsed.adminPin;
           delete parsed.adminPinHash;
           parsed.mainCategories = FIVE_MAIN_CATEGORIES;
           parsed.globalFreeDelivery = isStrictTrue(parsed.globalFreeDelivery);
           parsed.promoPopupEnabled = isStrictTrue(parsed.promoPopupEnabled);
+          if (Array.isArray(parsed.heroBanners)) {
+            parsed.heroBanners = parsed.heroBanners.filter(b => b?.image && !isDemoSuitBanner(b.image));
+          } else {
+            parsed.heroBanners = [];
+          }
           if (!Array.isArray(parsed.teamMembers)) parsed.teamMembers = [];
           if (!parsed.subCategories) parsed.subCategories = DEFAULT_SETTINGS.subCategories;
           if (!parsed.subCategories.KIDS) parsed.subCategories.KIDS = ["Boys Denim", "Boys Cargo", "Kids Shirt"];
@@ -547,9 +481,18 @@
       const [products, setProducts] = useState(() => {
         try {
           const p = localStorage.getItem("so_v4_products");
-          return p ? JSON.parse(p) : DEFAULT_PRODUCTS;
-        } catch { return DEFAULT_PRODUCTS; }
+          if (!p) return [];
+          const parsed = JSON.parse(p);
+          if (!Array.isArray(parsed)) return [];
+          // Ignore old cached single-item Unsplash demo cargo pant
+          if (parsed.length === 1 && parsed[0]?.id === "SO-CG01" && String(parsed[0]?.colors?.[0]?.image || "").includes("photo-1624378439575")) {
+            return [];
+          }
+          return parsed;
+        } catch { return []; }
       });
+
+      const [storeSyncing, setStoreSyncing] = useState(() => products.length === 0);
 
       const [orders, setOrders] = useState([]);
       const [abandonedCarts, setAbandonedCarts] = useState([]);
@@ -637,7 +580,7 @@
 
       // Promotional Popup Session Trigger
       useEffect(() => {
-        if (isStrictTrue(settings.promoPopupEnabled) && settings.promoPopupImage && view === "store") {
+        if (!storeSyncing && isStrictTrue(settings.promoPopupEnabled) && settings.promoPopupImage && view === "store") {
           const alreadyDismissed = sessionStorage.getItem("so_promo_dismissed");
           if (!alreadyDismissed) {
             setShowPromoModal(true);
@@ -645,7 +588,7 @@
         } else {
           setShowPromoModal(false);
         }
-      }, [settings.promoPopupEnabled, settings.promoPopupImage, view]);
+      }, [storeSyncing, settings.promoPopupEnabled, settings.promoPopupImage, view]);
 
       const closePromoPopup = () => {
         setShowPromoModal(false);
@@ -1090,14 +1033,12 @@
         fireMarketingEvent("PageView", {});
       }, []);
 
-      // Load Live Firebase Data & Dismiss Initial Pre-loader Smoothly
+      // Load Live Firebase Data Directly (Zero Demo Flash)
       useEffect(() => {
         if (!db) {
-          hideInitialLoader();
+          setStoreSyncing(false);
           return;
         }
-
-        const safetyTimer = setTimeout(hideInitialLoader, 650);
 
         Promise.all([
           db.collection("smart_outfit_store").doc("products").get().catch(() => null),
@@ -1139,6 +1080,11 @@
             loaded.mainCategories = FIVE_MAIN_CATEGORIES;
             loaded.globalFreeDelivery = isStrictTrue(loaded.globalFreeDelivery);
             loaded.promoPopupEnabled = isStrictTrue(loaded.promoPopupEnabled);
+            if (Array.isArray(loaded.heroBanners)) {
+              loaded.heroBanners = loaded.heroBanners.filter(b => b?.image && !isDemoSuitBanner(b.image));
+            } else {
+              loaded.heroBanners = [];
+            }
             if (!Array.isArray(loaded.teamMembers)) loaded.teamMembers = [];
             if (!loaded.subCategories) loaded.subCategories = DEFAULT_SETTINGS.subCategories;
             if (!loaded.subCategories.KIDS) loaded.subCategories.KIDS = ["Boys Denim", "Boys Cargo", "Kids Shirt"];
@@ -1146,11 +1092,9 @@
             try { localStorage.setItem("so_v4_settings", JSON.stringify(loaded)); } catch {}
           }
 
-          clearTimeout(safetyTimer);
-          hideInitialLoader();
+          setStoreSyncing(false);
         }).catch(() => {
-          clearTimeout(safetyTimer);
-          hideInitialLoader();
+          setStoreSyncing(false);
         });
       }, []);
 
@@ -1194,8 +1138,10 @@
       }, [loggedInCustomer]);
 
       const activeHeroBanners = useMemo(() => {
-        if (settings.heroBanners && settings.heroBanners.length > 0) return settings.heroBanners;
-        return DEFAULT_SETTINGS.heroBanners;
+        if (Array.isArray(settings.heroBanners) && settings.heroBanners.length > 0) {
+          return settings.heroBanners.filter(b => b?.image && !isDemoSuitBanner(b.image));
+        }
+        return [];
       }, [settings.heroBanners]);
 
       useEffect(() => {
@@ -1964,6 +1910,26 @@
           >
             ← Explore Other Collections
           </button>
+        </div>
+      `;
+
+      // Clean Minimal Skeleton Grid while Firebase loads (Zero Demo Flash!)
+      const renderStoreSkeleton = () => html`
+        <div class="w-full max-w-full overflow-x-hidden animate-pulse">
+          <div class="w-full h-[210px] sm:h-[420px] lg:h-[520px] bg-[#F3EFE8] border-b border-[#E6DFD3]"></div>
+          <div class="max-w-7xl mx-auto px-3 sm:px-6 py-7 sm:py-10">
+            <div class="h-5 w-36 bg-[#E6DFD3] mb-5"></div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
+              ${[1, 2, 3, 4].map(n => html`
+                <div key=${n} class="bg-white border border-[#E6DFD3]/70 p-2 sm:p-2.5">
+                  <div class="aspect-[3/4] w-full bg-[#F3EFE8] mb-2.5"></div>
+                  <div class="h-3.5 w-3/4 bg-[#E6DFD3] mb-2"></div>
+                  <div class="h-3.5 w-1/2 bg-[#E6DFD3] mb-2.5"></div>
+                  <div class="h-8 w-full bg-[#E6DFD3]"></div>
+                </div>
+              `)}
+            </div>
+          </div>
         </div>
       `;
 
@@ -2980,7 +2946,7 @@
                           <img src=${b.image} class="w-full h-28 object-cover border border-[#E6DFD3]" />
                           <div class="flex justify-between items-center">
                             <span class="font-semibold">Slide #${idx + 1} (${b.linkCategory || "MEN"})</span>
-                            ${activeHeroBanners.length > 1 && currentAdminProfile.canDelete && html`
+                            ${currentAdminProfile.canDelete && html`
                               <button
                                 onClick=${() => {
                                   const nextBanners = activeHeroBanners.filter((_, i) => i !== idx);
@@ -3428,7 +3394,7 @@
               onClick=${closePromoPopup}
             >
               <div
-                class="relative bg-white border-2 border-[#7C2517] max-w-md w-full shadow-2xl overflow-hidden animate-[fadeIn_0.25s_ease]"
+                class="relative bg-white border-2 border-[#7C2517] max-w-md w-full shadow-2xl overflow-hidden"
                 onClick=${e => e.stopPropagation()}
               >
                 <button
@@ -3595,118 +3561,119 @@
           </header>
 
           <!-- ===================================================================== -->
-          <!-- VIEW 1: HOMEPAGE                                                      -->
+          <!-- VIEW 1: HOMEPAGE (ZERO DEMO DATA FLASH)                               -->
           <!-- ===================================================================== -->
           ${view === "store" && html`
             <main class="flex-1 w-full max-w-full overflow-x-hidden">
-              
-              <!-- Multi-Banner Hero Slider -->
-              ${activeMainCat === "ALL" && activeSubCat === "ALL" && !searchQuery && html`
-                <div class="relative w-full overflow-hidden bg-[#F3EFE8] group">
-                  <img
-                    onClick=${() => {
-                      const targetCat = activeHeroBanners[heroSlideIdx]?.linkCategory || "MEN";
-                      setActiveMainCat(targetCat);
-                      setCleanBrowserUrl("store", null, targetCat);
-                    }}
-                    src=${activeHeroBanners[heroSlideIdx]?.image}
-                    alt=${settings.brandName}
-                    class="w-full h-[210px] sm:h-[420px] lg:h-[520px] object-cover block cursor-pointer transition-all duration-500"
-                  />
+              ${storeSyncing && products.length === 0 ? renderStoreSkeleton() : html`
+                <!-- Multi-Banner Hero Slider (Shows ONLY real uploaded banners) -->
+                ${activeMainCat === "ALL" && activeSubCat === "ALL" && !searchQuery && activeHeroBanners.length > 0 && html`
+                  <div class="relative w-full overflow-hidden bg-[#F3EFE8] group">
+                    <img
+                      onClick=${() => {
+                        const targetCat = activeHeroBanners[heroSlideIdx]?.linkCategory || "MEN";
+                        setActiveMainCat(targetCat);
+                        setCleanBrowserUrl("store", null, targetCat);
+                      }}
+                      src=${activeHeroBanners[heroSlideIdx]?.image}
+                      alt=${settings.brandName}
+                      class="w-full h-[210px] sm:h-[420px] lg:h-[520px] object-cover block cursor-pointer transition-all duration-500"
+                    />
 
-                  ${activeHeroBanners.length > 1 && html`
-                    <button
-                      onClick=${() => setHeroSlideIdx((heroSlideIdx - 1 + activeHeroBanners.length) % activeHeroBanners.length)}
-                      class="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-white/80 hover:bg-white text-[#1C1614] flex items-center justify-center shadow transition"
-                    >
-                      <${IconChevronLeft}/>
-                    </button>
-                    <button
-                      onClick=${() => setHeroSlideIdx((heroSlideIdx + 1) % activeHeroBanners.length)}
-                      class="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-white/80 hover:bg-white text-[#1C1614] flex items-center justify-center shadow transition"
-                    >
-                      <${IconChevronRight}/>
-                    </button>
-                    <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
-                      ${activeHeroBanners.map((_, i) => html`
-                        <button
-                          key=${i}
-                          onClick=${() => setHeroSlideIdx(i)}
-                          class="h-2 rounded-full transition-all ${heroSlideIdx === i ? "w-6 bg-[#7C2517]" : "w-2 bg-white/80"}"
-                        />
-                      `)}
-                    </div>
-                  `}
-                </div>
-              `}
-
-              <div class="max-w-7xl mx-auto px-3 sm:px-6 py-7 sm:py-10">
-                
-                <!-- Sub-Category Filter Pills -->
-                ${(activeMainCat !== "ALL" || activeSubCat !== "ALL") && html`
-                  <div class="mb-7 pb-4 border-b border-[#E6DFD3] flex items-center justify-between flex-wrap gap-3">
-                    <div>
-                      <p class="text-xs text-neutral-500 uppercase tracking-widest">
-                        <button onClick=${() => { setCleanBrowserUrl("store"); setActiveMainCat("ALL"); setActiveSubCat("ALL"); }} class="hover:text-[#7C2517]">Home</button>
-                        ${activeMainCat !== "ALL" && html` / ${activeMainCat}`}
-                      </p>
-                      <h1 class="text-xl sm:text-2xl font-extrabold uppercase tracking-tight text-[#1C1614] mt-0.5">
-                        ${activeSubCat === "ALL" ? activeMainCat : activeSubCat}
-                      </h1>
-                    </div>
-                    ${activeMainCat !== "ALL" && html`
-                      <div class="flex gap-2 overflow-x-auto no-scrollbar">
-                        <button
-                          onClick=${() => setActiveSubCat("ALL")}
-                          class="px-3.5 py-1.5 text-xs font-semibold border transition ${activeSubCat === "ALL" ? "border-[#7C2517] bg-[#7C2517]/10 text-[#7C2517]" : "border-[#E6DFD3] text-[#1C1614]"}"
-                        >
-                          All ${activeMainCat}
-                        </button>
-                        ${(settings.subCategories?.[activeMainCat] || []).map(sc => html`
+                    ${activeHeroBanners.length > 1 && html`
+                      <button
+                        onClick=${() => setHeroSlideIdx((heroSlideIdx - 1 + activeHeroBanners.length) % activeHeroBanners.length)}
+                        class="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-white/80 hover:bg-white text-[#1C1614] flex items-center justify-center shadow transition"
+                      >
+                        <${IconChevronLeft}/>
+                      </button>
+                      <button
+                        onClick=${() => setHeroSlideIdx((heroSlideIdx + 1) % activeHeroBanners.length)}
+                        class="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-white/80 hover:bg-white text-[#1C1614] flex items-center justify-center shadow transition"
+                      >
+                        <${IconChevronRight}/>
+                      </button>
+                      <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+                        ${activeHeroBanners.map((_, i) => html`
                           <button
-                            key=${sc}
-                            onClick=${() => setActiveSubCat(sc)}
-                            class="px-3.5 py-1.5 text-xs font-semibold border whitespace-nowrap transition ${activeSubCat === sc ? "border-[#7C2517] bg-[#7C2517]/10 text-[#7C2517]" : "border-[#E6DFD3] text-[#1C1614]"}"
-                          >
-                            ${sc}
-                          </button>
+                            key=${i}
+                            onClick=${() => setHeroSlideIdx(i)}
+                            class="h-2 rounded-full transition-all ${heroSlideIdx === i ? "w-6 bg-[#7C2517]" : "w-2 bg-white/80"}"
+                          />
                         `)}
                       </div>
                     `}
                   </div>
                 `}
 
-                ${activeMainCat === "ALL" && activeSubCat === "ALL" && !searchQuery ? html`
-                  <div class="space-y-10">
-                    ${bestSellingProducts.length > 0 && html`
-                      <section>
-                        <div class="flex items-baseline justify-between mb-5 border-b border-[#E6DFD3] pb-2.5">
-                          <h2 class="text-sm sm:text-lg font-extrabold uppercase tracking-tight text-[#1C1614]">
-                            BEST SELLING
-                          </h2>
+                <div class="max-w-7xl mx-auto px-3 sm:px-6 py-7 sm:py-10">
+                  
+                  <!-- Sub-Category Filter Pills -->
+                  ${(activeMainCat !== "ALL" || activeSubCat !== "ALL") && html`
+                    <div class="mb-7 pb-4 border-b border-[#E6DFD3] flex items-center justify-between flex-wrap gap-3">
+                      <div>
+                        <p class="text-xs text-neutral-500 uppercase tracking-widest">
+                          <button onClick=${() => { setCleanBrowserUrl("store"); setActiveMainCat("ALL"); setActiveSubCat("ALL"); }} class="hover:text-[#7C2517]">Home</button>
+                          ${activeMainCat !== "ALL" && html` / ${activeMainCat}`}
+                        </p>
+                        <h1 class="text-xl sm:text-2xl font-extrabold uppercase tracking-tight text-[#1C1614] mt-0.5">
+                          ${activeSubCat === "ALL" ? activeMainCat : activeSubCat}
+                        </h1>
+                      </div>
+                      ${activeMainCat !== "ALL" && html`
+                        <div class="flex gap-2 overflow-x-auto no-scrollbar">
+                          <button
+                            onClick=${() => setActiveSubCat("ALL")}
+                            class="px-3.5 py-1.5 text-xs font-semibold border transition ${activeSubCat === "ALL" ? "border-[#7C2517] bg-[#7C2517]/10 text-[#7C2517]" : "border-[#E6DFD3] text-[#1C1614]"}"
+                          >
+                            All ${activeMainCat}
+                          </button>
+                          ${(settings.subCategories?.[activeMainCat] || []).map(sc => html`
+                            <button
+                              key=${sc}
+                              onClick=${() => setActiveSubCat(sc)}
+                              class="px-3.5 py-1.5 text-xs font-semibold border whitespace-nowrap transition ${activeSubCat === sc ? "border-[#7C2517] bg-[#7C2517]/10 text-[#7C2517]" : "border-[#E6DFD3] text-[#1C1614]"}"
+                            >
+                              ${sc}
+                            </button>
+                          `)}
                         </div>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
-                          ${bestSellingProducts.map(renderProductCard)}
-                        </div>
-                      </section>
-                    `}
-
-                    ${otherRegularProducts.length > 0 && html`
-                      <section class="${bestSellingProducts.length > 0 ? "pt-6 border-t border-[#E6DFD3]" : ""}">
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
-                          ${otherRegularProducts.map(renderProductCard)}
-                        </div>
-                      </section>
-                    `}
-                  </div>
-                ` : html`
-                  ${filteredProducts.length > 0 ? html`
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
-                      ${filteredProducts.map(renderProductCard)}
+                      `}
                     </div>
-                  ` : renderComingSoonCard(activeSubCat !== "ALL" ? activeSubCat : activeMainCat)}
-                `}
-              </div>
+                  `}
+
+                  ${activeMainCat === "ALL" && activeSubCat === "ALL" && !searchQuery ? html`
+                    <div class="space-y-10">
+                      ${bestSellingProducts.length > 0 && html`
+                        <section>
+                          <div class="flex items-baseline justify-between mb-5 border-b border-[#E6DFD3] pb-2.5">
+                            <h2 class="text-sm sm:text-lg font-extrabold uppercase tracking-tight text-[#1C1614]">
+                              BEST SELLING
+                            </h2>
+                          </div>
+                          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
+                            ${bestSellingProducts.map(renderProductCard)}
+                          </div>
+                        </section>
+                      `}
+
+                      ${otherRegularProducts.length > 0 && html`
+                        <section class="${bestSellingProducts.length > 0 ? "pt-6 border-t border-[#E6DFD3]" : ""}">
+                          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
+                            ${otherRegularProducts.map(renderProductCard)}
+                          </div>
+                        </section>
+                      `}
+                    </div>
+                  ` : html`
+                    ${filteredProducts.length > 0 ? html`
+                      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
+                        ${filteredProducts.map(renderProductCard)}
+                      </div>
+                    ` : renderComingSoonCard(activeSubCat !== "ALL" ? activeSubCat : activeMainCat)}
+                  `}
+                </div>
+              `}
             </main>
           `}
 
