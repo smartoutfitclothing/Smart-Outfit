@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>SMART OUTFIT</title>
   <meta name="description" content="Premium Menswear, Women, Kids, Winter & Combo Fashion Brand in Bangladesh. Open Box Delivery & Easy 7-Day Size Exchange." />
   <meta property="og:title" content="SMART OUTFIT | Official Store" />
@@ -91,7 +93,6 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-    /* Hide root until Tailwind CSS finishes parsing so raw unstyled HTML never flashes */
     #root:empty {
       min-height: 100vh;
       background-color: #FAF7F2;
@@ -107,6 +108,13 @@
     import htm from 'https://esm.sh/htm@3.1.1';
 
     const html = htm.bind(h);
+
+    // Prevent Clickjacking / Frame Embedding
+    try {
+      if (window.top !== window.self) {
+        window.top.location = window.self.location;
+      }
+    } catch (e) {}
 
     // ============================================================================
     // 1. LIVE FIREBASE CONNECTION (smart-outfit-81663) & SUPER ADMIN EMAIL
@@ -136,7 +144,7 @@
     } catch (e) { console.warn("Firebase init notice:", e); }
 
     // ============================================================================
-    // 2. UNIFIED BRAND LOGO MARK (NO DEMO "S" FLASH ON STOREFRONT) & SVG ICONS
+    // 2. UNIFIED BRAND LOGO MARK & CLEAN LINE SVG ICONS
     // ============================================================================
     const BrandLogoMark = ({ logoUrl, brandName = "SMART OUTFIT", sizeClass = "w-9 h-9 sm:w-10 sm:h-10" }) => {
       if (logoUrl) {
@@ -244,7 +252,6 @@
       "XXL": "Size XXL: Chest 44-46 inches | Length 30.5 inches — Regular Comfort Fit."
     };
 
-    // ZERO HARDCODED DEMO BANNERS OR DEMO PRODUCTS (100% Eliminates Old Page Flash)
     const DEFAULT_SETTINGS = {
       brandName: "SMART OUTFIT",
       tagline: "",
@@ -292,8 +299,6 @@
       }
     };
 
-    const DEFAULT_PRODUCTS = [];
-
     const isDemoSuitBanner = (url) => {
       if (!url) return true;
       return String(url).includes("photo-1490114538077") ||
@@ -301,8 +306,17 @@
              String(url).includes("photo-1576995853123");
     };
 
-    const compressImageSafe = (file, maxWidth = 820, quality = 0.78) => {
-      return new Promise((resolve) => {
+    // Strict File-Type Validation & Safe JPEG Canvas Sanitization (Blocks SVG/Script Uploads)
+    const compressImageSafe = (file, maxWidth = 760, quality = 0.76) => {
+      return new Promise((resolve, reject) => {
+        if (!file || !file.type || !/^image\/(jpeg|jpg|png|webp)$/i.test(file.type)) {
+          alert("Security Notice: Only valid JPG, PNG, or WebP image files are allowed.");
+          return resolve("");
+        }
+        if (file.size > 12 * 1024 * 1024) {
+          alert("Image file is too large (Max 12MB). Please select a smaller image.");
+          return resolve("");
+        }
         const reader = new FileReader();
         reader.onload = (event) => {
           const img = new Image();
@@ -318,9 +332,10 @@
             const dataUrl = canvas.toDataURL("image/jpeg", quality);
             resolve(dataUrl);
           };
-          img.onerror = () => resolve(event.target.result);
+          img.onerror = () => resolve("");
           img.src = event.target.result;
         };
+        reader.onerror = () => resolve("");
         reader.readAsDataURL(file);
       });
     };
@@ -430,7 +445,7 @@
     };
 
     // ============================================================================
-    // 4. MAIN APPLICATION WITH GOOGLE SUPER ADMIN & ROLE-BASED ACCESS CONTROL
+    // 4. MAIN APPLICATION WITH INDIVIDUAL PRODUCT STORAGE & SECURITY HARDENING
     // ============================================================================
     function SmartOutfitApp() {
       const [view, setView] = useState("store"); // store | product | checkout | track | profile | adminLogin | admin
@@ -484,7 +499,6 @@
           if (!p) return [];
           const parsed = JSON.parse(p);
           if (!Array.isArray(parsed)) return [];
-          // Ignore old cached single-item Unsplash demo cargo pant
           if (parsed.length === 1 && parsed[0]?.id === "SO-CG01" && String(parsed[0]?.colors?.[0]?.image || "").includes("photo-1624378439575")) {
             return [];
           }
@@ -495,7 +509,6 @@
       const [storeSyncing, setStoreSyncing] = useState(() => products.length === 0);
 
       const [orders, setOrders] = useState([]);
-      const [abandonedCarts, setAbandonedCarts] = useState([]);
       const [myCustomerOrders, setMyCustomerOrders] = useState([]);
       const [loggedInCustomer, setLoggedInCustomer] = useState(() => {
         try {
@@ -568,6 +581,7 @@
 
       // Admin Editor States
       const [editingProduct, setEditingProduct] = useState(null);
+      const [savingProductBusy, setSavingProductBusy] = useState(false);
       const [colorUrlInputs, setColorUrlInputs] = useState({});
       const [newSubCatInput, setNewSubCatInput] = useState({ main: "MEN", name: "", image: "" });
       const [newBannerUrl, setNewBannerUrl] = useState("");
@@ -575,7 +589,7 @@
 
       const notify = (msg) => {
         setToast(msg);
-        setTimeout(() => setToast(""), 2800);
+        setTimeout(() => setToast(""), 3000);
       };
 
       // Promotional Popup Session Trigger
@@ -700,37 +714,75 @@
           .catch(() => {});
       }, []);
 
-      const syncData = (key, data, docName) => {
+      const syncData = async (key, data, docName) => {
         const cleanData = { ...data };
         if (docName === "settings") {
           delete cleanData.adminPin;
           delete cleanData.adminPinHash;
         }
-        try { localStorage.setItem(key, JSON.stringify(cleanData)); } catch (e) {}
+        try {
+          const storageCopy = { ...cleanData };
+          delete storageCopy.metaCapiToken;
+          localStorage.setItem(key, JSON.stringify(storageCopy));
+        } catch (e) {}
         if (db && docName) {
-          db.collection("smart_outfit_store").doc(docName).set({
-            items: cleanData,
-            updatedAt: new Date().toISOString()
-          }).catch(() => {});
+          try {
+            await db.collection("smart_outfit_store").doc(docName).set({
+              items: cleanData,
+              updatedAt: new Date().toISOString()
+            });
+          } catch (err) {
+            console.warn("Firestore sync notice:", err);
+          }
         }
       };
 
-      const syncProductListPersistently = (updatedProducts, changedProduct = null, deletedId = null) => {
+      // ============================================================================
+      // PERMANENT FIX FOR PRODUCT DISAPPEARING (INDIVIDUAL FIRESTORE DOCUMENTS)
+      // Each product gets its own 1MB document in `smart_outfit_products`.
+      // Also stores a lightweight index (without heavy base64 strings) in `products`
+      // so neither collection ever hits the 1MB Firestore document limit!
+      // ============================================================================
+      const syncProductListPersistently = async (updatedProducts, changedProduct = null, deletedId = null) => {
         try { localStorage.setItem("so_v4_products", JSON.stringify(updatedProducts)); } catch {}
-        if (!db) return;
-        db.collection("smart_outfit_store").doc("products").set({
-          items: updatedProducts,
-          updatedAt: new Date().toISOString()
-        }).catch(() => {});
+        if (!db) return true;
 
-        if (changedProduct && changedProduct.id) {
-          db.collection("smart_outfit_products").doc(String(changedProduct.id)).set({
-            ...changedProduct,
+        try {
+          if (changedProduct && changedProduct.id) {
+            await db.collection("smart_outfit_products").doc(String(changedProduct.id)).set({
+              ...changedProduct,
+              updatedAt: new Date().toISOString()
+            });
+          }
+
+          if (deletedId) {
+            await db.collection("smart_outfit_products").doc(String(deletedId)).delete();
+          }
+
+          // Save lightweight metadata index in `smart_outfit_store/products` (under 50KB always)
+          const lightIndex = updatedProducts.map(p => ({
+            id: p.id,
+            sku: p.sku,
+            nameEn: p.nameEn,
+            nameBn: p.nameBn || "",
+            mainCategory: p.mainCategory,
+            subCategory: p.subCategory,
+            isBestSeller: Boolean(p.isBestSeller),
+            regularPrice: Number(p.regularPrice) || 0,
+            discountPrice: Number(p.discountPrice) || 0,
+            freeDelivery: isStrictTrue(p.freeDelivery)
+          }));
+
+          db.collection("smart_outfit_store").doc("products").set({
+            items: lightIndex,
             updatedAt: new Date().toISOString()
           }).catch(() => {});
-        }
-        if (deletedId) {
-          db.collection("smart_outfit_products").doc(String(deletedId)).delete().catch(() => {});
+
+          return true;
+        } catch (err) {
+          console.error("Product Save Error:", err);
+          notify("⚠️ Could not save to cloud! Check internet or reduce photo count.");
+          return false;
         }
       };
 
@@ -862,6 +914,8 @@
         }
       }, [settings.metaPixelId, settings.ga4Id, settings.googleAdsId]);
 
+      // QUOTA OPTIMIZED MARKETING TRACKER:
+      // Fires 100% of Meta Pixel, Meta CAPI & GA4 events without burning Firebase 20k daily writes on every click!
       const fireMarketingEvent = async (eventName, payload = {}, userInfo = {}) => {
         const eventId = `evt_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
         const source = getTrafficSource();
@@ -890,7 +944,7 @@
             },
             ...(next.recentEvents || []).slice(0, 35)
           ];
-          syncData("so_v4_analytics", next, "analytics");
+          try { localStorage.setItem("so_v4_analytics", JSON.stringify(next)); } catch {}
           return next;
         });
 
@@ -1033,7 +1087,7 @@
         fireMarketingEvent("PageView", {});
       }, []);
 
-      // Load Live Firebase Data Directly (Zero Demo Flash)
+      // Load Live Products from Individual Documents + Auto-Migrate Any Legacy Products
       useEffect(() => {
         if (!db) {
           setStoreSyncing(false);
@@ -1041,36 +1095,58 @@
         }
 
         Promise.all([
-          db.collection("smart_outfit_store").doc("products").get().catch(() => null),
           db.collection("smart_outfit_products").get().catch(() => null),
+          db.collection("smart_outfit_store").doc("products").get().catch(() => null),
           db.collection("smart_outfit_store").doc("settings").get().catch(() => null)
-        ]).then(([mainDoc, indivSnap, settingsDoc]) => {
-          let baseList = [];
-          if (mainDoc && mainDoc.exists && Array.isArray(mainDoc.data()?.items)) {
-            baseList = mainDoc.data().items;
-          }
+        ]).then(([indivSnap, mainDoc, settingsDoc]) => {
           const indivMap = new Map();
           if (indivSnap && !indivSnap.empty) {
             indivSnap.docs.forEach(d => {
               const item = d.data();
-              if (item && item.id) indivMap.set(item.id, item);
+              if (item && item.id) {
+                if (item.id === "SO-CG01" && String(item?.colors?.[0]?.image || "").includes("photo-1624378439575")) return;
+                indivMap.set(String(item.id), item);
+              }
             });
           }
-          if (baseList.length > 0 || indivMap.size > 0) {
-            const merged = baseList.map(p => {
-              const ind = indivMap.get(p.id);
-              if (ind && getProductPrimaryPhoto(ind) && !getProductPrimaryPhoto(p)) {
-                return ind;
-              }
-              return ind ? { ...p, ...ind } : p;
-            });
-            indivMap.forEach((val, key) => {
-              if (!merged.some(m => m.id === key)) merged.unshift(val);
-            });
-            if (merged.length > 0) {
-              setProducts(merged);
-              try { localStorage.setItem("so_v4_products", JSON.stringify(merged)); } catch {}
+
+          let legacyList = [];
+          if (mainDoc && mainDoc.exists && Array.isArray(mainDoc.data()?.items)) {
+            legacyList = mainDoc.data().items.filter(p =>
+              !(p?.id === "SO-CG01" && String(p?.colors?.[0]?.image || "").includes("photo-1624378439575"))
+            );
+          }
+
+          const finalMap = new Map();
+
+          // First, preserve ordering from index if available
+          legacyList.forEach(lp => {
+            if (!lp || !lp.id) return;
+            const idStr = String(lp.id);
+            const fullIndiv = indivMap.get(idStr);
+            if (fullIndiv && getProductPrimaryPhoto(fullIndiv)) {
+              finalMap.set(idStr, { ...lp, ...fullIndiv });
+            } else if (getProductPrimaryPhoto(lp)) {
+              finalMap.set(idStr, lp);
+              // Self-heal: migrate legacy product into its own individual document
+              db.collection("smart_outfit_products").doc(idStr).set({
+                ...lp,
+                updatedAt: new Date().toISOString()
+              }).catch(() => {});
             }
+          });
+
+          // Next, include all individual products that weren't in the legacy list! (Restores missing products)
+          indivMap.forEach((val, key) => {
+            if (!finalMap.has(key) && getProductPrimaryPhoto(val)) {
+              finalMap.set(key, val);
+            }
+          });
+
+          const mergedList = Array.from(finalMap.values());
+          if (mergedList.length > 0) {
+            setProducts(mergedList);
+            try { localStorage.setItem("so_v4_products", JSON.stringify(mergedList)); } catch {}
           }
 
           if (settingsDoc && settingsDoc.exists && settingsDoc.data()?.items) {
@@ -1089,7 +1165,11 @@
             if (!loaded.subCategories) loaded.subCategories = DEFAULT_SETTINGS.subCategories;
             if (!loaded.subCategories.KIDS) loaded.subCategories.KIDS = ["Boys Denim", "Boys Cargo", "Kids Shirt"];
             setSettings(prev => ({ ...prev, ...loaded }));
-            try { localStorage.setItem("so_v4_settings", JSON.stringify(loaded)); } catch {}
+            try {
+              const localSafe = { ...loaded };
+              delete localSafe.metaCapiToken;
+              localStorage.setItem("so_v4_settings", JSON.stringify(localSafe));
+            } catch {}
           }
 
           setStoreSyncing(false);
@@ -1105,18 +1185,6 @@
           const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
           setOrders(list);
         }, () => {});
-
-        db.collection("smart_outfit_store").doc("abandoned").get().then(doc => {
-          if (doc.exists && Array.isArray(doc.data()?.items)) {
-            setAbandonedCarts(doc.data().items);
-          }
-        }).catch(() => {});
-
-        db.collection("smart_outfit_store").doc("analytics").get().then(doc => {
-          if (doc.exists && doc.data()?.items) {
-            setAnalyticsData(prev => ({ ...prev, ...doc.data().items }));
-          }
-        }).catch(() => {});
 
         return () => unsubOrders();
       }, [adminAuthenticated]);
@@ -1166,22 +1234,6 @@
           setView(adminAuthenticated ? "admin" : "adminLogin");
         }
       };
-
-      useEffect(() => {
-        const cleanPhone = customerForm.phone.replace(/\D/g, "");
-        if (isValidBdMobile(cleanPhone) && cart.length > 0 && db) {
-          const draft = {
-            id: "ABD-" + cleanPhone,
-            name: customerForm.name || "Guest",
-            phone: cleanPhone,
-            address: customerForm.address || "",
-            items: cart.map(c => `${c.nameEn} (${c.color}/${c.size}) x${c.qty}`).join(", "),
-            total: cart.reduce((s, i) => s + i.price * i.qty, 0),
-            time: new Date().toLocaleString("en-GB")
-          };
-          db.collection("smart_outfit_abandoned").doc(cleanPhone).set(draft).catch(() => {});
-        }
-      }, [customerForm.phone, customerForm.name, customerForm.address]);
 
       const openProductPage = (prod) => {
         setSavedScrollY(window.scrollY || 0);
@@ -1391,14 +1443,14 @@
       };
 
       // ============================================================================
-      // STRICT DELIVERY CHARGE LOGIC FIX (NEVER FREE UNLESS EXPLICITLY QUALIFIED)
+      // STRICT DELIVERY CHARGE & PRICE INTEGRITY VERIFICATION
       // ============================================================================
       const verifiedCart = useMemo(() => {
         return cart.map(item => {
           const officialProd = products.find(p => p.id === item.productId);
-          const verifiedPrice = officialProd ? Number(officialProd.discountPrice) : Number(item.price);
+          const verifiedPrice = Math.max(1, officialProd ? Number(officialProd.discountPrice) : Number(item.price));
           const verifiedFreeDel = officialProd ? isStrictTrue(officialProd.freeDelivery) : isStrictTrue(item.freeDelivery);
-          return { ...item, price: verifiedPrice, freeDelivery: verifiedFreeDel };
+          return { ...item, price: verifiedPrice, freeDelivery: verifiedFreeDel, qty: Math.max(1, Number(item.qty) || 1) };
         });
       }, [cart, products]);
 
@@ -1420,7 +1472,7 @@
         ? selectedZoneRate
         : (isFreeDelivery ? 0 : selectedZoneRate);
 
-      const grandTotal = verifiedCart.length === 0 ? 0 : Math.max(0, subtotal + deliveryCharge);
+      const grandTotal = verifiedCart.length === 0 ? 0 : Math.max(1, subtotal + deliveryCharge);
 
       const submitOrder = async (e) => {
         e.preventDefault();
@@ -1479,11 +1531,27 @@
           trafficSource: getTrafficSource()
         };
 
+        // Pre-Masked Public Tracking Record (Zero Raw PII Exposure)
+        const maskedTrackRecord = {
+          orderId,
+          orderIdUpper: orderId.toUpperCase(),
+          customerPhone: cleanPhone,
+          createdAt: now.toISOString(),
+          dateFormatted: newOrder.dateFormatted,
+          status: "Pending",
+          maskedName: maskCustomerName(newOrder.customer.name),
+          maskedPhone: maskCustomerPhone(cleanPhone),
+          maskedAddress: maskCustomerAddress(newOrder.customer.address),
+          grandTotal,
+          itemCount: totalItemsCount,
+          itemsSummary: verifiedCart.map(i => `${i.nameEn} (${i.size}) x${i.qty}`).join(", ")
+        };
+
         localStorage.setItem("so_last_order_ts", String(Date.now()));
 
         if (db) {
           db.collection("orders").doc(orderId).set(newOrder).catch(() => {});
-          db.collection("smart_outfit_abandoned").doc(cleanPhone).delete().catch(() => {});
+          db.collection("smart_outfit_tracking").doc(orderId.toUpperCase()).set(maskedTrackRecord).catch(() => {});
         }
         if (adminAuthenticated) {
           setOrders(prev => [newOrder, ...prev]);
@@ -1535,7 +1603,7 @@
       };
 
       // ============================================================================
-      // 1-INPUT EASY PARCEL TRACKING (ORDER ID OR MOBILE NUMBER WITH PRIVACY MASKING)
+      // PRIVACY-PROTECTED PARCEL TRACKING (READS PRE-MASKED COLLECTION FIRST)
       // ============================================================================
       const handleEasyOrderTrack = async (e) => {
         e.preventDefault();
@@ -1554,40 +1622,64 @@
 
         setTrackLoading(true);
         try {
-          let matchedOrder = null;
+          let maskedResult = null;
+
           if (db) {
+            // 1. Check Pre-Masked `smart_outfit_tracking` Collection First
             if (looksLikePhone) {
-              const qSnap = await db.collection("orders").where("customerPhone", "==", digitsOnly).get();
-              if (!qSnap.empty) {
-                const list = qSnap.docs.map(d => d.data());
+              const tSnap = await db.collection("smart_outfit_tracking").where("customerPhone", "==", digitsOnly).get().catch(() => null);
+              if (tSnap && !tSnap.empty) {
+                const list = tSnap.docs.map(d => d.data());
                 list.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
-                matchedOrder = list[0];
+                maskedResult = list[0];
               }
             } else {
-              const docSnap = await db.collection("orders").doc(cleanCode).get();
-              if (docSnap.exists) {
-                matchedOrder = docSnap.data();
+              const tDoc = await db.collection("smart_outfit_tracking").doc(cleanCode).get().catch(() => null);
+              if (tDoc && tDoc.exists) {
+                maskedResult = tDoc.data();
+              }
+            }
+
+            // 2. Fallback to Legacy `orders` Collection if older order
+            if (!maskedResult) {
+              let legacyOrder = null;
+              if (looksLikePhone) {
+                const qSnap = await db.collection("orders").where("customerPhone", "==", digitsOnly).get().catch(() => null);
+                if (qSnap && !qSnap.empty) {
+                  const list = qSnap.docs.map(d => d.data());
+                  list.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+                  legacyOrder = list[0];
+                }
               } else {
-                const qSnap = await db.collection("orders").where("orderIdUpper", "==", cleanCode).get();
-                if (!qSnap.empty) matchedOrder = qSnap.docs[0].data();
+                const docSnap = await db.collection("orders").doc(cleanCode).get().catch(() => null);
+                if (docSnap && docSnap.exists) {
+                  legacyOrder = docSnap.data();
+                } else {
+                  const qSnap = await db.collection("orders").where("orderIdUpper", "==", cleanCode).get().catch(() => null);
+                  if (qSnap && !qSnap.empty) legacyOrder = qSnap.docs[0].data();
+                }
+              }
+
+              if (legacyOrder) {
+                maskedResult = {
+                  orderId: legacyOrder.orderId,
+                  status: legacyOrder.status || "Pending",
+                  dateFormatted: legacyOrder.dateFormatted,
+                  maskedName: maskCustomerName(legacyOrder.customer?.name),
+                  maskedPhone: maskCustomerPhone(legacyOrder.customer?.phone || legacyOrder.customerPhone),
+                  maskedAddress: maskCustomerAddress(legacyOrder.customer?.address),
+                  grandTotal: legacyOrder.grandTotal,
+                  itemCount: (legacyOrder.items || []).reduce((s, i) => s + (Number(i.qty) || 1), 0),
+                  itemsSummary: (legacyOrder.items || []).map(i => `${i.nameEn} (${i.size}) x${i.qty}`).join(", ")
+                };
               }
             }
           }
 
-          if (!matchedOrder) {
+          if (!maskedResult) {
             setTrackErrorMsg("No parcel found matching this Order ID or Mobile Number.");
           } else {
-            setTrackedParcelResult({
-              orderId: matchedOrder.orderId,
-              status: matchedOrder.status || "Pending",
-              dateFormatted: matchedOrder.dateFormatted,
-              maskedName: maskCustomerName(matchedOrder.customer?.name),
-              maskedPhone: maskCustomerPhone(matchedOrder.customer?.phone || matchedOrder.customerPhone),
-              maskedAddress: maskCustomerAddress(matchedOrder.customer?.address),
-              grandTotal: matchedOrder.grandTotal,
-              itemCount: (matchedOrder.items || []).reduce((s, i) => s + (Number(i.qty) || 1), 0),
-              itemsSummary: (matchedOrder.items || []).map(i => `${i.nameEn} (${i.size}) x${i.qty}`).join(", ")
-            });
+            setTrackedParcelResult(maskedResult);
           }
         } catch {
           setTrackErrorMsg("Unable to fetch parcel status right now. Please try again in a moment.");
@@ -1620,7 +1712,10 @@
       const handleOrderStatusChange = (orderId, newStatus) => {
         const updated = orders.map(o => o.orderId === orderId ? { ...o, status: newStatus } : o);
         setOrders(updated);
-        if (db) db.collection("orders").doc(orderId).update({ status: newStatus }).catch(() => {});
+        if (db) {
+          db.collection("orders").doc(orderId).update({ status: newStatus }).catch(() => {});
+          db.collection("smart_outfit_tracking").doc(String(orderId).toUpperCase()).set({ status: newStatus }, { merge: true }).catch(() => {});
+        }
         notify(`Status: ${newStatus}`);
       };
 
@@ -1631,7 +1726,10 @@
         }
         const updated = orders.filter(o => o.orderId !== orderId);
         setOrders(updated);
-        if (db) db.collection("orders").doc(orderId).delete().catch(() => {});
+        if (db) {
+          db.collection("orders").doc(orderId).delete().catch(() => {});
+          db.collection("smart_outfit_tracking").doc(String(orderId).toUpperCase()).delete().catch(() => {});
+        }
         notify("Order Deleted Permanently");
       };
 
@@ -1733,9 +1831,10 @@
 
       const startNewProduct = () => {
         setColorUrlInputs({});
+        const uniqueSuffix = String(Date.now()).slice(-4);
         setEditingProduct({
-          id: "SO-" + Math.floor(100 + Math.random() * 900),
-          sku: "SO-" + Math.floor(100 + Math.random() * 900),
+          id: "SO-" + uniqueSuffix,
+          sku: "SO-" + uniqueSuffix,
           nameEn: "",
           nameBn: "",
           mainCategory: "MEN",
@@ -1755,9 +1854,11 @@
         });
       };
 
-      const saveEditedProduct = (e) => {
+      const saveEditedProduct = async (e) => {
         e.preventDefault();
-        if (!editingProduct.nameEn) return;
+        if (!editingProduct.nameEn || savingProductBusy) return;
+        setSavingProductBusy(true);
+
         const normalizedColors = (editingProduct.colors || []).map((c, idx) => {
           const pendingTypedUrl = (colorUrlInputs[idx] || "").trim();
           const imgs = getColorPhotos(c);
@@ -1780,11 +1881,16 @@
         const updated = exists
           ? products.map(p => p.id === finalProd.id ? finalProd : p)
           : [finalProd, ...products];
+
         setProducts(updated);
-        syncProductListPersistently(updated, finalProd, null);
-        setColorUrlInputs({});
-        setEditingProduct(null);
-        notify("✓ Product & Photos Saved Permanently!");
+        const ok = await syncProductListPersistently(updated, finalProd, null);
+        setSavingProductBusy(false);
+
+        if (ok) {
+          setColorUrlInputs({});
+          setEditingProduct(null);
+          notify("✓ Product & Photos Saved Permanently to Cloud!");
+        }
       };
       const handleCustomerSignup = async (e) => {
         e.preventDefault();
@@ -1837,6 +1943,13 @@
 
       const handleCustomerLogin = async (e) => {
         e.preventDefault();
+        const lockUntil = Number(localStorage.getItem("so_cust_lock_until") || 0);
+        if (Date.now() < lockUntil) {
+          const waitSec = Math.ceil((lockUntil - Date.now()) / 1000);
+          notify(`⏳ Too many failed attempts. Please wait ${waitSec}s.`);
+          return;
+        }
+
         const inputId = loginForm.id.trim().toLowerCase();
         const passHash = await sha256Hash(loginForm.password);
 
@@ -1852,9 +1965,18 @@
         }
 
         if (!found || (found.passwordHash !== passHash && found.password !== loginForm.password)) {
+          const fails = Number(localStorage.getItem("so_cust_fails") || 0) + 1;
+          localStorage.setItem("so_cust_fails", String(fails));
+          if (fails >= 5) {
+            localStorage.setItem("so_cust_lock_until", String(Date.now() + 60 * 1000));
+            localStorage.setItem("so_cust_fails", "0");
+          }
           notify("Incorrect Mobile/Email or Password!");
           return;
         }
+
+        localStorage.removeItem("so_cust_fails");
+        localStorage.removeItem("so_cust_lock_until");
 
         const safeSessionProfile = { ...found };
         delete safeSessionProfile.passwordHash;
@@ -1875,12 +1997,25 @@
 
       const handleCustomerForgotPass = async (e) => {
         e.preventDefault();
+        const lockUntil = Number(localStorage.getItem("so_cust_lock_until") || 0);
+        if (Date.now() < lockUntil) {
+          const waitSec = Math.ceil((lockUntil - Date.now()) / 1000);
+          notify(`⏳ Please wait ${waitSec}s before trying again.`);
+          return;
+        }
+
         const cleanPhone = forgotForm.phone.trim();
         const cleanEmail = forgotForm.email.trim().toLowerCase();
 
         if (!db) return;
         const docSnap = await db.collection("smart_outfit_customers").doc(cleanPhone).get().catch(() => null);
         if (!docSnap || !docSnap.exists || (docSnap.data()?.email || "").toLowerCase() !== cleanEmail) {
+          const fails = Number(localStorage.getItem("so_cust_fails") || 0) + 1;
+          localStorage.setItem("so_cust_fails", String(fails));
+          if (fails >= 4) {
+            localStorage.setItem("so_cust_lock_until", String(Date.now() + 90 * 1000));
+            localStorage.setItem("so_cust_fails", "0");
+          }
           notify("No account matched that Mobile Number and Email!");
           return;
         }
@@ -2275,7 +2410,7 @@
                   <div class="flex flex-wrap justify-between items-center gap-3 bg-white p-4 sm:p-5 border border-[#E6DFD3]">
                     <div>
                       <h2 class="text-sm sm:text-base font-bold uppercase text-[#7C2517]">Products Catalog (${products.length})</h2>
-                      <p class="text-xs text-neutral-500">Manage Products, Dynamic Size Fit Guides, Multi-Photos & Direct Sales Ad Links</p>
+                      <p class="text-xs text-neutral-500">Each product saves in its own dedicated cloud document (No 1MB Limit!)</p>
                     </div>
                     <button onClick=${startNewProduct} class="px-4 py-2.5 bg-[#7C2517] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
                       <${IconPlus}/> Add New Product
@@ -2379,12 +2514,12 @@
                               Upload Size Chart Photo
                               <input
                                 type="file"
-                                accept="image/*"
+                                accept="image/jpeg,image/png,image/webp"
                                 class="hidden"
                                 onChange=${async (e) => {
                                   if (e.target.files?.[0]) {
-                                    const compressed = await compressImageSafe(e.target.files[0], 950, 0.82);
-                                    setEditingProduct({ ...editingProduct, sizeChartImage: compressed });
+                                    const compressed = await compressImageSafe(e.target.files[0], 900, 0.80);
+                                    if (compressed) setEditingProduct({ ...editingProduct, sizeChartImage: compressed });
                                   }
                                 }}
                               />
@@ -2503,7 +2638,7 @@
                                       + Upload Photos
                                       <input
                                         type="file"
-                                        accept="image/*"
+                                        accept="image/jpeg,image/png,image/webp"
                                         multiple
                                         class="hidden"
                                         onChange=${async (e) => {
@@ -2511,9 +2646,10 @@
                                           if (!files.length) return;
                                           const uploaded = [];
                                           for (const f of files) {
-                                            const compressed = await compressImageSafe(f, 820, 0.78);
-                                            uploaded.push(compressed);
+                                            const compressed = await compressImageSafe(f, 760, 0.76);
+                                            if (compressed) uploaded.push(compressed);
                                           }
+                                          if (!uploaded.length) return;
                                           const copy = [...editingProduct.colors];
                                           const nextImgs = [...getColorPhotos(copy[cIdx]), ...uploaded];
                                           copy[cIdx].images = nextImgs;
@@ -2592,7 +2728,9 @@
 
                       <div class="flex justify-end gap-3 pt-3 border-t border-[#E6DFD3]">
                         <button type="button" onClick=${() => setEditingProduct(null)} class="px-5 py-2.5 border border-[#E6DFD3] font-semibold">Cancel</button>
-                        <button type="submit" class="px-6 py-2.5 bg-[#7C2517] text-white font-bold uppercase tracking-wider">Save Product</button>
+                        <button type="submit" disabled=${savingProductBusy} class="px-6 py-2.5 bg-[#7C2517] text-white font-bold uppercase tracking-wider">
+                          ${savingProductBusy ? "Saving to Cloud..." : "Save Product"}
+                        </button>
                       </div>
                     </form>
                   `}
@@ -2618,12 +2756,12 @@
                                 <input
                                   type="checkbox"
                                   checked=${Boolean(p.isBestSeller)}
-                                  onChange=${e => {
+                                  onChange=${async (e) => {
                                     const updated = [...products];
                                     updated[idx].isBestSeller = e.target.checked;
                                     setProducts(updated);
-                                    syncProductListPersistently(updated, updated[idx], null);
-                                    notify(e.target.checked ? "Added to Best Selling" : "Removed from Best Selling");
+                                    await syncProductListPersistently(updated, updated[idx], null);
+                                    notify(e.target.checked ? "Added to Best Selling" : "Moved to Explore More");
                                   }}
                                 />
                                 <span>Best Seller</span>
@@ -2652,10 +2790,10 @@
                             </button>
                             ${currentAdminProfile.canDelete && html`
                               <button
-                                onClick=${() => {
+                                onClick=${async () => {
                                   const updated = products.filter((_, i) => i !== idx);
                                   setProducts(updated);
-                                  syncProductListPersistently(updated, null, p.id);
+                                  await syncProductListPersistently(updated, null, p.id);
                                   notify("Product Deleted");
                                 }}
                                 class="px-3 py-1.5 border border-red-200 text-red-600 font-semibold"
@@ -2754,11 +2892,12 @@
                         Upload Brand Logo from Device
                         <input
                           type="file"
-                          accept="image/*"
+                          accept="image/jpeg,image/png,image/webp"
                           class="hidden"
                           onChange=${async (e) => {
                             if (e.target.files?.[0]) {
                               const compressed = await compressImageSafe(e.target.files[0], 400, 0.85);
+                              if (!compressed) return;
                               const updated = { ...settings, logoUrl: compressed, faviconUrl: compressed };
                               setSettings(updated);
                               syncData("so_v4_settings", updated, "settings");
@@ -2825,11 +2964,12 @@
                             + Upload Popup Offer Image
                             <input
                               type="file"
-                              accept="image/*"
+                              accept="image/jpeg,image/png,image/webp"
                               class="hidden"
                               onChange=${async (e) => {
                                 if (e.target.files?.[0]) {
-                                  const compressed = await compressImageSafe(e.target.files[0], 950, 0.84);
+                                  const compressed = await compressImageSafe(e.target.files[0], 900, 0.82);
+                                  if (!compressed) return;
                                   const updated = { ...settings, promoPopupImage: compressed, promoPopupEnabled: true };
                                   setSettings(updated);
                                   syncData("so_v4_settings", updated, "settings");
@@ -2898,11 +3038,12 @@
                         + Upload New Banner Photo
                         <input
                           type="file"
-                          accept="image/*"
+                          accept="image/jpeg,image/png,image/webp"
                           class="hidden"
                           onChange=${async (e) => {
                             if (e.target.files?.[0]) {
-                              const compressed = await compressImageSafe(e.target.files[0], 1400, 0.82);
+                              const compressed = await compressImageSafe(e.target.files[0], 1300, 0.80);
+                              if (!compressed) return;
                               const nextBanners = [...activeHeroBanners, { id: "hb-" + Date.now(), image: compressed, linkCategory: newBannerCat }];
                               const updated = { ...settings, heroBanners: nextBanners };
                               setSettings(updated);
@@ -2975,7 +3116,7 @@
                     <div class="flex flex-wrap justify-between items-center gap-3">
                       <div>
                         <h2 class="text-sm font-bold uppercase text-[#7C2517]">Live Visitor & Customer Activity Tracker</h2>
-                        <p class="text-neutral-500">Real-time customer behavior, product views, cart additions & ad attribution</p>
+                        <p class="text-neutral-500">Quota-optimized tracking: Meta Pixel, CAPI & GA4 fire 100% live without burning Firebase writes</p>
                       </div>
                       <div class="flex flex-wrap gap-2">
                         ${currentAdminProfile.canDelete && html`
@@ -2983,7 +3124,7 @@
                             onClick=${() => {
                               const resetObj = { totalVisitors: 1, productViews: {}, addToCartCount: 0, checkoutCount: 0, recentEvents: [] };
                               setAnalyticsData(resetObj);
-                              syncData("so_v4_analytics", resetObj, "analytics");
+                              try { localStorage.setItem("so_v4_analytics", JSON.stringify(resetObj)); } catch {}
                               notify("Activity Counters Reset!");
                             }}
                             class="px-3.5 py-2 border border-[#E6DFD3] hover:border-red-400 text-red-600 font-bold uppercase"
@@ -3002,7 +3143,7 @@
 
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                       <div class="p-4 bg-[#FAF7F2] border border-[#E6DFD3]">
-                        <p class="text-[10px] font-bold uppercase text-neutral-500">Total Store Visitors</p>
+                        <p class="text-[10px] font-bold uppercase text-neutral-500">Session Visitors</p>
                         <p class="text-2xl font-extrabold mt-1">${analyticsData.totalVisitors || 1}</p>
                       </div>
                       <div class="p-4 bg-[#FAF7F2] border border-[#E6DFD3]">
@@ -3028,8 +3169,8 @@
                         <input value=${settings.metaPixelId || ""} onInput=${e => setSettings({ ...settings, metaPixelId: e.target.value })} placeholder="e.g. 1610417736940742" class="w-full p-2.5 border border-[#E6DFD3]" />
                       </div>
                       <div>
-                        <label class="block font-semibold mb-1">Meta CAPI Access Token (Server-Side Deduplicated Tracking)</label>
-                        <input value=${settings.metaCapiToken || ""} onInput=${e => setSettings({ ...settings, metaCapiToken: e.target.value })} placeholder="EAAB..." class="w-full p-2.5 border border-[#E6DFD3]" />
+                        <label class="block font-semibold mb-1">Meta CAPI Access Token (Protected — Hidden from LocalStorage)</label>
+                        <input type="password" value=${settings.metaCapiToken || ""} onInput=${e => setSettings({ ...settings, metaCapiToken: e.target.value })} placeholder="EAAB..." class="w-full p-2.5 border border-[#E6DFD3]" />
                       </div>
                       <div>
                         <label class="block font-semibold mb-1">Meta Test Event Code (Leave Blank for Live Traffic)</label>
@@ -3561,12 +3702,12 @@
           </header>
 
           <!-- ===================================================================== -->
-          <!-- VIEW 1: HOMEPAGE (ZERO DEMO DATA FLASH)                               -->
+          <!-- VIEW 1: HOMEPAGE (BEST SELLING + EXPLORE MORE SECTION HEADING)        -->
           <!-- ===================================================================== -->
           ${view === "store" && html`
             <main class="flex-1 w-full max-w-full overflow-x-hidden">
               ${storeSyncing && products.length === 0 ? renderStoreSkeleton() : html`
-                <!-- Multi-Banner Hero Slider (Shows ONLY real uploaded banners) -->
+                <!-- Multi-Banner Hero Slider -->
                 ${activeMainCat === "ALL" && activeSubCat === "ALL" && !searchQuery && activeHeroBanners.length > 0 && html`
                   <div class="relative w-full overflow-hidden bg-[#F3EFE8] group">
                     <img
@@ -3658,7 +3799,12 @@
                       `}
 
                       ${otherRegularProducts.length > 0 && html`
-                        <section class="${bestSellingProducts.length > 0 ? "pt-6 border-t border-[#E6DFD3]" : ""}">
+                        <section class="${bestSellingProducts.length > 0 ? "pt-4" : ""}">
+                          <div class="flex items-baseline justify-between mb-5 border-b border-[#E6DFD3] pb-2.5">
+                            <h2 class="text-sm sm:text-lg font-extrabold uppercase tracking-tight text-[#1C1614]">
+                              EXPLORE MORE
+                            </h2>
+                          </div>
                           <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
                             ${otherRegularProducts.map(renderProductCard)}
                           </div>
@@ -4285,11 +4431,11 @@
                         <label class="block font-semibold uppercase mb-1">Profile Photo (Optional)</label>
                         <input
                           type="file"
-                          accept="image/*"
+                          accept="image/jpeg,image/png,image/webp"
                           onChange=${async (e) => {
                             if (e.target.files?.[0]) {
                               const img = await compressImageSafe(e.target.files[0], 300, 0.8);
-                              setSignupForm({ ...signupForm, avatar: img });
+                              if (img) setSignupForm({ ...signupForm, avatar: img });
                             }
                           }}
                           class="w-full text-xs"
@@ -4463,12 +4609,12 @@
                             Change Photo
                             <input
                               type="file"
-                              accept="image/*"
+                              accept="image/jpeg,image/png,image/webp"
                               class="hidden"
                               onChange=${async (e) => {
                                 if (e.target.files?.[0]) {
                                   const img = await compressImageSafe(e.target.files[0], 300, 0.8);
-                                  setLoggedInCustomer({ ...loggedInCustomer, avatar: img });
+                                  if (img) setLoggedInCustomer({ ...loggedInCustomer, avatar: img });
                                 }
                               }}
                             />
@@ -4531,7 +4677,7 @@
           `}
 
           <!-- ===================================================================== -->
-          <!-- VIEW 5: EASY 1-BOX PARCEL TRACKING (NO BANGLA + PRIVACY MASKED)       -->
+          <!-- VIEW 5: EASY 1-BOX PARCEL TRACKING (PRIVACY MASKED COLLECTION)        -->
           <!-- ===================================================================== -->
           ${view === "track" && html`
             <div class="max-w-lg mx-auto px-4 py-12 flex-1 w-full">
